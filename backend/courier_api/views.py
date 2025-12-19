@@ -146,13 +146,8 @@ def create_courier(request):
         # Add technicians
         courier.technicians.set(technicians)
         
-        # Generate PDF
-        try:
-            pdf_bytes = generate_courier_pdf(courier)
-            pdf_filename = f"{courier_id}.pdf"
-            courier.pdf_file.save(pdf_filename, ContentFile(pdf_bytes), save=True)
-        except Exception as pdf_error:
-            logger.warning(f"PDF generation failed: {pdf_error}")
+        # PDF generation is disabled as per requirements
+        logger.info("PDF generation is disabled")
         
         # DON'T update sheets yet - only when technician marks received
         
@@ -162,8 +157,7 @@ def create_courier(request):
         return Response({
             'success': True,
             'message': 'Courier created successfully (in transit)',
-            'data': serializer.data,
-            'pdf_url': f"/api/courier/{courier.id}/pdf/" if courier.pdf_file else None
+            'data': serializer.data
         }, status=status.HTTP_201_CREATED)
         
     except Exception as e:
