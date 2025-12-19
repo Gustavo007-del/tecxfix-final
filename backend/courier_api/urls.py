@@ -1,6 +1,7 @@
 # E:\study\techfix\backend\courier_api\urls.py
 from django.urls import path
 from . import views
+from .views import health_check
 
 urlpatterns = [
     # Company stock management
