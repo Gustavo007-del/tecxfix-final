@@ -5,3 +5,7 @@ django-cors-headers
 gunicorn
 dj-database-url
 psycopg2-binary
+gspread
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
