@@ -1,0 +1,1 @@
+i have 2 admins both are created by superuder, one is admin and second is spareadmin, how hide some some items for sparelogin in admindashboard, spare admin need to only see 

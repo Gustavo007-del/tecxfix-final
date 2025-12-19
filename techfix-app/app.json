@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "TEX FIX",
+    "slug": "techfix-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2C2C2C"
+    },
+    "ios": {
+      "supportsTabletMode": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2C2C2C"
+      },
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermissions": "Allow TECHFIX to access your location for accurate check-in/check-out"
+        }
+      ]
+    ]
+  }
+}
