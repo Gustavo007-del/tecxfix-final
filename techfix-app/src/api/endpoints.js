@@ -1,8 +1,8 @@
 // E:\study\techfix\techfix-app\src\api\endpoints.js
-// API Endpoints
 const API_ENDPOINTS = {
-  // Authentication
-  LOGIN: '/token/',
+  // Authentication - FIXED
+  LOGIN_TECHNICIAN: '/login/technician/',
+  LOGIN_ADMIN: '/login/admin/',
   REFRESH_TOKEN: '/token/refresh/',
   
   // User
@@ -20,8 +20,7 @@ const API_ENDPOINTS = {
   PENDING_COURIERS: '/pending-couriers/',
   TECHNICIANS_FOR_COURIER: '/technicians-for-courier/',
   COURIER_PDF: (id) => `/courier/${id}/pdf/`,
-  MY_COURIER_HISTORY: '/my-courier-history/',  // For history screen
-
+  MY_COURIER_HISTORY: '/my-courier-history/',
   
   // Technician
   TECHNICIAN_LIST: '/technicians/',

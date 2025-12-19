@@ -720,3 +720,6 @@ def register_technician_stock(request):
                 'sheet_id': technician_stock.sheet_id
             }
         }, status=status.HTTP_201_CREATED)        
+
+def health_check(request):
+    return JsonResponse({"status": "ok"})        

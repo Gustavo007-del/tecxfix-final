@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "TEX FIX",
-    "slug": "techfix-app",
+    "slug": "texfix-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,9 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#2C2C2C"
     },
-    "ios": {
-      "supportsTabletMode": true
-    },
+   
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -22,7 +20,8 @@
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION"
-      ]
+      ],
+      "package": "com.shijil.py.texfixapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -34,6 +33,11 @@
           "locationAlwaysAndWhenInUsePermissions": "Allow TECHFIX to access your location for accurate check-in/check-out"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "7b76e30e-1972-447d-8928-898c7e0bc026"
+      }
+    }
   }
 }

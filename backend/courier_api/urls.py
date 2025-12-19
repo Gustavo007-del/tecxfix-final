@@ -18,6 +18,7 @@ urlpatterns = [
     # Courier status
     path('pending-couriers/', views.pending_couriers, name='pending_couriers'),
     path('mark-received/<int:courier_id>/', views.mark_received, name='mark_received'),
+    path("health/", health_check),
     
     # Technician management
     path('technicians/', views.get_technicians, name='get_technicians'),

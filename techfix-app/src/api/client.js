@@ -3,7 +3,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API_ENDPOINTS from './endpoints';
 
-const API_BASE_URL = 'http:/192.168.43.128:8000/api';  // Update your IP!
+const API_BASE_URL = 'https://tecxfix-final.onrender.com/api';  
 
 const client = axios.create({
   baseURL: API_BASE_URL,
