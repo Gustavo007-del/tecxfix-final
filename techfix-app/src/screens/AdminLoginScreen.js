@@ -99,7 +99,7 @@ export default function AdminLoginScreen({ navigation }) {
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logo}>TECHFIX</Text>
+          <Text style={styles.logo}>TEX FIX</Text>
           <Text style={styles.subtitle}>Admin Panel</Text>
         </View>
 

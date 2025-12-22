@@ -1,7 +1,7 @@
 # E:\study\techfix\backend\courier_api\urls.py
 from django.urls import path
 from . import views
-from .views import health_check
+from .views import health_check, minimal_health_check
 
 urlpatterns = [
     # Company stock management
@@ -19,7 +19,8 @@ urlpatterns = [
     # Courier status
     path('pending-couriers/', views.pending_couriers, name='pending_couriers'),
     path('mark-received/<int:courier_id>/', views.mark_received, name='mark_received'),
-    path("health/", health_check),
+    path("health-check/", health_check, name='health_check'),
+    path("minimal-health/", minimal_health_check, name='minimal_health_check'),
     
     # Technician management
     path('technicians/', views.get_technicians, name='get_technicians'),

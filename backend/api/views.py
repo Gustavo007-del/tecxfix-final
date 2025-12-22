@@ -1,4 +1,6 @@
 # E:\study\techfix\backend\api\views.py
+import os
+import json
 import logging
 from django.db.models import Q
 from django.db import transaction
@@ -27,6 +29,39 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from django.http import JsonResponse
 from datetime import datetime
+
+
+def get_google_sheets_client():
+    """
+    Get authenticated Google Sheets client using environment variables
+    Falls back to service.json if environment variables are not set (local development)
+    """
+    try:
+        # Try to get credentials from environment variable (for production)
+        google_credentials_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
+        
+        if google_credentials_json:
+            # Parse the JSON string from environment variable
+            credentials_dict = json.loads(google_credentials_json)
+            creds = Credentials.from_service_account_info(
+                credentials_dict,
+                scopes=["https://www.googleapis.com/auth/spreadsheets"]
+            )
+            logger.info("Using Google credentials from environment variable")
+        else:
+            # Fallback to service.json for local development
+            creds = Credentials.from_service_account_file(
+                "service.json",
+                scopes=["https://www.googleapis.com/auth/spreadsheets"]
+            )
+            logger.info("Using Google credentials from service.json file")
+        
+        client = gspread.authorize(creds)
+        return client
+    
+    except Exception as e:
+        logger.error(f"Failed to authenticate with Google Sheets: {str(e)}")
+        raise Exception(f"Google Sheets authentication failed: {str(e)}")
 
 RANGE = "Sheet1!A:O"  # includes columns A to O
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
@@ -579,11 +614,8 @@ def get_complaints(request):
         to_dt = datetime.strptime(to_date, "%d-%m-%Y")
 
         # Authenticate Google Sheets
-        creds = Credentials.from_service_account_file(
-            "service.json",
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
-        )
-        client = gspread.authorize(creds)
+        client = get_google_sheets_client()
+
 
         # Open worksheet
         sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
@@ -648,11 +680,8 @@ def update_complaint_status(request):
             return JsonResponse({"error": "complaint_no required"}, status=400)
 
         # Authenticate Google Sheets
-        creds = Credentials.from_service_account_file(
-            "service.json",
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
-        )
-        client = gspread.authorize(creds)
+        client = get_google_sheets_client()
+
 
         sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
 
@@ -683,11 +712,8 @@ def get_spare_pending(request):
     try:
         technician_name = request.user.first_name
 
-        creds = Credentials.from_service_account_file(
-            "service.json",
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
-        )
-        client = gspread.authorize(creds)
+        client = get_google_sheets_client()
+
         sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
         rows = sheet.get_all_values()
         
@@ -747,11 +773,8 @@ def get_spare_closed(request):
         from_dt = datetime.strptime(from_date_str, "%d-%m-%Y")
         to_dt = datetime.strptime(to_date_str, "%d-%m-%Y")
         
-        creds = Credentials.from_service_account_file(
-            "service.json",
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
-        )
-        client = gspread.authorize(creds)
+        client = get_google_sheets_client()
+
         sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
         rows = sheet.get_all_values()
         
@@ -820,11 +843,8 @@ def get_admin_spare_approvals(request):
         if not request.user.is_staff:
             return JsonResponse({"error": "Only admin users can access this endpoint"}, status=403)
 
-        creds = Credentials.from_service_account_file(
-            "service.json",
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
-        )
-        client = gspread.authorize(creds)
+        client = get_google_sheets_client()
+
         sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
         rows = sheet.get_all_values()
         
@@ -887,11 +907,8 @@ def update_spare_status(request):
             return JsonResponse({"success": False, "error": "new_status must be PENDING or CLOSED"}, status=400)
         
         # Authenticate Google Sheets
-        creds = Credentials.from_service_account_file(
-            "service.json",
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
-        )
-        client = gspread.authorize(creds)
+        client = get_google_sheets_client()
+
         
         sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
         
@@ -932,11 +949,8 @@ def update_spare_status(request):
 def test_sheet_connection(request):
     """Test if we can connect to the sheet"""
     try:
-        creds = Credentials.from_service_account_file(
-            "service.json",
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
-        )
-        client = gspread.authorize(creds)
+        client = get_google_sheets_client()
+
         sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
         rows = sheet.get_all_values()
         return JsonResponse({
@@ -1094,11 +1108,8 @@ def approve_spare_request(request):
         
         # Update Google Sheet
         try:
-            creds = Credentials.from_service_account_file(
-                "service.json",
-                scopes=["https://www.googleapis.com/auth/spreadsheets"]
-            )
-            client = gspread.authorize(creds)
+            client = get_google_sheets_client()
+
             sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
             
             # Find and update the complaint row
@@ -1202,11 +1213,8 @@ def get_stock_out_items(request):
                 "error": "Only admin users can access this endpoint"
             }, status=403)
 
-        creds = Credentials.from_service_account_file(
-            "service.json",
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
-        )
-        client = gspread.authorize(creds)
+        client = get_google_sheets_client()
+
         sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
         rows = sheet.get_all_values()
         
@@ -1279,11 +1287,8 @@ def mark_stock_as_ordered(request):
         # Get the row data from Google Sheet first
         logger.info("Attempting to connect to Google Sheet...")
         try:
-            creds = Credentials.from_service_account_file(
-                "service.json",
-                scopes=["https://www.googleapis.com/auth/spreadsheets"]
-            )
-            client = gspread.authorize(creds)
+            client = get_google_sheets_client()
+
             sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
             
             # Find complaint number row (column B = 2)
@@ -1359,11 +1364,8 @@ def get_ordered_items(request):
                 "error": "Only admin users can access this endpoint"
             }, status=403)
 
-        creds = Credentials.from_service_account_file(
-            "service.json",
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
-        )
-        client = gspread.authorize(creds)
+        client = get_google_sheets_client()
+
         sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
         rows = sheet.get_all_values()
         
@@ -1440,11 +1442,8 @@ def mark_stock_as_received(request):
         
         # Update Google Sheet
         try:
-            creds = Credentials.from_service_account_file(
-                "service.json",
-                scopes=["https://www.googleapis.com/auth/spreadsheets"]
-            )
-            client = gspread.authorize(creds)
+            client = get_google_sheets_client()
+
             sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
             
             # Find complaint number row (column B = 2)

@@ -63,21 +63,11 @@ export default function AttendanceScreen({ navigation }) {
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [time, setTime] = useState(new Date());
   const { state, signOut } = useContext(AuthContext);
 
 
   useEffect(() => {
     fetchAttendanceStatus();
-
-
-    // Update time every second
-    const timer = setInterval(() => {
-      setTime(new Date());
-    }, 1000);
-
-
-    return () => clearInterval(timer);
   }, []);
 
 
@@ -261,32 +251,9 @@ export default function AttendanceScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-
-        {/* Current Time */}
-        <View style={styles.timeCard}>
-          <Text style={styles.timeLabel}>Current Time (IST)</Text>
-          <Text style={styles.timeValue}>
-            {time.toLocaleTimeString('en-IN', {
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-              hour12: true,
-            })}
-          </Text>
-          <Text style={styles.dateValue}>
-            {time.toLocaleDateString('en-IN', {
-              weekday: 'short',
-              month: 'short',
-              day: '2-digit',
-            })}
-          </Text>
-        </View>
-
-
         {/* Status Card */}
         <View style={styles.statusCard}>
           <Text style={styles.statusTitle}>Today's Status</Text>
-
 
           {isCheckedIn ? (
             <View style={styles.statusRow}>
@@ -301,7 +268,6 @@ export default function AttendanceScreen({ navigation }) {
           ) : (
             <Text style={styles.noDataText}>Not checked in yet</Text>
           )}
-
 
           {isCheckedOut && (
             <View style={styles.statusRow}>
@@ -325,10 +291,7 @@ export default function AttendanceScreen({ navigation }) {
               disabled={checkingIn}
             >
               {checkingIn ? (
-                <>
-                  <ActivityIndicator color={COLORS.dark} />
-                  <Text style={[styles.buttonText, { marginLeft: 12 }]}>Getting Location...</Text>
-                </>
+                <ActivityIndicator color={COLORS.dark} />
               ) : (
                 <>
                   <MaterialIcons name="check-circle" size={24} color={COLORS.dark} />
@@ -343,12 +306,7 @@ export default function AttendanceScreen({ navigation }) {
               disabled={checkingOut}
             >
               {checkingOut ? (
-                <>
-                  <ActivityIndicator color={COLORS.white} />
-                  <Text style={[styles.buttonText, { marginLeft: 12, color: COLORS.white }]}>
-                    Getting Location...
-                  </Text>
-                </>
+                <ActivityIndicator color={COLORS.white} />
               ) : (
                 <>
                   <MaterialIcons name="check-circle" size={24} color={COLORS.white} />
@@ -407,34 +365,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.light,
     marginTop: 4,
-  },
-  timeCard: {
-    backgroundColor: COLORS.white,
-    marginHorizontal: 16,
-    marginVertical: 16,
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  timeLabel: {
-    fontSize: 12,
-    color: COLORS.gray,
-    fontWeight: '500',
-    marginBottom: 8,
-  },
-  timeValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  dateValue: {
-    fontSize: 12,
-    color: COLORS.dark,
-    marginTop: 8,
   },
   statusCard: {
     backgroundColor: COLORS.white,
