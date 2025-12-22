@@ -57,9 +57,9 @@ function TechnicianNavigator() {
                     } else if (route.name === 'TechStockStack') {
                         iconName = 'inventory';
                     } else if (route.name === 'CouriersStack') {
-                        iconName = 'local-shipping';
-                    } else if (route.name === 'ReceiveCourierStack') {
                         iconName = 'add-shopping-cart';
+                    } else if (route.name === 'ReceiveCourierStack') {
+                        iconName = 'local-shipping';
                     } else if (route.name === 'RequestsStack') {
                         iconName = 'list';
                     }
@@ -94,7 +94,7 @@ function TechnicianNavigator() {
                 name="CouriersStack"
                 component={CouriersScreenStack}
                 options={{
-                    tabBarLabel: 'Spare',
+                    tabBarLabel: 'complaints',
                     tabBarLabelStyle: { fontSize: 11 },
                 }}
             />
@@ -102,7 +102,7 @@ function TechnicianNavigator() {
                 name="ReceiveCourierStack"
                 component={ReceiveCourierScreenStack}
                 options={{
-                    tabBarLabel: 'Receive',
+                    tabBarLabel: 'Courier',
                     tabBarLabelStyle: { fontSize: 11 },
                 }}
             />

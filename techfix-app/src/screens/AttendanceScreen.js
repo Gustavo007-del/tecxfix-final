@@ -9,6 +9,7 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  Linking,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -84,57 +85,81 @@ export default function AttendanceScreen({ navigation }) {
 
 
   const getCurrentLocation = async () => {
-  return new Promise(async (resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error('Location timeout - please try again'));
-    }, 20000); // Increased to 20 seconds
-
-
-    try {
-      // First, try to get last known location (instant)
-      try {
-        const lastLocation = await Location.getLastKnownPositionAsync();
-        if (lastLocation && lastLocation.coords) {
-          clearTimeout(timeout);
-          resolve({
-            latitude: lastLocation.coords.latitude,
-            longitude: lastLocation.coords.longitude,
-            accuracy: lastLocation.coords.accuracy,
-          });
-          return;
-        }
-      } catch (lastLocError) {
-        console.warn('Last known location failed:', lastLocError);
-      }
-
-
-      // If no last location, try high accuracy
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced, // Changed from Highest to Balanced
-        maxAge: 0,
-        timeout: 15000,
-      });
-
-
-      clearTimeout(timeout);
-
-
-      const accuracy = location.coords.accuracy;
-
-
-      resolve({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        accuracy: accuracy,
-      });
-    } catch (error) {
-      clearTimeout(timeout);
-      console.error('Location error:', error);
-      reject(error);
+    // First, check and request location permissions
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission required',
+        'Location permission is required for attendance check-in/check-out',
+        [
+          {
+            text: 'Open Settings',
+            onPress: () => Linking.openSettings(),
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+        ]
+      );
+      throw new Error('Location permission not granted');
     }
-  });
-};
 
+    return new Promise(async (resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Location timeout - please try again'));
+      }, 20000);
+
+      try {
+        // First, try to get last known location (instant)
+        try {
+          const lastLocation = await Location.getLastKnownPositionAsync();
+          if (lastLocation?.coords) {
+            clearTimeout(timeout);
+            resolve({
+              latitude: lastLocation.coords.latitude,
+              longitude: lastLocation.coords.longitude,
+              accuracy: lastLocation.coords.accuracy,
+            });
+            return;
+          }
+        } catch (lastLocError) {
+          console.warn('Last known location failed:', lastLocError);
+        }
+
+        // If no last location, try high accuracy
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+          distanceInterval: 10, // Minimum change in meters between updates
+          timeInterval: 5000,   // Minimum time in ms between updates
+        });
+
+        clearTimeout(timeout);
+
+        resolve({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          accuracy: location.coords.accuracy,
+        });
+      } catch (error) {
+        clearTimeout(timeout);
+        console.error('Location error:', error);
+        
+        // Provide more user-friendly error messages
+        let errorMessage = 'Failed to get location';
+        if (error.code === 'E_LOCATION_TIMEOUT') {
+          errorMessage = 'Location request timed out. Please try again in an open area.';
+        } else if (error.code === 'E_LOCATION_SERVICES_DISABLED') {
+          errorMessage = 'Location services are disabled. Please enable them in your device settings.';
+        } else if (error.code === 'E_LOCATION_UNAVAILABLE') {
+          errorMessage = 'Location is not available. Please check your connection and try again.';
+        }
+        
+        reject(new Error(errorMessage));
+      }
+    });
+  };
 
 
   const handleCheckIn = async () => {
