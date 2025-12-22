@@ -38,7 +38,7 @@ def get_google_sheets_client():
     """
     try:
         # Try to get credentials from environment variable (for production)
-        google_credentials_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
+        google_credentials_json = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON')
         
         if google_credentials_json:
             # Parse the JSON string from environment variable

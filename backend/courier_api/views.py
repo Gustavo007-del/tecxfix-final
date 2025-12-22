@@ -722,105 +722,20 @@ def register_technician_stock(request):
             }
         }, status=status.HTTP_201_CREATED)        
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def minimal_health_check(request):
-    """Minimal health check that doesn't require database access"""
-    try:
-        return Response({
-            'status': 'ok',
-            'message': 'Minimal health check passed',
-            'server_time': timezone.now().isoformat()
-        })
-    except Exception as e:
-        return Response({
-            'status': 'error',
-            'message': str(e)
-        }, status=500)
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from django.utils import timezone
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def health_check(request):
-    """Comprehensive health check with detailed diagnostics"""
-    import os
-    import sys
-    import traceback
-    from django.db import connection
-    from django.conf import settings
-    
-    # Initialize response data
-    response_data = {
-        'status': 'ok',
-        'debug': {}
-    }
-    
-    try:
-        # 1. Check Python version
-        response_data['python_version'] = sys.version.split()[0]
-        
-        # 2. Check Django version
-        from django import get_version
-        response_data['django_version'] = get_version()
-        
-        # 3. Check database connection
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT 1")
-                response_data['database'] = 'ok'
-        except Exception as e:
-            response_data['database'] = f"error: {str(e)}"
-            response_data['status'] = 'error'
-        
-        # 4. Check environment
-        response_data['environment'] = {
-            'debug': settings.DEBUG,
-            'allowed_hosts': settings.ALLOWED_HOSTS,
-            'database_engine': settings.DATABASES['default']['ENGINE']
-        }
-        
-        # 5. Check if we can import all required modules
-        required_modules = [
-            'rest_framework',
-            'django.db',
-            'django.contrib.auth',
-            'rest_framework.response'
-        ]
-        
-        missing_modules = []
-        for module in required_modules:
-            try:
-                __import__(module)
-            except ImportError as e:
-                missing_modules.append(f"{module}: {str(e)}")
-        
-        if missing_modules:
-            response_data['missing_modules'] = missing_modules
-            response_data['status'] = 'error'
-        
-        # 6. Check if we can access the database models
-        try:
-            from django.apps import apps
-            response_data['installed_apps'] = [app.name for app in apps.get_app_configs()]
-        except Exception as e:
-            response_data['app_loading_error'] = str(e)
-            response_data['status'] = 'error'
-        
-        # If we got here without setting status to error, everything is fine
-        if response_data['status'] == 'ok':
-            return Response(response_data)
-        else:
-            return Response(response_data, status=500)
-            
-    except Exception as e:
-        # Log the full traceback for debugging
-        error_trace = traceback.format_exc()
-        logger.error(f"Health check failed: {error_trace}")
-        
-        # Return detailed error information
-        return Response({
-            'status': 'error',
-            'message': str(e),
-            'error_type': type(e).__name__,
-            'python_version': sys.version.split()[0] if 'sys' in locals() else 'unknown',
-            'traceback': error_trace if settings.DEBUG else None
-        }, status=500)
+def health(request):
+
+    return Response(
+        {
+            "status": "ok",
+            "service": "tecxfix-backend",
+            "timestamp": timezone.now().isoformat()
+        },
+        status=200
+    )
