@@ -1,10 +1,11 @@
 ﻿// E:\study\techfix\techfix-app\App.js
-import React, { useEffect, useContext } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import React, { useEffect, useContext, useState } from 'react';
+import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
 import { COLORS } from './src/theme/colors';
 import StockOutScreen from './src/screens/StockOutScreen';
@@ -179,6 +180,9 @@ function RequestsScreenStack() {
 // ============================================
 
 function AdminNavigator() {
+    const { state } = useContext(AuthContext);
+    const isSpareAdmin = state?.user?.username === 'SpareAdmin';
+
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
@@ -229,14 +233,16 @@ function AdminNavigator() {
                     tabBarLabelStyle: { fontSize: 11 },
                 }}
             />
-            <Tab.Screen
-                name="SettingsStack"
-                component={SettingsStackScreen}
-                options={{
-                    tabBarLabel: 'Settings',
-                    tabBarLabelStyle: { fontSize: 11 },
-                }}
-            />
+            {!isSpareAdmin && (
+                <Tab.Screen
+                    name="SettingsStack"
+                    component={SettingsStackScreen}
+                    options={{
+                        tabBarLabel: 'Settings',
+                        tabBarLabelStyle: { fontSize: 11 },
+                    }}
+                />
+            )}
         </Tab.Navigator>
     );
 }
@@ -337,10 +343,106 @@ function RootNavigator() {
 // MAIN APP
 // ============================================
 
-export default function App() {
-    return (
-        <AuthProvider>
-            <RootNavigator />
-        </AuthProvider>
-    );
+function LocationPermissionScreen({ onRetry }) {
+  return (
+    <View style={styles.container}>
+      <MaterialIcons name="location-off" size={64} color={COLORS.danger} />
+      <Text style={styles.title}>Location Permission Required</Text>
+      <Text style={styles.message}>
+        This app requires location permission to function properly. Please enable location services in your device settings.
+      </Text>
+      <TouchableOpacity 
+        style={styles.button} 
+        onPress={() => {
+          Linking.openSettings();
+        }}
+      >
+        <Text style={styles.buttonText}>Open Settings</Text>
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={[styles.button, { backgroundColor: COLORS.primary }]} 
+        onPress={onRetry}
+      >
+        <Text style={styles.buttonText}>Retry</Text>
+      </TouchableOpacity>
+    </View>
+  );
 }
+
+export default function App() {
+  const [locationPermission, setLocationPermission] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const checkLocationPermission = async () => {
+    setLoading(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status === 'granted');
+    } catch (error) {
+      console.error('Error requesting location permission:', error);
+      setLocationPermission(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    checkLocationPermission();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (locationPermission === false) {
+    return <LocationPermissionScreen onRetry={checkLocationPermission} />;
+  }
+
+  return (
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: COLORS.white,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginVertical: 20,
+    textAlign: 'center',
+    color: COLORS.dark,
+  },
+  message: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 30,
+    color: COLORS.gray,
+    lineHeight: 24,
+  },
+  button: {
+    backgroundColor: COLORS.danger,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    marginVertical: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

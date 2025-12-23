@@ -21,7 +21,10 @@ export default function AdminDashboardScreen({ navigation }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { signOut } = useContext(AuthContext);
+  const { signOut, state } = useContext(AuthContext);
+  console.log('Auth State:', JSON.stringify(state, null, 2));
+  const isSpareAdmin = state?.user?.username === 'SpareAdmin';
+  console.log('isSpareAdmin:', isSpareAdmin);
 
   useEffect(() => {
     fetchDashboardStats();
@@ -82,84 +85,90 @@ export default function AdminDashboardScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <MaterialIcons name="people" size={32} color={COLORS.primary} />
-            <View style={styles.statContent}>
-              <Text style={styles.statNumber}>{stats?.total_technicians || 0}</Text>
-              <Text style={styles.statLabel}>Total Technicians</Text>
+        {!isSpareAdmin && (
+          <View style={styles.statsContainer}>
+            <View style={styles.statCard}>
+              <MaterialIcons name="people" size={32} color={COLORS.primary} />
+              <View style={styles.statContent}>
+                <Text style={styles.statNumber}>{stats?.total_technicians || 0}</Text>
+                <Text style={styles.statLabel}>Total Technicians</Text>
+              </View>
             </View>
-          </View>
 
-          <View style={[styles.statCard, { borderLeftColor: COLORS.success }]}>
-            <MaterialIcons name="check-circle" size={32} color={COLORS.success} />
-            <View style={styles.statContent}>
-              <Text style={[styles.statNumber, { color: COLORS.success }]}>
-                {stats?.checked_in_today || 0}
-              </Text>
-              <Text style={styles.statLabel}>Checked In Today</Text>
+            <View style={[styles.statCard, { borderLeftColor: COLORS.success }]}>
+              <MaterialIcons name="check-circle" size={32} color={COLORS.success} />
+              <View style={styles.statContent}>
+                <Text style={[styles.statNumber, { color: COLORS.success }]}>
+                  {stats?.checked_in_today || 0}
+                </Text>
+                <Text style={styles.statLabel}>Checked In Today</Text>
+              </View>
             </View>
-          </View>
 
-          <View style={[styles.statCard, { borderLeftColor: COLORS.primary }]}>
-            <MaterialIcons name="task-alt" size={32} color={COLORS.primary} />
-            <View style={styles.statContent}>
-              <Text style={[styles.statNumber, { color: COLORS.primary }]}>
-                {stats?.completed_today || 0}
-              </Text>
-              <Text style={styles.statLabel}>Completed Today</Text>
+            <View style={[styles.statCard, { borderLeftColor: COLORS.primary }]}>
+              <MaterialIcons name="task-alt" size={32} color={COLORS.primary} />
+              <View style={styles.statContent}>
+                <Text style={[styles.statNumber, { color: COLORS.primary }]}>
+                  {stats?.completed_today || 0}
+                </Text>
+                <Text style={styles.statLabel}>Completed Today</Text>
+              </View>
             </View>
           </View>
-        </View>
+        )}
 
         <View style={styles.actionsContainer}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('AdminAttendanceRecordScreen')}
-          >
-            <MaterialIcons name="list-alt" size={24} color={COLORS.white} />
-            <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>Attendance Records</Text>
-              <Text style={styles.actionSubtitle}>View daily attendance by date</Text>
-            </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
-          </TouchableOpacity>
+          {!isSpareAdmin && (
+            <>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => navigation.navigate('AdminAttendanceRecordScreen')}
+              >
+                <MaterialIcons name="list-alt" size={24} color={COLORS.white} />
+                <View style={styles.actionContent}>
+                  <Text style={styles.actionTitle}>Attendance Records</Text>
+                  <Text style={styles.actionSubtitle}>View daily attendance by date</Text>
+                </View>
+                <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('TechnicianList')}
-          >
-            <MaterialIcons name="people-alt" size={24} color={COLORS.white} />
-            <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>All Technicians</Text>
-              <Text style={styles.actionSubtitle}>Manage technician list</Text>
-            </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => navigation.navigate('TechnicianList')}
+              >
+                <MaterialIcons name="people-alt" size={24} color={COLORS.white} />
+                <View style={styles.actionContent}>
+                  <Text style={styles.actionTitle}>All Technicians</Text>
+                  <Text style={styles.actionSubtitle}>Manage technician list</Text>
+                </View>
+                <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('ManageTechnicians')}
-          >
-            <MaterialIcons name="person-add" size={24} color={COLORS.white} />
-            <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>Manage Technicians</Text>
-              <Text style={styles.actionSubtitle}>Add, edit, or delete technicians</Text>
-            </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => navigation.navigate('ManageTechnicians')}
+              >
+                <MaterialIcons name="person-add" size={24} color={COLORS.white} />
+                <View style={styles.actionContent}>
+                  <Text style={styles.actionTitle}>Manage Technicians</Text>
+                  <Text style={styles.actionSubtitle}>Add, edit, or delete technicians</Text>
+                </View>
+                <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('RegisterTechnicianStock')}
-          >
-            <MaterialIcons name="storage" size={24} color={COLORS.white} />
-            <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>Register Technician Stock</Text>
-              <Text style={styles.actionSubtitle}>Link technicians to stock sheets</Text>
-            </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => navigation.navigate('RegisterTechnicianStock')}
+              >
+                <MaterialIcons name="storage" size={24} color={COLORS.white} />
+                <View style={styles.actionContent}>
+                  <Text style={styles.actionTitle}>Register Technician Stock</Text>
+                  <Text style={styles.actionSubtitle}>Link technicians to stock sheets</Text>
+                </View>
+                <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
+              </TouchableOpacity>
+            </>
+          )}
 
           <TouchableOpacity
             style={styles.actionButton}

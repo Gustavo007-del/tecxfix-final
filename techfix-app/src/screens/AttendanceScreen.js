@@ -85,17 +85,20 @@ export default function AttendanceScreen({ navigation }) {
 
 
   const getCurrentLocation = async () => {
-    // First, check and request location permissions
-    let { status } = await Location.requestForegroundPermissionsAsync();
+    // First, check if we already have permission
+    let { status } = await Location.getForegroundPermissionsAsync();
     
     if (status !== 'granted') {
+      // If permission was denied, show message to enable from settings
       Alert.alert(
-        'Permission required',
-        'Location permission is required for attendance check-in/check-out',
+        'Location Permission Required',
+        'Please enable location permission in your device settings to continue.',
         [
           {
             text: 'Open Settings',
-            onPress: () => Linking.openSettings(),
+            onPress: () => {
+              Linking.openSettings();
+            },
           },
           {
             text: 'Cancel',
