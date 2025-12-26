@@ -426,6 +426,9 @@ def mark_received(request, courier_id):
             if item['spare_id'] in received_qty_map:
                 item['received_qty'] = received_qty_map[item['spare_id']]
         
+        # Mark the items field as modified
+        courier.items = courier.items
+        
         # Update courier status and save
         courier.status = 'received'
         courier.received_time = timezone.now()
