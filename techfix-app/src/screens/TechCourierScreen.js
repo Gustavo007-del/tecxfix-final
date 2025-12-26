@@ -66,12 +66,19 @@ export default function TechCourierScreen({ navigation }) {
     const handleDownloadPDF = async (courier) => {
         try {
             setGeneratingPDF(courier.id);
-
             const technicianName = getTechnicianName();
-
+            
             const result = await generateTechnicianCourierPDF(courier, technicianName);
-
-            if (result.success) {
+            
+            if (!result.success) {
+                // If there's a message, show it to the user
+                if (result.message) {
+                    Alert.alert('Info', result.message);
+                }
+                return;
+            }
+            
+            if (result.uri) {
                 Alert.alert(
                     'Success',
                     'PDF generated successfully!',
@@ -82,7 +89,7 @@ export default function TechCourierScreen({ navigation }) {
             console.error('Error generating PDF:', error);
             Alert.alert(
                 'Error',
-                'Failed to generate PDF. Please try again.'
+                error.message || 'Failed to generate PDF. Please try again.'
             );
         } finally {
             setGeneratingPDF(null);
@@ -92,21 +99,28 @@ export default function TechCourierScreen({ navigation }) {
     const handlePrintPDF = async (courier) => {
         try {
             setGeneratingPDF(courier.id);
-
             const technicianName = getTechnicianName();
-
-            await printTechnicianCourierPDF(courier, technicianName);
-
+            
+            const result = await printTechnicianCourierPDF(courier, technicianName);
+            
+            if (!result.success) {
+                // If there's a message, show it to the user
+                if (result.message) {
+                    Alert.alert('Info', result.message);
+                }
+                return;
+            }
+            
             Alert.alert(
                 'Success',
-                'Print dialog opened',
+                'PDF sent to printer!',
                 [{ text: 'OK' }]
             );
         } catch (error) {
             console.error('Error printing PDF:', error);
             Alert.alert(
                 'Error',
-                'Failed to print PDF. Please try again.'
+                error.message || 'Failed to print PDF. Please try again.'
             );
         } finally {
             setGeneratingPDF(null);

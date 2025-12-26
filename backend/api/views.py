@@ -740,6 +740,7 @@ def get_spare_pending(request):
                     "part_name": row[9],             # Index 9
                     "no_of_spares": row[10],         # Index 10
                     "status": status,                # Index 11
+                    "pending_days": row[12],  # Index 12
                     "district": row[15] if len(row) > 15 else "",  # Index 15
                     "technician": tech_name
                 })
@@ -870,6 +871,7 @@ def get_admin_spare_approvals(request):
                     "part_name": row[9],            # Index 9
                     "no_of_spares": row[10],        # Index 10
                     "status": status,               # Index 11
+                     "pending_days": row[12], 
                     "district": row[15] if len(row) > 15 else "",  # Index 15
                     "technician": row[14] if len(row) > 14 else ""  # Index 14
                 })

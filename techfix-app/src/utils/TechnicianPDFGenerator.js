@@ -3,6 +3,9 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
 
+// Flag to prevent multiple print operations
+let isPrinting = false;
+
 /**
  * Generate HTML template for technician courier invoice
  */
@@ -292,6 +295,15 @@ const generateCourierHTML = (courierData, technicianName) => {
  * Generate and share/download PDF for technician courier
  */
 export const generateTechnicianCourierPDF = async (courierData, technicianName) => {
+    if (isPrinting) {
+        console.log('PDF generation already in progress');
+        return { 
+            success: false, 
+            message: 'A PDF operation is already in progress. Please wait...' 
+        };
+    }
+
+    isPrinting = true;
     try {
         // Generate HTML content
         const htmlContent = generateCourierHTML(courierData, technicianName);
@@ -319,11 +331,17 @@ export const generateTechnicianCourierPDF = async (courierData, technicianName) 
         } else {
             // Fallback for platforms where sharing is not available
             console.log('Sharing not available on this platform');
-            return { success: true, uri, message: 'PDF generated but sharing not available' };
+            return { 
+                success: true, 
+                uri, 
+                message: 'PDF generated but sharing not available' 
+            };
         }
     } catch (error) {
         console.error('Error generating PDF:', error);
         throw error;
+    } finally {
+        isPrinting = false;
     }
 };
 
@@ -331,17 +349,65 @@ export const generateTechnicianCourierPDF = async (courierData, technicianName) 
  * Generate PDF for printing (without sharing dialog)
  */
 export const printTechnicianCourierPDF = async (courierData, technicianName) => {
+    if (isPrinting) {
+        console.log('Print operation already in progress');
+        return { success: false, message: 'A print operation is already in progress. Please wait...' };
+    }
+
+    isPrinting = true;
+    let printTimeout;
+    
     try {
         const htmlContent = generateCourierHTML(courierData, technicianName);
 
-        // Print directly
-        await Print.printAsync({
-            html: htmlContent
+        // Create a promise that will reject after 30 seconds
+        const timeoutPromise = new Promise((_, reject) => {
+            printTimeout = setTimeout(() => {
+                reject(new Error('Print operation timed out after 30 seconds'));
+            }, 30000); // 30 seconds timeout
         });
 
+        // Race between the print operation and the timeout
+        const printPromise = Print.printAsync({
+            html: htmlContent,
+            width: 612,      // 8.5in in points (72 dpi)
+            height: 792,     // 11in in points (72 dpi)
+            padding: {
+                top: 36,     // 0.5in
+                right: 36,   // 0.5in
+                bottom: 36,  // 0.5in
+                left: 36     // 0.5in
+            },
+            base64: false
+        });
+
+        await Promise.race([printPromise, timeoutPromise]);
+        
         return { success: true };
+        
     } catch (error) {
-        console.error('Error printing PDF:', error);
-        throw error;
+        console.error('Error in printTechnicianCourierPDF:', error);
+        
+        // More specific error messages
+        let errorMessage = 'Failed to print. ';
+        if (error.message.includes('timeout')) {
+            errorMessage += 'The operation took too long. Please check your printer connection and try again.';
+        } else if (error.message.includes('no printer')) {
+            errorMessage += 'No printer found. Please ensure a printer is connected and try again.';
+        } else {
+            errorMessage += 'Please try again.';
+        }
+        
+        return { 
+            success: false, 
+            message: errorMessage,
+            error: error.message 
+        };
+    } finally {
+        // Clear the timeout if it's still pending
+        if (printTimeout) {
+            clearTimeout(printTimeout);
+        }
+        isPrinting = false;
     }
 };
