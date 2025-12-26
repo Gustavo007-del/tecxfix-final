@@ -420,7 +420,13 @@ def mark_received(request, courier_id):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
-        # Update courier status
+        # Update items with received quantities
+        received_qty_map = {item['spare_id']: item['qty'] for item in received_items}
+        for item in courier.items:
+            if item['spare_id'] in received_qty_map:
+                item['received_qty'] = received_qty_map[item['spare_id']]
+        
+        # Update courier status and save
         courier.status = 'received'
         courier.received_time = timezone.now()
         courier.save()

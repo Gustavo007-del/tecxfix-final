@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import * as MediaLibrary from 'expo-media-library';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
 import { COLORS } from './src/theme/colors';
 import StockOutScreen from './src/screens/StockOutScreen';
@@ -371,23 +372,36 @@ function LocationPermissionScreen({ onRetry }) {
 
 export default function App() {
   const [locationPermission, setLocationPermission] = useState(null);
+  const [storagePermission, setStoragePermission] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const checkLocationPermission = async () => {
+  const checkPermissions = async () => {
     setLoading(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      setLocationPermission(status === 'granted');
+      // Check location permission
+      const locationStatus = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(locationStatus.status === 'granted');
+      
+      // Check storage permission
+      const mediaStatus = await MediaLibrary.requestPermissionsAsync();
+      setStoragePermission(mediaStatus.status === 'granted');
+      
+      // If either permission is denied, show the permission screen
+      if (locationStatus.status !== 'granted' || mediaStatus.status !== 'granted') {
+        setLocationPermission(false);
+        setStoragePermission(false);
+      }
     } catch (error) {
-      console.error('Error requesting location permission:', error);
+      console.error('Error requesting permissions:', error);
       setLocationPermission(false);
+      setStoragePermission(false);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    checkLocationPermission();
+    checkPermissions();
   }, []);
 
   if (loading) {
@@ -398,14 +412,24 @@ export default function App() {
     );
   }
 
-  if (locationPermission === false) {
-    return <LocationPermissionScreen onRetry={checkLocationPermission} />;
+  if (locationPermission === false || storagePermission === false) {
+    return <LocationPermissionScreen onRetry={checkPermissions} />;
   }
 
+  // Only render the app if both permissions are granted
+  if (locationPermission === true && storagePermission === true) {
+    return (
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+    );
+  }
+  
+  // Fallback in case of any unexpected state
   return (
-    <AuthProvider>
-      <RootNavigator />
-    </AuthProvider>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" color={COLORS.primary} />
+    </View>
   );
 }
 

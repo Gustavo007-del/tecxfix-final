@@ -145,7 +145,9 @@ export default function TechCourierScreen({ navigation }) {
                 )}
             </View>
             <View style={styles.itemPricing}>
-                <Text style={styles.itemQty}>Qty: {item.qty}</Text>
+                <Text style={styles.itemQty}>
+                    Sent: {item.qty} {item.received_qty !== undefined ? `| Rcvd: ${item.received_qty}` : ''}
+                </Text>
                 <Text style={styles.itemPrice}>₹{item.mrp.toFixed(2)}</Text>
                 <Text style={styles.itemTotal}>₹{(item.qty * item.mrp).toFixed(2)}</Text>
             </View>

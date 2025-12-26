@@ -19,7 +19,7 @@ import { COLORS } from '../theme/colors';
 export default function AdminLoginScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin');
+  const [password, setPassword] = useState('admin@123');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { dispatch } = useContext(AuthContext);
@@ -162,13 +162,7 @@ export default function AdminLoginScreen({ navigation }) {
             <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
 
-          <View style={styles.demoContainer}>
-            <Text style={styles.demoText}>Demo Credentials:</Text>
-            <View style={styles.credentialBox}>
-              <Text style={styles.demoCredentials}>🔐 admin</Text>
-              <Text style={styles.demoCredentials}>🔑 admin</Text>
-            </View>
-          </View>
+          
         </View>
       </ScrollView>
     </View>

@@ -18,8 +18,8 @@ import { COLORS } from '../theme/colors';
 
 export default function TechnicianLoginScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const [username, setUsername] = useState('NIDHIN');
-  const [password, setPassword] = useState('NIDHIN');
+  const [username, setUsername] = useState('abinav');
+  const [password, setPassword] = useState('abinav');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { dispatch } = useContext(AuthContext);
@@ -133,17 +133,6 @@ export default function TechnicianLoginScreen({ navigation }) {
             <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
 
-          <View style={styles.demoContainer}>
-            <Text style={styles.demoText}>Demo Credentials:</Text>
-            <View style={styles.credentialBox}>
-              <Text style={styles.demoCredentials}>📱 AMAL</Text>
-              <Text style={styles.demoCredentials}>🔑 AMAL</Text>
-            </View>
-            <View style={styles.credentialBox}>
-              <Text style={styles.demoCredentials}>📱 NIDHIN</Text>
-              <Text style={styles.demoCredentials}>🔑 NIDHIN</Text>
-            </View>
-          </View>
         </View>
       </ScrollView>
     </View>

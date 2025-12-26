@@ -11,7 +11,6 @@
       "resizeMode": "contain",
       "backgroundColor": "#2C2C2C"
     },
-   
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -32,7 +31,10 @@
         {
           "locationAlwaysAndWhenInUsePermissions": "Allow TECHFIX to access your location for accurate check-in/check-out"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-router",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {

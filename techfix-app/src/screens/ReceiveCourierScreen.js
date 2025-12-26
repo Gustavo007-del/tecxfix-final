@@ -86,18 +86,28 @@ export default function ReceiveCourierScreen({ route, navigation }) {
     };
 
     const toggleItemSelection = (spareId, maxQty) => {
-        setSelectedItems(prev => ({
-            ...prev,
-            [spareId]: {
-                selected: !prev[spareId].selected,
-                qty: !prev[spareId].selected ? maxQty : 0
-            }
-        }));
+        setSelectedItems(prev => {
+            const currentState = prev[spareId] || { selected: false, qty: 0 };
+            const newSelectedState = !currentState.selected;
+            
+            return {
+                ...prev,
+                [spareId]: {
+                    selected: newSelectedState,
+                    qty: newSelectedState ? Math.min(1, maxQty) : 0
+                }
+            };
+        });
     };
 
     const updateItemQty = (spareId, qty, maxQty) => {
-        const parsedQty = parseInt(qty, 10) || 0;
-        const validQty = Math.min(Math.max(0, parsedQty), maxQty);
+        // If qty is a string from TextInput, parse it
+        // If it's a number from +/-, use it directly
+        const newQty = typeof qty === 'string' 
+            ? parseInt(qty, 10) || 0 
+            : qty;
+            
+        const validQty = Math.min(Math.max(0, newQty), maxQty);
         
         setSelectedItems(prev => ({
             ...prev,
@@ -262,8 +272,12 @@ export default function ReceiveCourierScreen({ route, navigation }) {
                             <TouchableOpacity
                                 style={styles.itemHeader}
                                 onPress={() => toggleItemSelection(item.spare_id, item.qty)}
+                                activeOpacity={0.7}
                             >
-                                <View style={styles.checkbox}>
+                                <View style={[
+                                    styles.checkbox,
+                                    isSelected && styles.checkboxSelected
+                                ]}>
                                     {isSelected && (
                                         <MaterialIcons name="check" size={18} color={COLORS.white} />
                                     )}
@@ -480,6 +494,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: COLORS.white,
         marginRight: 12,
+    },
+    checkboxSelected: {
+        backgroundColor: COLORS.primary,
     },
     itemInfo: {
         flex: 1,
