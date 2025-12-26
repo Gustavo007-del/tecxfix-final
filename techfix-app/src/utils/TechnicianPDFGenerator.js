@@ -34,14 +34,16 @@ const generateCourierHTML = (courierData, technicianName) => {
         })
         : 'Not Received';
 
-    // Calculate total amount
+    // Calculate total amount based on received quantity if available, otherwise use sent quantity
     const totalAmount = courierData.items.reduce((sum, item) => {
-        return sum + (item.qty * item.mrp);
+        const qty = item.received_qty !== undefined ? item.received_qty : item.qty;
+        return sum + (qty * item.mrp);
     }, 0);
 
     // Generate items rows
     const itemsRows = courierData.items.map((item, index) => {
-        const itemTotal = item.qty * item.mrp;
+        const displayQty = item.received_qty !== undefined ? item.received_qty : item.qty;
+        const itemTotal = displayQty * item.mrp;
         return `
             <tr style="${index % 2 === 0 ? 'background-color: #f9f9f9;' : 'background-color: #ffffff;'}">
                 <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.spare_id}</td>
@@ -50,7 +52,12 @@ const generateCourierHTML = (courierData, technicianName) => {
                     <span style="font-size: 11px; color: #666;">Brand: ${item.brand || 'N/A'}</span>
                     ${item.hsn ? `<br/><span style="font-size: 11px; color: #666;">HSN: ${item.hsn}</span>` : ''}
                 </td>
-                <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600;">${item.qty}</td>
+                <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: 600;">
+                    ${displayQty}
+                    ${item.received_qty !== undefined ? 
+                        `<div style="font-size: 10px; color: #666; font-weight: normal;">of ${item.qty} sent</div>` : 
+                        ''}
+                </td>
                 <td style="padding: 12px; border: 1px solid #ddd; text-align: right;">₹${item.mrp.toFixed(2)}</td>
                 <td style="padding: 12px; border: 1px solid #ddd; text-align: right; font-weight: 600; color: #1a4d63;">₹${itemTotal.toFixed(2)}</td>
             </tr>

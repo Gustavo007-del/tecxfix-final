@@ -425,6 +425,8 @@ def mark_received(request, courier_id):
         for item in courier.items:
             if item['spare_id'] in received_qty_map:
                 item['received_qty'] = received_qty_map[item['spare_id']]
+            else:
+                item['received_qty'] = 0  # Set received_qty to 0 for items not in received_items
         
         # Mark the items field as modified
         courier.items = courier.items
