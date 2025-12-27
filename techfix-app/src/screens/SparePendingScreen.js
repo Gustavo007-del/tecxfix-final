@@ -242,6 +242,10 @@ export default function SparePendingScreen() {
           <Text style={styles.detailLabel}>🌍 District</Text>
           <Text style={styles.detailValue}>{item.district || 'N/A'}</Text>
         </View>
+        <View style={styles.detailItem}>
+          <Text style={styles.detailLabel}>🔢 Pending Days</Text>
+          <Text style={styles.detailValue}>{item.pending_days || 'N/A'}</Text>
+        </View>
       </View>
 
       {item.status === 'PENDING' && (

@@ -742,6 +742,7 @@ def get_spare_pending(request):
                     "status": status,                # Index 11
                     "pending_days": row[12],  # Index 12
                     "district": row[15] if len(row) > 15 else "",  # Index 15
+                    "mrp": row[19],
                     "technician": tech_name
                 })
         

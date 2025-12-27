@@ -183,20 +183,34 @@ export default function AllCouriersScreen({ navigation }) {
         return items.reduce((sum, item) => sum + (item.qty * item.mrp), 0);
     };
 
-    const renderItemRow = (item) => (
-        <View key={item.spare_id} style={styles.itemRow}>
+    const renderItemRow = (item, index) => (
+        <View key={index} style={styles.itemRow}>
             <View style={styles.itemInfo}>
-                <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemDetails}>
-                    ID: {item.spare_id} | Brand: {item.brand}
+                <Text style={styles.itemName} numberOfLines={1}>
+                    {item.name}
                 </Text>
-                {item.hsn && (
-                    <Text style={styles.itemDetails}>HSN: {item.hsn}</Text>
-                )}
+                <Text style={styles.itemDetails}>
+                    {item.spare_id} | {item.brand || 'No Brand'}
+                </Text>
+                <View style={styles.qtyRow}>
+                    <View style={styles.qtyItem}>
+                        <Text style={styles.qtyLabel}>Sent:</Text>
+                        <Text style={styles.qtyValue}>{item.qty || 0}</Text>
+                    </View>
+                    <View style={[styles.qtyItem, styles.qtyDivider]}>
+                        <Text style={styles.qtyLabel}>Recvd:</Text>
+                        <Text style={styles.qtyValue}>{item.received_qty || 0}</Text>
+                    </View>
+                    <View style={[styles.qtyItem, styles.qtyDivider]}>
+                        <Text style={styles.qtyLabel}>Pend:</Text>
+                        <Text style={styles.qtyValue}>{(item.qty || 0) - (item.received_qty || 0)}</Text>
+                    </View>
+                </View>
+                <Text style={styles.itemPrice}>
+                    ₹{item.mrp} x {item.qty} = ₹{(item.qty * item.mrp).toFixed(2)}
+                </Text>
             </View>
-            <View style={styles.itemPricing}>
-                <Text style={styles.itemQty}>Qty: {item.qty}</Text>
-                <Text style={styles.itemPrice}>₹{item.mrp.toFixed(2)}</Text>
+            <View style={styles.itemTotalContainer}>
                 <Text style={styles.itemTotal}>₹{(item.qty * item.mrp).toFixed(2)}</Text>
             </View>
         </View>
@@ -611,6 +625,34 @@ const styles = StyleSheet.create({
     cardBody: {
         padding: 16,
         gap: 8,
+    },
+    qtyRow: {
+        flexDirection: 'row',
+        marginTop: 6,
+        backgroundColor: '#f5f5f5',
+        borderRadius: 6,
+        padding: 6,
+    },
+    qtyItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+    },
+    qtyDivider: {
+        borderLeftWidth: 1,
+        borderLeftColor: '#e0e0e0',
+    },
+    qtyLabel: {
+        fontSize: 12,
+        color: COLORS.gray,
+        marginRight: 4,
+    },
+    qtyValue: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: COLORS.dark,
+        minWidth: 20,
+        textAlign: 'right',
     },
     infoRow: {
         flexDirection: 'row',

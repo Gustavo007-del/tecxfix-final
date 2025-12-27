@@ -351,6 +351,17 @@ const generateAdminCourierHTML = (courierData) => {
 const requestStoragePermission = async () => {
     if (Platform.OS === 'android') {
         try {
+            // First check if we already have permission
+            const hasPermission = await PermissionsAndroid.check(
+                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+            );
+            
+            // If we already have permission, return true
+            if (hasPermission) {
+                return true;
+            }
+            
+            // Only request permission if not already granted
             const granted = await PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
                 {
