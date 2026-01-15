@@ -169,6 +169,24 @@ export default function AdminDashboardScreen({ navigation }) {
               </TouchableOpacity>
             </>
           )}
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => {
+              try {
+                navigation.navigate('MemberLocations');
+              } catch (error) {
+                console.error('Navigation error:', error);
+                Alert.alert('Error', 'Failed to navigate to Member Locations');
+              }
+            }}
+          >
+            <MaterialIcons name="my-location" size={24} color={COLORS.white} />
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Member Locations</Text>
+              <Text style={styles.actionSubtitle}>Track member movement history</Text>
+            </View>
+            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.actionButton}

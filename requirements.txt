@@ -14,3 +14,6 @@ google-api-python-client
 geopy
 reportlab
 whitenoise
+django-cors-headers
+djangorestframework
+dj_database_url

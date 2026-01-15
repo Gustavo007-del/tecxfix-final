@@ -18,6 +18,7 @@ import client from '../api/client';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { COLORS } from '../theme/colors';
 import { useNavigation } from '@react-navigation/native';
+import { LocationTrackingService } from '../services/locationTracking';
 
 
 
@@ -69,6 +70,14 @@ export default function AttendanceScreen({ navigation }) {
 
   useEffect(() => {
     fetchAttendanceStatus();
+    return () => {
+      // Stop tracking if component unmounts
+      LocationTrackingService.isTracking().then(isTracking => {
+        if (isTracking) {
+          console.log('Component unmounting, but tracking continues in background');
+        }
+      });
+    };
   }, []);
 
 
@@ -166,65 +175,93 @@ export default function AttendanceScreen({ navigation }) {
 
 
   const handleCheckIn = async () => {
-    if (checkingIn) return;
+  if (checkingIn) return;
 
+  setCheckingIn(true);
+  try {
+    const location = await getCurrentLocation();
 
-    setCheckingIn(true);
-    try {
-      const location = await getCurrentLocation();
+    // Existing check-in API call
+    const response = await client.post('/attendance/check-in/', {
+      latitude: location.latitude,
+      longitude: location.longitude,
+    });
 
-
-      const response = await client.post('/attendance/check-in/', {
-        latitude: location.latitude,
-        longitude: location.longitude,
-      });
-
-
-      if (response.data.success) {
-        setAttendance(response.data.data);
-        Alert.alert('✓ Check-in Successful');
+    if (response.data.success) {
+      setAttendance(response.data.data);
+      
+      // START LOCATION TRACKING (NEW)
+      try {
+        await client.post('/tracking/check-in/');
+        const trackingResult = await LocationTrackingService.startTracking();
+        
+        if (!trackingResult.success) {
+          console.warn('Location tracking failed to start:', trackingResult.error);
+        } else {
+          console.log('Location tracking started successfully');
+        }
+      } catch (trackingError) {
+        console.error('Error starting location tracking:', trackingError);
+        // Don't fail check-in if tracking fails
       }
-    } catch (error) {
-      console.error('Check-in error:', error);
-      Alert.alert(
-        'Check-in Failed',
-        error.response?.data?.error || error.message || 'Failed to check in'
-      );
-    } finally {
-      setCheckingIn(false);
+      
+      Alert.alert('✓ Check-in Successful');
     }
-  };
+  } catch (error) {
+    console.error('Check-in error:', error);
+    Alert.alert(
+      'Check-in Failed',
+      error.response?.data?.error || error.message || 'Failed to check in'
+    );
+  } finally {
+    setCheckingIn(false);
+  }
+};
 
 
   const handleCheckOut = async () => {
-    if (checkingOut) return;
+  if (checkingOut) return;
 
+  setCheckingOut(true);
+  try {
+    const location = await getCurrentLocation();
 
-    setCheckingOut(true);
-    try {
-      const location = await getCurrentLocation();
+    // Existing check-out API call
+    const response = await client.post('/attendance/check-out/', {
+      latitude: location.latitude,
+      longitude: location.longitude,
+    });
 
-
-      const response = await client.post('/attendance/check-out/', {
-        latitude: location.latitude,
-        longitude: location.longitude,
-      });
-
-
-      if (response.data.success) {
-        setAttendance(response.data.data);
-        Alert.alert('✓ Check-out Successful');
+    if (response.data.success) {
+      setAttendance(response.data.data);
+      
+      // STOP LOCATION TRACKING (NEW)
+      try {
+        await client.post('/tracking/check-out/');
+        const trackingResult = await LocationTrackingService.stopTracking();
+        
+        if (!trackingResult.success) {
+          console.warn('Location tracking failed to stop:', trackingResult.error);
+        } else {
+          console.log('Location tracking stopped successfully');
+        }
+      } catch (trackingError) {
+        console.error('Error stopping location tracking:', trackingError);
+        // Don't fail check-out if tracking fails
       }
-    } catch (error) {
-      console.error('Check-out error:', error);
-      Alert.alert(
-        'Check-out Failed',
-        error.response?.data?.error || error.message || 'Failed to check out'
-      );
-    } finally {
-      setCheckingOut(false);
+      
+      Alert.alert('✓ Check-out Successful');
     }
-  };
+  } catch (error) {
+    console.error('Check-out error:', error);
+    Alert.alert(
+      'Check-out Failed',
+      error.response?.data?.error || error.message || 'Failed to check out'
+    );
+  } finally {
+    setCheckingOut(false);
+  }
+};
 
 
   const onRefresh = async () => {

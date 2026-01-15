@@ -40,6 +40,8 @@ import AdminSpareApprovalsScreen from './src/screens/AdminSpareApprovalsScreen';
 import AttendanceListScreen from './src/screens/AttendanceListScreen';
 import RegisterTechnicianStockScreen from './src/screens/RegisterTechnicianStockScreen';
 
+import MemberLocationsScreen from './src/screens/MemberLocationsScreen';
+import MemberLocationMapScreen from './src/screens/MemberLocationMapScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -266,6 +268,8 @@ function DashboardStackScreen() {
             <Stack.Screen name="StockOrdered" component={StockOrderedScreen} />
             <Stack.Screen name="OrderHistory" component={OrderHistoryScreen} />
             <Stack.Screen name="ReceivedHistory" component={ReceivedHistoryScreen} />
+            <Stack.Screen name="MemberLocations" component={MemberLocationsScreen} />
+            <Stack.Screen name="MemberLocationMap" component={MemberLocationMapScreen} />
         </Stack.Navigator>
     );
 }
