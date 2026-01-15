@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     # Local apps
     'api',
     'courier_api',
+    'technician_tracking',
 ]
 
 # -------------------------------------------------

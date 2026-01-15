@@ -69,4 +69,6 @@ urlpatterns = [
     path('api/stock-ordered/receive/', mark_stock_as_received, name='mark_stock_received'),
     path('api/stock-out/order-history/', get_order_history, name='order_history'),
     path('api/stock-out/received-history/', get_received_history, name='received_history'),
+    path('api/tracking/', include('technician_tracking.urls')),  
+
 ]
