@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "privacy": "https://your-backend-url.com/privacy-policy/",
+    "privacyPolicyUrl": "https://your-backend-url.com/privacy-policy/",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -24,7 +24,6 @@
         "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.FOREGROUND_SERVICE"
       ],
-      "usesCleartextTraffic": false,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyDtICApf5bJ_CloGp2D-0caa9Dlr1Rhp1Y"
@@ -47,7 +46,8 @@
       ],
       "@react-native-community/datetimepicker",
       "expo-router",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-font"
     ],
     "extra": {
       "eas": {
