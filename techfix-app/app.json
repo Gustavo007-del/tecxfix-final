@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "privacy": "https://your-backend-url.com/privacy-policy/",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -23,7 +24,7 @@
         "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.FOREGROUND_SERVICE"
       ],
-      "usesCleartextTraffic": true,
+      "usesCleartextTraffic": false,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyDtICApf5bJ_CloGp2D-0caa9Dlr1Rhp1Y"
@@ -37,9 +38,9 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermissions": "Allow TECHFIX to access your location for accurate check-in/check-out",
-          "locationAlwaysPermission": "Allow $(PRODUCT_NAME) to use your location in the background for work tracking.",
-          "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location while using the app.",
+          "locationAlwaysAndWhenInUsePermissions": "TECHFIX requires background location to track technician work locations during field service. This enables:\n\n• Automatic attendance tracking with precise location verification\n• Continuous location monitoring during work hours for operational safety\n• Real-time technician location visibility for administrators\n• Emergency location assistance for field technicians\n\nWithout background location: Attendance tracking would be manual, technician safety monitoring would be lost, and operational efficiency would be significantly reduced.",
+          "locationAlwaysPermission": "TECHFIX needs background location to continuously track technician work locations during field service hours. This ensures accurate attendance records and provides safety monitoring for field technicians.",
+          "locationWhenInUsePermission": "TECHFIX uses your location to verify attendance check-in/check-out and provide field service tracking while you're using the app.",
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true
         }

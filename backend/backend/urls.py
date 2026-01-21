@@ -15,6 +15,7 @@ from api.views import (
     mark_stock_as_received, get_order_history,
     get_received_history
 )
+from api.privacy_views import privacy_policy
 
 # Import the courier API URLs
 from courier_api import urls as courier_urls
@@ -22,6 +23,9 @@ from courier_api import urls as courier_urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # Privacy Policy
+    path('privacy-policy/', privacy_policy, name='privacy_policy'),
     
     # Authentication
     path('api/login/technician/', technician_login, name='technician_login'),

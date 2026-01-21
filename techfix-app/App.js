@@ -4,6 +4,7 @@ import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, Linking } 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import * as MediaLibrary from 'expo-media-library';
@@ -39,9 +40,10 @@ import AdminAttendanceRecordScreen from './src/screens/AdminAttendanceRecordScre
 import AdminSpareApprovalsScreen from './src/screens/AdminSpareApprovalsScreen';
 import AttendanceListScreen from './src/screens/AttendanceListScreen';
 import RegisterTechnicianStockScreen from './src/screens/RegisterTechnicianStockScreen';
-
 import MemberLocationsScreen from './src/screens/MemberLocationsScreen';
 import MemberLocationMapScreen from './src/screens/MemberLocationMapScreen';
+import LocationDisclosureScreen from './src/screens/LocationDisclosureScreen';
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -354,7 +356,14 @@ function LocationPermissionScreen({ onRetry }) {
       <MaterialIcons name="location-off" size={64} color={COLORS.danger} />
       <Text style={styles.title}>Location Permission Required</Text>
       <Text style={styles.message}>
-        This app requires location permission to function properly. Please enable location services in your device settings.
+        TECHFIX requires location access for essential field service operations:
+        
+        • Verify attendance check-in/check-out with precise location
+        • Enable continuous location tracking during work hours
+        • Provide technician safety monitoring
+        • Support real-time operational coordination
+        
+        Background location ensures accurate work records and technician safety.
       </Text>
       <TouchableOpacity 
         style={styles.button} 
@@ -378,6 +387,17 @@ export default function App() {
   const [locationPermission, setLocationPermission] = useState(null);
   const [storagePermission, setStoragePermission] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showDisclosure, setShowDisclosure] = useState(true);
+
+  const handleDisclosureAccept = async () => {
+    setShowDisclosure(false);
+    await checkPermissions();
+  };
+
+  const handleDisclosureDecline = () => {
+    setShowDisclosure(false);
+    checkPermissions(); // Still check permissions but user was informed
+  };
 
   const checkPermissions = async () => {
     setLoading(true);
@@ -405,35 +425,54 @@ export default function App() {
   };
 
   useEffect(() => {
-    checkPermissions();
+    // Remove automatic permission check - let user see disclosure first
   }, []);
+
+  // Show disclosure screen first
+  if (showDisclosure) {
+    return (
+      <SafeAreaProvider>
+        <LocationDisclosureScreen onAccept={handleDisclosureAccept} onDecline={handleDisclosureDecline} />
+      </SafeAreaProvider>
+    );
+  }
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
+      <SafeAreaProvider>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      </SafeAreaProvider>
     );
   }
 
   if (locationPermission === false || storagePermission === false) {
-    return <LocationPermissionScreen onRetry={checkPermissions} />;
+    return (
+      <SafeAreaProvider>
+        <LocationPermissionScreen onRetry={checkPermissions} />
+      </SafeAreaProvider>
+    );
   }
 
   // Only render the app if both permissions are granted
   if (locationPermission === true && storagePermission === true) {
     return (
       <AuthProvider>
-        <RootNavigator />
+        <SafeAreaProvider>
+          <RootNavigator />
+        </SafeAreaProvider>
       </AuthProvider>
     );
   }
   
   // Fallback in case of any unexpected state
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <ActivityIndicator size="large" color={COLORS.primary} />
-    </View>
+    <SafeAreaProvider>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    </SafeAreaProvider>
   );
 }
 

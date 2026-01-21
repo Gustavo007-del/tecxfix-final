@@ -101,7 +101,7 @@ export default function AttendanceScreen({ navigation }) {
       // If permission was denied, show message to enable from settings
       Alert.alert(
         'Location Permission Required',
-        'Please enable location permission in your device settings to continue.',
+        'TECHFIX needs location access for:\n\n• Accurate attendance verification\n• Work hour location tracking\n• Technician safety monitoring\n\nPlease enable location in settings to continue.',
         [
           {
             text: 'Open Settings',
