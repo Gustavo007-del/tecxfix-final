@@ -11,6 +11,7 @@ import * as MediaLibrary from 'expo-media-library';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
 import { COLORS } from './src/theme/colors';
 import ErrorBoundary from './src/utils/ErrorBoundary';
+import ErrorBoundary from './src/utils/ErrorBoundary';
 import StockOutScreen from './src/screens/StockOutScreen';
 import StockOrderedScreen from './src/screens/StockOrderedScreen';
 import OrderHistoryScreen from './src/screens/OrderHistoryScreen';
@@ -437,9 +438,11 @@ export default function App() {
   if (showDisclosure) {
     return (
       <ErrorBoundary>
+      <ErrorBoundary>
         <SafeAreaProvider>
           <LocationDisclosureScreen onAccept={handleDisclosureAccept} onDecline={handleDisclosureDecline} />
         </SafeAreaProvider>
+      </ErrorBoundary>
       </ErrorBoundary>
     );
   }
@@ -447,11 +450,13 @@ export default function App() {
   if (loading) {
     return (
       <ErrorBoundary>
+      <ErrorBoundary>
         <SafeAreaProvider>
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <ActivityIndicator size="large" color={COLORS.primary} />
           </View>
         </SafeAreaProvider>
+      </ErrorBoundary>
       </ErrorBoundary>
     );
   }
@@ -459,9 +464,11 @@ export default function App() {
   if (locationPermission === false || storagePermission === false) {
     return (
       <ErrorBoundary>
+      <ErrorBoundary>
         <SafeAreaProvider>
           <LocationPermissionScreen onRetry={checkPermissions} />
         </SafeAreaProvider>
+      </ErrorBoundary>
       </ErrorBoundary>
     );
   }
@@ -470,11 +477,13 @@ export default function App() {
   if (locationPermission === true && storagePermission === true) {
     return (
       <ErrorBoundary>
+      <ErrorBoundary>
         <AuthProvider>
           <SafeAreaProvider>
             <RootNavigator />
           </SafeAreaProvider>
         </AuthProvider>
+      </ErrorBoundary>
       </ErrorBoundary>
     );
   }
@@ -482,11 +491,13 @@ export default function App() {
   // Fallback in case of any unexpected state
   return (
     <ErrorBoundary>
+    <ErrorBoundary>
       <SafeAreaProvider>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
       </SafeAreaProvider>
+    </ErrorBoundary>
     </ErrorBoundary>
   );
 }
