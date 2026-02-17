@@ -7,12 +7,15 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  Linking
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 import { COLORS } from '../theme/colors';
 import client from '../api/client';
+
+const API_BASE_URL = 'https://tecxfix-final.onrender.com';
 
 const TechnicianProfileScreen = ({ navigation }) => {
   const { state, signOut } = useContext(AuthContext);
@@ -84,6 +87,36 @@ const TechnicianProfileScreen = ({ navigation }) => {
     );
   };
 
+  const handleLegalLink = async (linkType) => {
+    const links = profile?.legal_links || {};
+    let linkPath = links[linkType] || '';
+    
+    // Fallback hardcoded paths if backend doesn't return them
+    if (!linkPath) {
+      const fallbackPaths = {
+        'privacy_policy': '/privacy-policy/',
+        'terms_of_service': '/terms-of-service/',
+        'user_agreement': '/user-agreement/'
+      };
+      linkPath = fallbackPaths[linkType] || '';
+    }
+    
+    const url = API_BASE_URL + linkPath;
+    
+    if (url) {
+      try {
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+          await Linking.openURL(url);
+        } else {
+          Alert.alert('Error', 'Cannot open this link');
+        }
+      } catch (error) {
+        Alert.alert('Error', 'Failed to open link');
+      }
+    }
+  };
+
   if (loading && !profile) {
     return (
       <View style={styles.loadingContainer}>
@@ -149,6 +182,46 @@ const TechnicianProfileScreen = ({ navigation }) => {
             </Text>
           </View>
         </View>
+      </View>
+
+      <View style={styles.legalSection}>
+        <Text style={styles.sectionTitle}>Legal Information</Text>
+        
+        <TouchableOpacity 
+          style={styles.legalLink}
+          onPress={() => handleLegalLink('privacy_policy')}
+        >
+          <MaterialIcons name="privacy-tip" size={20} color={COLORS.primary} />
+          <View style={styles.legalLinkContent}>
+            <Text style={styles.legalLinkTitle}>Privacy Policy</Text>
+            <Text style={styles.legalLinkDescription}>Learn how we collect and protect your data</Text>
+          </View>
+          <MaterialIcons name="chevron-right" size={20} color={COLORS.gray} />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.legalLink}
+          onPress={() => handleLegalLink('terms_of_service')}
+        >
+          <MaterialIcons name="description" size={20} color={COLORS.primary} />
+          <View style={styles.legalLinkContent}>
+            <Text style={styles.legalLinkTitle}>Terms of Service</Text>
+            <Text style={styles.legalLinkDescription}>Read our terms and conditions</Text>
+          </View>
+          <MaterialIcons name="chevron-right" size={20} color={COLORS.gray} />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.legalLink}
+          onPress={() => handleLegalLink('user_agreement')}
+        >
+          <MaterialIcons name="handshake" size={20} color={COLORS.primary} />
+          <View style={styles.legalLinkContent}>
+            <Text style={styles.legalLinkTitle}>User Agreement</Text>
+            <Text style={styles.legalLinkDescription}>Understand your rights and responsibilities</Text>
+          </View>
+          <MaterialIcons name="chevron-right" size={20} color={COLORS.gray} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.actionsSection}>
@@ -282,6 +355,38 @@ const styles = StyleSheet.create({
     color: COLORS.dark,
     marginLeft: 10,
     flex: 1,
+  },
+  legalSection: {
+    backgroundColor: COLORS.white,
+    margin: 20,
+    borderRadius: 10,
+    padding: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  legalLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray || '#f0f0f0',
+  },
+  legalLinkContent: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  legalLinkTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.dark,
+    marginBottom: 2,
+  },
+  legalLinkDescription: {
+    fontSize: 14,
+    color: COLORS.gray,
   },
   actionsSection: {
     paddingHorizontal: 20,
