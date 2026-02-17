@@ -7,7 +7,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import * as MediaLibrary from 'expo-media-library';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
 import { COLORS } from './src/theme/colors';
 import ErrorBoundary from './src/utils/ErrorBoundary';
@@ -391,7 +390,6 @@ function LocationPermissionScreen({ onRetry }) {
 
 export default function App() {
   const [locationPermission, setLocationPermission] = useState(null);
-  const [storagePermission, setStoragePermission] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDisclosure, setShowDisclosure] = useState(true);
 
@@ -412,18 +410,14 @@ export default function App() {
       const locationStatus = await Location.requestForegroundPermissionsAsync();
       setLocationPermission(locationStatus.status === 'granted');
       
-      // Check storage permission
-      const mediaStatus = await MediaLibrary.requestPermissionsAsync();
-      setStoragePermission(mediaStatus.status === 'granted');
-      
-      // If either permission is denied, show the permission screen
-      if (locationStatus.status !== 'granted' || mediaStatus.status !== 'granted') {
+      // If location permission is denied, show the permission screen
+      if (locationStatus.status !== 'granted') {
         setLocationPermission(false);
-        setStoragePermission(false);
+        // Removed setStoragePermission(false);
       }
     } catch (error) {
       setLocationPermission(false);
-      setStoragePermission(false);
+      // Removed setStoragePermission(false);
     } finally {
       setLoading(false);
     }
@@ -460,7 +454,7 @@ export default function App() {
     );
   }
 
-  if (locationPermission === false || storagePermission === false) {
+  if (locationPermission === false) {
     return (
       <ErrorBoundary>
       <ErrorBoundary>
@@ -472,8 +466,8 @@ export default function App() {
     );
   }
 
-  // Only render the app if both permissions are granted
-  if (locationPermission === true && storagePermission === true) {
+  // Only render the app if location permission is granted
+  if (locationPermission === true) {
     return (
       <ErrorBoundary>
       <ErrorBoundary>
