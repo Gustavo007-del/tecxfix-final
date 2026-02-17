@@ -650,7 +650,13 @@ def get_my_profile(request):
             'email': user.email,
             'phone': tech.phone,
             'date_joined': user.date_joined,
-            'role': 'technician'
+            'role': 'technician',
+            'legal_links': {
+                'privacy_policy': '/privacy-policy/',
+                'terms_of_service': '/terms-of-service/',
+                'user_agreement': '/user-agreement/',
+                'account_deletion_policy': '/account-deletion-policy/'
+            }
         }, status=status.HTTP_200_OK)
         
     except Exception as e:

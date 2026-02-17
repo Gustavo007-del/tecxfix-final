@@ -28,3 +28,12 @@ def user_agreement(request):
     Renders an HTML page with user agreement information
     """
     return render(request, 'user/user_agreement.html')
+
+
+@csrf_exempt
+def account_deletion_policy(request):
+    """
+    Account Deletion Policy view for TECHFIX mobile app
+    Renders an HTML page with account deletion policy information
+    """
+    return render(request, 'account/account_deletion_policy.html')

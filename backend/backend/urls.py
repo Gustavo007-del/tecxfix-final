@@ -16,7 +16,7 @@ from api.views import (
     get_received_history,
     delete_my_account, get_my_profile
 )
-from api.privacy_views import privacy_policy, terms_of_service, user_agreement
+from api.privacy_views import privacy_policy, terms_of_service, user_agreement, account_deletion_policy
 
 # Import the courier API URLs
 from courier_api import urls as courier_urls
@@ -29,6 +29,7 @@ urlpatterns = [
     path('privacy-policy/', privacy_policy, name='privacy_policy'),
     path('terms-of-service/', terms_of_service, name='terms_of_service'),
     path('user-agreement/', user_agreement, name='user_agreement'),
+    path('account-deletion-policy/', account_deletion_policy, name='account_deletion_policy'),
     
     # Authentication
     path('api/login/technician/', technician_login, name='technician_login'),
