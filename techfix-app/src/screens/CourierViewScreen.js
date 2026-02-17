@@ -35,7 +35,6 @@ export default function CourierViewScreen({ route, navigation }) {
             
             const response = await client.get(API_ENDPOINTS.COURIER_DETAIL(courierId));
             
-            console.log('Courier response:', JSON.stringify(response.data, null, 2));
             
             if (response.data.success) {
                 setCourier(response.data.data);
@@ -43,8 +42,6 @@ export default function CourierViewScreen({ route, navigation }) {
                 setError('Failed to load courier details');
             }
         } catch (err) {
-            console.error('Error fetching courier details:', err);
-            console.error('Error response:', err.response?.data);
             setError(err.response?.data?.error || 'Failed to load courier details');
         } finally {
             setLoading(false);

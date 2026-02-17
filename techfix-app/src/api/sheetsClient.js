@@ -14,7 +14,6 @@ const SHEETS_API = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching complaints:', error);
       throw error;
     }
   },
@@ -28,7 +27,6 @@ const SHEETS_API = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error updating complaint:', error);
       throw error;
     }
   },
@@ -39,7 +37,6 @@ const SHEETS_API = {
       const response = await client.get('/spare/pending/');
       return response.data;
     } catch (error) {
-      console.error('Error fetching spare pending:', error);
       throw error;
     }
   },
@@ -55,7 +52,6 @@ const SHEETS_API = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching spare closed:', error);
       throw error;
     }
   },
@@ -69,7 +65,6 @@ const SHEETS_API = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error updating spare status:', error);
       throw error;
     }
   },
@@ -88,7 +83,6 @@ const SHEETS_API = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error creating spare request:', error);
       throw error;
     }
   },
@@ -100,7 +94,6 @@ const SHEETS_API = {
       const response = await client.get('/spare-request/my-requests/', { params });
       return response.data;
     } catch (error) {
-      console.error('Error fetching my spare requests:', error);
       throw error;
     }
   },
@@ -111,7 +104,6 @@ const SHEETS_API = {
       const response = await client.get('/spare-request/all-requests/');
       return response.data;
     } catch (error) {
-      console.error('Error fetching all spare requests:', error);
       throw error;
     }
   },
@@ -125,7 +117,6 @@ const SHEETS_API = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error approving spare request:', error);
       throw error;
     }
   },
@@ -139,7 +130,6 @@ const SHEETS_API = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error rejecting spare request:', error);
       throw error;
     }
   },

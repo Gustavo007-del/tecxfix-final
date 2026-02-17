@@ -30,7 +30,6 @@ export default function AdminLoginScreen({ navigation }) {
       return;
     }
 
-    console.log('Attempting to login with:', { username });
     setLoading(true);
     
     try {
@@ -39,23 +38,22 @@ export default function AdminLoginScreen({ navigation }) {
         password,
       });
 
-      console.log('Login response:', response.data);
 
       if (response.data && response.data.access) {
         const user = response.data.user || { username, role: 'admin' };
         const accessToken = response.data.access;
         const refreshToken = response.data.refresh;
 
-        console.log('Login successful, saving tokens...');
         
         // Save tokens and user info
         await AsyncStorage.setItem('access_token', accessToken);
-        await AsyncStorage.setItem('refresh_token', refreshToken || '');
+        if (refreshToken) {
+          await AsyncStorage.setItem('refresh_token', refreshToken);
+        }
         await AsyncStorage.setItem('userToken', accessToken);
         await AsyncStorage.setItem('role', user.role || 'admin');
         await AsyncStorage.setItem('user', JSON.stringify(user));
 
-        console.log('Dispatching sign in...');
         dispatch({
           type: 'SIGN_IN',
           token: accessToken,
@@ -63,18 +61,12 @@ export default function AdminLoginScreen({ navigation }) {
           user,
         });
       } else {
-        console.log('Unexpected response format:', response.data);
         Alert.alert(
           'Login Failed',
           'Unexpected response from server. Please try again.'
         );
       }
     } catch (error) {
-      console.error('Login error:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
       
       let errorMessage = 'Invalid credentials';
       if (error.response) {

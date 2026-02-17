@@ -29,7 +29,6 @@ export default function TechCourierScreen({ navigation }) {
                 setCouriers(response.data.data || []);
             }
         } catch (error) {
-            console.error('Error fetching couriers:', error);
             Alert.alert('Error', 'Failed to fetch couriers');
         } finally {
             setLoading(false);
@@ -86,7 +85,6 @@ export default function TechCourierScreen({ navigation }) {
                 );
             }
         } catch (error) {
-            console.error('Error generating PDF:', error);
             Alert.alert(
                 'Error',
                 error.message || 'Failed to generate PDF. Please try again.'
@@ -117,7 +115,6 @@ export default function TechCourierScreen({ navigation }) {
                 [{ text: 'OK' }]
             );
         } catch (error) {
-            console.error('Error printing PDF:', error);
             Alert.alert(
                 'Error',
                 error.message || 'Failed to print PDF. Please try again.'

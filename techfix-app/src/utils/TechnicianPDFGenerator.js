@@ -296,7 +296,6 @@ const generateCourierHTML = (courierData, technicianName) => {
  */
 export const generateTechnicianCourierPDF = async (courierData, technicianName) => {
     if (isPrinting) {
-        console.log('PDF generation already in progress');
         return { 
             success: false, 
             message: 'A PDF operation is already in progress. Please wait...' 
@@ -314,7 +313,6 @@ export const generateTechnicianCourierPDF = async (courierData, technicianName) 
             base64: false
         });
 
-        console.log('PDF generated at:', uri);
 
         // Check if sharing is available
         const isAvailable = await Sharing.isAvailableAsync();
@@ -330,7 +328,6 @@ export const generateTechnicianCourierPDF = async (courierData, technicianName) 
             return { success: true, uri };
         } else {
             // Fallback for platforms where sharing is not available
-            console.log('Sharing not available on this platform');
             return { 
                 success: true, 
                 uri, 
@@ -338,7 +335,6 @@ export const generateTechnicianCourierPDF = async (courierData, technicianName) 
             };
         }
     } catch (error) {
-        console.error('Error generating PDF:', error);
         throw error;
     } finally {
         isPrinting = false;
@@ -350,7 +346,6 @@ export const generateTechnicianCourierPDF = async (courierData, technicianName) 
  */
 export const printTechnicianCourierPDF = async (courierData, technicianName) => {
     if (isPrinting) {
-        console.log('Print operation already in progress');
         return { success: false, message: 'A print operation is already in progress. Please wait...' };
     }
 
@@ -386,7 +381,6 @@ export const printTechnicianCourierPDF = async (courierData, technicianName) => 
         return { success: true };
         
     } catch (error) {
-        console.error('Error in printTechnicianCourierPDF:', error);
         
         // More specific error messages
         let errorMessage = 'Failed to print. ';

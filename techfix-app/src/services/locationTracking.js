@@ -8,7 +8,6 @@ const TRACKING_INTERVAL = 5 * 60 * 1000; // 5 minutes
 // Define the background task
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
   if (error) {
-    console.error('Location task error:', error);
     return;
   }
   
@@ -25,10 +24,8 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
           accuracy: location.coords.accuracy,
         });
         
-        console.log('Location updated:', location.coords.latitude, location.coords.longitude);
       }
     } catch (err) {
-      console.error('Error sending location:', err);
     }
   }
 });
@@ -42,7 +39,6 @@ export const LocationTrackingService = {
       // Check if already tracking
       const isTracking = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
       if (isTracking) {
-        console.log('Location tracking already active');
         return { success: true, message: 'Already tracking' };
       }
 
@@ -57,7 +53,6 @@ export const LocationTrackingService = {
 
       const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
       if (backgroundStatus !== 'granted') {
-        console.warn('Background location permission not granted - tracking may not work in background');
       }
 
       // Start tracking with 5-minute intervals
@@ -73,10 +68,8 @@ export const LocationTrackingService = {
         pausesUpdatesAutomatically: false,
       });
 
-      console.log('Location tracking started');
       return { success: true, message: 'Tracking started' };
     } catch (err) {
-      console.error('Error starting location tracking:', err);
       return { 
         success: false, 
         error: err.message || 'Failed to start tracking' 
@@ -91,15 +84,12 @@ export const LocationTrackingService = {
     try {
       const isTracking = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
       if (!isTracking) {
-        console.log('Location tracking not active');
         return { success: true, message: 'Not tracking' };
       }
 
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      console.log('Location tracking stopped');
       return { success: true, message: 'Tracking stopped' };
     } catch (err) {
-      console.error('Error stopping location tracking:', err);
       return { 
         success: false, 
         error: err.message || 'Failed to stop tracking' 
@@ -114,7 +104,6 @@ export const LocationTrackingService = {
     try {
       return await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
     } catch (err) {
-      console.error('Error checking tracking status:', err);
       return false;
     }
   },
@@ -136,7 +125,6 @@ export const LocationTrackingService = {
 
       return { success: true };
     } catch (err) {
-      console.error('Error sending current location:', err);
       return { success: false, error: err.message };
     }
   },

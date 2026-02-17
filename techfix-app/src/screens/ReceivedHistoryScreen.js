@@ -28,7 +28,6 @@ export default function ReceivedHistoryScreen({ navigation }) {
                 setReceivedHistory(response.data.data || []);
             }
         } catch (error) {
-            console.error('Error fetching received history:', error);
         } finally {
             setLoading(false);
         }

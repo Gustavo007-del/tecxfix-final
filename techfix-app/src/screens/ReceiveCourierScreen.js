@@ -46,7 +46,6 @@ export default function ReceiveCourierScreen({ route, navigation }) {
                 setCouriers([]);
             }
         } catch (error) {
-            console.error('Error fetching pending couriers:', error);
             setError('Failed to load pending couriers');
             setCouriers([]);
         } finally {
@@ -75,7 +74,6 @@ export default function ReceiveCourierScreen({ route, navigation }) {
                 setSelectedItems(initialSelection);
             }
         } catch (error) {
-            console.error('Error fetching courier:', error);
             setError('Failed to load courier details');
             if (!fromTab) {
                 navigation.goBack();
@@ -160,7 +158,6 @@ export default function ReceiveCourierScreen({ route, navigation }) {
                                 );
                             }
                         } catch (error) {
-                            console.error('Error receiving courier:', error);
                             const errorMsg = error.response?.data?.error || 'Failed to mark as received';
                             Alert.alert('Error', errorMsg);
                         } finally {

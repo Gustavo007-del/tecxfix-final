@@ -80,7 +80,6 @@ export default function AttendanceListScreen({ navigation }) {
       setAttendance(response.data);
       setFilteredAttendance(response.data);
     } catch (error) {
-      console.log('Error fetching attendance:', error);
     } finally {
       setLoading(false);
     }

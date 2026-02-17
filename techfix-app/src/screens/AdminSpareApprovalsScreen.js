@@ -48,7 +48,6 @@ export default function AdminSpareApprovalsScreen({ navigation }) {
         Alert.alert('Error', 'Failed to load approval requests');
       }
     } catch (error) {
-      console.error('Error fetching approvals:', error);
       Alert.alert('Error', 'Failed to fetch approval requests');
     } finally {
       setLoading(false);
@@ -90,7 +89,6 @@ export default function AdminSpareApprovalsScreen({ navigation }) {
         Alert.alert('Error', response?.error || 'Failed to approve request');
       }
     } catch (error) {
-      console.error('Approval error:', error);
       Alert.alert('Error', 'Failed to approve request');
     } finally {
       setActionLoading(false);
@@ -117,7 +115,6 @@ export default function AdminSpareApprovalsScreen({ navigation }) {
         Alert.alert('Error', response?.error || 'Failed to reject request');
       }
     } catch (error) {
-      console.error('Rejection error:', error);
       Alert.alert('Error', 'Failed to reject request');
     } finally {
       setActionLoading(false);

@@ -38,7 +38,6 @@ export default function RegisterTechnicianStockScreen({ navigation }) {
       setUsers(response.data.users || []);
       setExistingStocks(response.data.existing_stocks || []);
     } catch (error) {
-      console.log('Error fetching data:', error);
       Alert.alert('Error', 'Failed to load technicians');
     } finally {
       setLoading(false);
@@ -71,7 +70,6 @@ export default function RegisterTechnicianStockScreen({ navigation }) {
         },
       ]);
     } catch (error) {
-      console.log('Error submitting:', error);
       const errorMsg = error.response?.data?.error || 'Failed to register technician stock';
       Alert.alert('Error', errorMsg);
     } finally {

@@ -71,35 +71,22 @@ export default function SparePendingScreen() {
   const fetchComplaints = async (status = filterStatus) => {
     try {
       setLoading(true);
-      console.log('Fetching complaints with status:', status);
       
       let response;
       if (status === 'PENDING') {
-        console.log('Fetching pending complaints...');
         response = await SHEETS_API.getSparePending();
       } else {
         const fromStr = formatDate(fromDate);
         const toStr = formatDate(toDate);
-        console.log(`Fetching closed complaints from ${fromStr} to ${toStr}...`);
         response = await SHEETS_API.getSpareClosed(fromStr, toStr);
       }
 
       const data = response?.data || [];
-      console.log('Fetched data:', { 
-        status: status,
-        count: data.length,
-        firstItem: data[0] || 'No items'
-      });
       
       setComplaints(data);
       setFilteredComplaints(data);
       setSearchQuery('');
     } catch (error) {
-      console.error('Error in fetchComplaints:', {
-        error: error.message,
-        status: status,
-        stack: error.stack
-      });
       Alert.alert('Error', 'Failed to fetch spare items');
     } finally {
       setLoading(false);
@@ -107,13 +94,10 @@ export default function SparePendingScreen() {
   };
 
   const handleFilterChange = (status) => {
-    console.log('handleFilterChange called with status:', status, 'current status:', filterStatus);
     if (status === filterStatus) {
-      console.log('Same status, skipping...');
       return;
     }
     
-    console.log('Updating status to:', status);
     setFilterStatus(status);
     setSearchQuery('');
     
@@ -166,7 +150,6 @@ export default function SparePendingScreen() {
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to submit request');
-      console.error(error);
     } finally {
       setUpdatingStatus(false);
     }
@@ -229,7 +212,6 @@ export default function SparePendingScreen() {
         
         // If stock item not found, cache and return false
         if (!stockItem) {
-          console.log('Stock item not found for:', part.product_code);
           stockCache.current.set(cacheKey, false);
           return false;
         }
@@ -239,7 +221,6 @@ export default function SparePendingScreen() {
         stockCache.current.set(cacheKey, hasStock);
         return hasStock;
       } catch (error) {
-        console.error('Error checking stock:', error);
         // Don't cache errors in case it's a temporary issue
         return false;
       }

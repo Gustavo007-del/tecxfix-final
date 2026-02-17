@@ -29,7 +29,6 @@ export default function TechnicianListScreen({ navigation }) {
       const response = await client.get('/technicians/');
       setTechnicians(response.data);
     } catch (error) {
-      console.log('Error fetching technicians:', error);
     } finally {
       setLoading(false);
     }

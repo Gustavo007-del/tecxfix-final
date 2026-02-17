@@ -11,7 +11,6 @@ import * as MediaLibrary from 'expo-media-library';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
 import { COLORS } from './src/theme/colors';
 import ErrorBoundary from './src/utils/ErrorBoundary';
-import ErrorBoundary from './src/utils/ErrorBoundary';
 import StockOutScreen from './src/screens/StockOutScreen';
 import StockOrderedScreen from './src/screens/StockOrderedScreen';
 import OrderHistoryScreen from './src/screens/OrderHistoryScreen';
@@ -29,6 +28,7 @@ import TechnicianStockScreen from './src/screens/TechnicianStockScreen';
 import SparePendingScreen from './src/screens/SparePendingScreen';
 import MyRequestsScreen from './src/screens/MyRequestsScreen';
 import ReceiveCourierScreen from './src/screens/ReceiveCourierScreen';
+import TechnicianProfileScreen from './src/screens/TechnicianProfileScreen';
 
 // Admin Screens
 import AdminDashboardScreen from './src/screens/AdminDashboardScreen';
@@ -422,7 +422,6 @@ export default function App() {
         setStoragePermission(false);
       }
     } catch (error) {
-      console.error('Error requesting permissions:', error);
       setLocationPermission(false);
       setStoragePermission(false);
     } finally {

@@ -29,7 +29,6 @@ export default function CourierStockScreen({ navigation }) {
             const stockData = response.data.data || response.data;
             setStock(Array.isArray(stockData) ? stockData : []);
         } catch (error) {
-            console.error('Error fetching stock:', error);
             setStock([]);
         } finally {
             setLoading(false);

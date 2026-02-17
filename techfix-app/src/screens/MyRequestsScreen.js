@@ -41,7 +41,6 @@ export default function MyRequestsScreen({ navigation }) {
         Alert.alert('Error', 'Failed to load requests');
       }
     } catch (error) {
-      console.error('Error fetching requests:', error);
       Alert.alert('Error', 'Failed to fetch your requests');
     } finally {
       setLoading(false);

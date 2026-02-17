@@ -1,5 +1,5 @@
 // E:\study\techfix\techfix-app\src\screens\ManageTechniciansScreen.js
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
   View,
   Text,
@@ -40,19 +40,15 @@ export default function ManageTechniciansScreen({ navigation }) {
     fetchTechnicians();
   }, []);
 
-  const fetchTechnicians = async () => {
+  const fetchTechnicians = useCallback(async () => {
     try {
       const response = await client.get('/technicians/');
-      console.log('=== TECHNICIANS RESPONSE ===');
-      console.log('Full response:', JSON.stringify(response.data, null, 2));
-      console.log('First technician:', response.data[0]);
       setTechnicians(response.data);
     } catch (error) {
-      console.log('Error fetching technicians:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -60,7 +56,7 @@ export default function ManageTechniciansScreen({ navigation }) {
     setRefreshing(false);
   };
 
-  const openAddModal = () => {
+  const openAddModal = useCallback(() => {
     setEditingId(null);
     setFormData({
       username: '',
@@ -70,11 +66,10 @@ export default function ManageTechniciansScreen({ navigation }) {
       phone: '',
     });
     setModalVisible(true);
-  };
+  }, []);
 
-  const openEditModal = async (techId) => {
+  const openEditModal = useCallback(async (techId) => {
     try {
-      console.log(`Opening edit modal for techId: ${techId}`);
       const response = await client.get(`/technicians/${techId}/`);
       setEditingId(techId);
       setFormData({
@@ -88,7 +83,7 @@ export default function ManageTechniciansScreen({ navigation }) {
     } catch (error) {
       Alert.alert('Error', 'Failed to load technician details');
     }
-  };
+  }, []);
 
   const handleSave = async () => {
     if (!formData.first_name || !formData.last_name || !formData.phone) {
@@ -132,12 +127,7 @@ export default function ManageTechniciansScreen({ navigation }) {
     }
   };
 
-  const handleDelete = (techId, name) => {
-    console.log('=== DELETE TECHNICIAN ===');
-    console.log('Tech ID to delete:', techId);
-    console.log('Tech name:', name);
-    console.log('Type of techId:', typeof techId);
-    
+  const handleDelete = useCallback((techId, name) => {
     Alert.alert('Delete Technician', `Delete ${name}?\n\nID: ${techId}`, [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -145,23 +135,18 @@ export default function ManageTechniciansScreen({ navigation }) {
         style: 'destructive',
         onPress: async () => {
           try {
-            console.log(`Deleting technician with ID: ${techId}`);
             const response = await client.delete(`/technicians/${techId}/delete/`);
-            console.log('Delete response:', response.data);
             Alert.alert('Success', 'Technician deleted');
             await fetchTechnicians();
           } catch (error) {
-            console.error('Delete error:', error.response?.data || error);
             Alert.alert('Error', error.response?.data?.error || 'Failed to delete technician');
           }
         },
       },
     ]);
-  };
+  }, [fetchTechnicians]);
 
-  const renderTechnicianItem = ({ item, index }) => {
-    console.log(`Rendering tech at index ${index}: ID=${item.id}, Username=${item.username}`);
-    
+  const renderTechnicianItem = useCallback(({ item, index }) => {
     return (
       <View style={styles.techCard}>
         <View style={styles.techHeader}>
@@ -198,7 +183,7 @@ export default function ManageTechniciansScreen({ navigation }) {
         </View>
       </View>
     );
-  };
+  }, [openEditModal, handleDelete]);
 
   if (loading) {
     return (

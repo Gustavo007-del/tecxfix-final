@@ -43,7 +43,6 @@ const formatUtcTimeToLocalIST = (timeString) => {
     
     return istTime.toLocaleTimeString('en-IN', options);
   } catch (error) {
-    console.error('Time format error:', error);
     return timeString;
   }
 };
@@ -63,7 +62,6 @@ export default function AdminAttendanceRecordScreen({ navigation }) {
       const response = await client.get('/attendance/list/');
       setAttendance(response.data);
     } catch (error) {
-      console.log('Error fetching attendance:', error);
     } finally {
       setLoading(false);
     }

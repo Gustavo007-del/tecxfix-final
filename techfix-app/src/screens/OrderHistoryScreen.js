@@ -28,7 +28,6 @@ export default function OrderHistoryScreen({ navigation }) {
                 setOrderHistory(response.data.data || []);
             }
         } catch (error) {
-            console.error('Error fetching order history:', error);
         } finally {
             setLoading(false);
         }

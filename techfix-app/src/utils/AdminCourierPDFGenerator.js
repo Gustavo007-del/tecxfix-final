@@ -374,7 +374,6 @@ const requestStoragePermission = async () => {
             );
             return granted === PermissionsAndroid.RESULTS.GRANTED;
         } catch (err) {
-            console.warn('Storage permission error:', err);
             return false;
         }
     }
@@ -386,7 +385,6 @@ const requestStoragePermission = async () => {
  */
 export const generateAdminCourierPDF = async (courierData) => {
     try {
-        console.log('Starting PDF generation for courier:', courierData.courier_id);
         
         // Validate courier data
         if (!courierData || !courierData.items || !Array.isArray(courierData.items)) {
@@ -403,7 +401,6 @@ export const generateAdminCourierPDF = async (courierData) => {
         const htmlContent = generateAdminCourierHTML(courierData);
         const fileName = `Courier_${courierData.courier_id}_${Date.now()}.pdf`;
 
-        console.log('Generating PDF with filename:', fileName);
 
         // Generate PDF with specific dimensions
         const { uri } = await Print.printToFileAsync({
@@ -413,13 +410,11 @@ export const generateAdminCourierPDF = async (courierData) => {
             height: 792,  // 11in * 72dpi
         });
 
-        console.log('PDF generated successfully at:', uri);
 
         // Check if sharing is available
         const isAvailable = await Sharing.isAvailableAsync();
         
         if (isAvailable) {
-            console.log('Sharing PDF...');
             // Share/save the PDF
             await Sharing.shareAsync(uri, {
                 mimeType: 'application/pdf',
@@ -429,7 +424,6 @@ export const generateAdminCourierPDF = async (courierData) => {
             
             return { success: true, uri, fileName };
         } else {
-            console.log('Sharing not available on this platform');
             return { 
                 success: true, 
                 uri, 
@@ -438,7 +432,6 @@ export const generateAdminCourierPDF = async (courierData) => {
             };
         }
     } catch (error) {
-        console.error('Error generating admin PDF:', error);
         
         // Provide specific error messages
         if (error.message.includes('permission') || error.message.includes('EACCES')) {
@@ -458,7 +451,6 @@ export const generateAdminCourierPDF = async (courierData) => {
  */
 export const printAdminCourierPDF = async (courierData) => {
     try {
-        console.log('Starting print for courier:', courierData.courier_id);
         
         // Validate courier data
         if (!courierData || !courierData.items || !Array.isArray(courierData.items)) {
@@ -474,7 +466,6 @@ export const printAdminCourierPDF = async (courierData) => {
 
         return { success: true };
     } catch (error) {
-        console.error('Error printing admin PDF:', error);
         throw new Error(`Failed to print PDF: ${error.message}`);
     }
 };

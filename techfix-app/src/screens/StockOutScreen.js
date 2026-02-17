@@ -28,7 +28,6 @@ export default function StockOutScreen({ navigation }) {
                 setStockOutItems(response.data.data || []);
             }
         } catch (error) {
-            console.error('Error fetching stock-out items:', error);
             Alert.alert('Error', 'Failed to fetch stock-out items');
         } finally {
             setLoading(false);
@@ -42,10 +41,8 @@ export default function StockOutScreen({ navigation }) {
     };
 
     const handleOrder = async (complaint_no) => {
-        console.log('Order button clicked for complaint:', complaint_no);
         
         if (!complaint_no || typeof complaint_no !== 'string' || complaint_no.trim() === '') {
-            console.error('Invalid complaint_no:', complaint_no);
             Alert.alert('Error', 'Invalid complaint number');
             return;
         }
@@ -59,9 +56,7 @@ export default function StockOutScreen({ navigation }) {
                     text: 'Order',
                     onPress: async () => {
                         try {
-                            console.log('Sending order request for complaint:', complaint_no);
                             const payload = { complaint_no: complaint_no };
-                            console.log('Request payload:', JSON.stringify(payload));
                             
                             const response = await client.post('/stock-out/order/', payload, {
                                 headers: {
@@ -69,31 +64,14 @@ export default function StockOutScreen({ navigation }) {
                                 },
                             });
 
-                            console.log('Order response:', JSON.stringify(response.data));
                             
                             if (response.data && response.data.success) {
                                 Alert.alert('Success', response.data.message || 'Item ordered successfully');
                                 fetchStockOutItems(); // Refresh list
                             } else {
-                                console.error('Unexpected response format:', response.data);
                                 Alert.alert('Error', response.data?.error || 'Failed to process order');
                             }
                         } catch (error) {
-                            console.error('Error ordering item:', {
-                                message: error.message,
-                                response: {
-                                    status: error.response?.status,
-                                    data: error.response?.data,
-                                    headers: error.response?.headers,
-                                },
-                                config: {
-                                    url: error.config?.url,
-                                    method: error.config?.method,
-                                    headers: error.config?.headers,
-                                    data: error.config?.data,
-                                },
-                            });
-                            
                             let errorMessage = 'Failed to order item';
                             if (error.response) {
                                 // The request was made and the server responded with a status code

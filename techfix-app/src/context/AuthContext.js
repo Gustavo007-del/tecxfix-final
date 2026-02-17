@@ -63,7 +63,6 @@ export const AuthProvider = ({ children }) => {
           user: user ? JSON.parse(user) : null,
         });
       } catch (e) {
-        console.error('Restore failed:', e);
       }
     };
 
@@ -80,7 +79,6 @@ export const AuthProvider = ({ children }) => {
       await AsyncStorage.removeItem('role');
       await AsyncStorage.removeItem('user');
     } catch (e) {
-      console.error('Logout error:', e);
     }
     dispatch({ type: 'SIGN_OUT' });
   };

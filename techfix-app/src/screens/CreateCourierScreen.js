@@ -38,9 +38,6 @@ export default function CreateCourierScreen({ navigation }) {
         // Fetch technicians
         try {
             const techResponse = await client.get(API_ENDPOINTS.TECHNICIANS_FOR_COURIER);
-            console.log('=== RAW TECHNICIAN RESPONSE ===');
-            console.log(JSON.stringify(techResponse.data, null, 2));
-            console.log('================================');
             
             const techData = techResponse.data.data || techResponse.data;
             
@@ -49,15 +46,9 @@ export default function CreateCourierScreen({ navigation }) {
                 ? techData.filter(t => t.id !== 1) // Exclude admin ID 1
                 : [];
             
-            console.log('=== FILTERED TECHNICIANS ===');
-            filteredTechs.forEach(t => {
-                console.log(`ID: ${t.id}, Username: ${t.username}`);
-            });
-            console.log('============================');
             
             setAvailableTechs(filteredTechs);
         } catch (techError) {
-            console.warn('Failed to fetch technicians:', techError);
             setAvailableTechs([]);
         }
         
@@ -67,12 +58,10 @@ export default function CreateCourierScreen({ navigation }) {
             const stockData = stockResponse.data.data || stockResponse.data;
             setAvailableStock(Array.isArray(stockData) ? stockData : []);
         } catch (stockError) {
-            console.error('Error fetching stock:', stockError);
             Alert.alert('Error', 'Failed to load stock items');
             setAvailableStock([]);
         }
     } catch (error) {
-        console.error('Error fetching data:', error);
         Alert.alert('Error', 'Failed to load initial data');
     } finally {
         setLoading(false);
@@ -161,16 +150,9 @@ export default function CreateCourierScreen({ navigation }) {
             notes: notes,
         };
 
-        // DEBUG: Log the payload
-        console.log('=== CREATE COURIER PAYLOAD ===');
-        console.log('Technician IDs:', payload.technician_ids);
-        console.log('Items:', JSON.stringify(payload.items, null, 2));
-        console.log('Notes:', payload.notes);
-        console.log('==============================');
 
         const response = await client.post(API_ENDPOINTS.COURIER_CREATE, payload);
         
-        console.log('SUCCESS:', response.data);
         
         const courierId = response.data.data?.id;
         
@@ -196,11 +178,6 @@ export default function CreateCourierScreen({ navigation }) {
             },
         ]);
     } catch (error) {
-        console.error('=== ERROR CREATING COURIER ===');
-        console.error('Status:', error.response?.status);
-        console.error('Error Data:', JSON.stringify(error.response?.data, null, 2));
-        console.error('Error Message:', error.message);
-        console.error('===============================');
         
         const errorMsg = error.response?.data?.error || 
                        JSON.stringify(error.response?.data) ||
@@ -378,7 +355,6 @@ export default function CreateCourierScreen({ navigation }) {
                                 selectedTechs.includes(item.id) && styles.modalItemSelected
                             ]}
                             onPress={() => {
-                                console.log(`Selected: ID=${item.id}, Username=${item.username}`);
                                 toggleTechSelection(item.id);
                             }}
                         >

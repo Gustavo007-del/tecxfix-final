@@ -22,9 +22,7 @@ export default function AdminDashboardScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { signOut, state } = useContext(AuthContext);
-  console.log('Auth State:', JSON.stringify(state, null, 2));
   const isSpareAdmin = state?.user?.username === 'SpareAdmin';
-  console.log('isSpareAdmin:', isSpareAdmin);
 
   useEffect(() => {
     fetchDashboardStats();
@@ -35,7 +33,6 @@ export default function AdminDashboardScreen({ navigation }) {
       const response = await client.get('/admin/dashboard/');
       setStats(response.data);
     } catch (error) {
-      console.log('Error fetching stats:', error);
     } finally {
       setLoading(false);
     }
@@ -175,7 +172,6 @@ export default function AdminDashboardScreen({ navigation }) {
               try {
                 navigation.navigate('MemberLocations');
               } catch (error) {
-                console.error('Navigation error:', error);
                 Alert.alert('Error', 'Failed to navigate to Member Locations');
               }
             }}

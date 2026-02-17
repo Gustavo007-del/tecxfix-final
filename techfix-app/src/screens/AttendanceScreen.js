@@ -51,7 +51,6 @@ const formatUtcTimeToLocalIST = (timeString) => {
    
     return istTime.toLocaleTimeString('en-IN', options);
   } catch (error) {
-    console.error('Time format error:', error);
     return timeString;
   }
 };
@@ -74,7 +73,6 @@ export default function AttendanceScreen({ navigation }) {
       // Stop tracking if component unmounts
       LocationTrackingService.isTracking().then(isTracking => {
         if (isTracking) {
-          console.log('Component unmounting, but tracking continues in background');
         }
       });
     };
@@ -86,7 +84,12 @@ export default function AttendanceScreen({ navigation }) {
       const response = await client.get('/attendance/today/');
       setAttendance(response.data);
     } catch (error) {
-      setAttendance(null);
+      // 404 is expected when no attendance record exists for today
+      if (error.response?.status === 404) {
+        setAttendance(null);
+      } else {
+        setAttendance(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -137,7 +140,6 @@ export default function AttendanceScreen({ navigation }) {
             return;
           }
         } catch (lastLocError) {
-          console.warn('Last known location failed:', lastLocError);
         }
 
         // If no last location, try high accuracy
@@ -156,7 +158,6 @@ export default function AttendanceScreen({ navigation }) {
         });
       } catch (error) {
         clearTimeout(timeout);
-        console.error('Location error:', error);
         
         // Provide more user-friendly error messages
         let errorMessage = 'Failed to get location';
@@ -196,19 +197,15 @@ export default function AttendanceScreen({ navigation }) {
         const trackingResult = await LocationTrackingService.startTracking();
         
         if (!trackingResult.success) {
-          console.warn('Location tracking failed to start:', trackingResult.error);
         } else {
-          console.log('Location tracking started successfully');
         }
       } catch (trackingError) {
-        console.error('Error starting location tracking:', trackingError);
         // Don't fail check-in if tracking fails
       }
       
       Alert.alert('✓ Check-in Successful');
     }
   } catch (error) {
-    console.error('Check-in error:', error);
     Alert.alert(
       'Check-in Failed',
       error.response?.data?.error || error.message || 'Failed to check in'
@@ -241,19 +238,15 @@ export default function AttendanceScreen({ navigation }) {
         const trackingResult = await LocationTrackingService.stopTracking();
         
         if (!trackingResult.success) {
-          console.warn('Location tracking failed to stop:', trackingResult.error);
         } else {
-          console.log('Location tracking stopped successfully');
         }
       } catch (trackingError) {
-        console.error('Error stopping location tracking:', trackingError);
         // Don't fail check-out if tracking fails
       }
       
       Alert.alert('✓ Check-out Successful');
     }
   } catch (error) {
-    console.error('Check-out error:', error);
     Alert.alert(
       'Check-out Failed',
       error.response?.data?.error || error.message || 'Failed to check out'

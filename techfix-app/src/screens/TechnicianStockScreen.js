@@ -29,7 +29,6 @@ export default function TechnicianStockScreen({ navigation }) {
             const stockData = response.data.data || response.data;
             setStock(Array.isArray(stockData) ? stockData : []);
         } catch (error) {
-            console.error('Error fetching stock:', error);
             Alert.alert('Error', error.response?.data?.error || 'Failed to fetch your stock');
         } finally {
             setLoading(false);

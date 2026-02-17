@@ -28,7 +28,6 @@ export default function StockOrderedScreen({ navigation }) {
                 setOrderedItems(response.data.data || []);
             }
         } catch (error) {
-            console.error('Error fetching ordered items:', error);
             Alert.alert('Error', 'Failed to fetch ordered items');
         } finally {
             setLoading(false);
@@ -60,7 +59,6 @@ export default function StockOrderedScreen({ navigation }) {
                                 fetchOrderedItems(); // Refresh list
                             }
                         } catch (error) {
-                            console.error('Error marking as received:', error);
                             const errorMsg = error.response?.data?.error || 'Failed to mark as received';
                             Alert.alert('Error', errorMsg);
                         }

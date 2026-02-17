@@ -30,7 +30,6 @@ export default function MemberLocationsScreen({ navigation }) {
         setMembers(response.data.data);
       }
     } catch (error) {
-      console.error('Error fetching members:', error);
     } finally {
       setLoading(false);
     }
@@ -46,7 +45,6 @@ export default function MemberLocationsScreen({ navigation }) {
     try {
       navigation.navigate('MemberLocationMap', { member });
     } catch (error) {
-      console.error('Navigation error:', error);
     }
   };
 

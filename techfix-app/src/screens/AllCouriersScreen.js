@@ -46,7 +46,6 @@ export default function AllCouriersScreen({ navigation }) {
                 setCouriers([]);
             }
         } catch (error) {
-            console.error('Fetch couriers error:', error);
             Alert.alert('Error', 'Failed to fetch couriers');
             setCouriers([]);
         } finally {
@@ -78,7 +77,6 @@ export default function AllCouriersScreen({ navigation }) {
                 );
             }
         } catch (error) {
-            console.error('Error generating PDF:', error);
             Alert.alert(
                 'Error',
                 'Failed to generate PDF. Please try again.'
@@ -100,7 +98,6 @@ export default function AllCouriersScreen({ navigation }) {
                 [{ text: 'OK' }]
             );
         } catch (error) {
-            console.error('Error printing PDF:', error);
             Alert.alert(
                 'Error',
                 'Failed to print PDF. Please try again.'

@@ -52,7 +52,6 @@ export default function MemberLocationMapScreen({ route, navigation }) {
         }
       }
     } catch (error) {
-      console.error('Error fetching locations:', error);
       Alert.alert('Error', 'Failed to fetch location data');
     } finally {
       setLoading(false);
@@ -73,7 +72,6 @@ export default function MemberLocationMapScreen({ route, navigation }) {
         animated: true,
       });
     } catch (error) {
-      console.error('Error fitting map:', error);
     }
   };
 
@@ -232,7 +230,6 @@ export default function MemberLocationMapScreen({ route, navigation }) {
             showsUserLocation={false}
             showsMyLocationButton={false}
             onMapError={(error) => {
-              console.error('Map error:', error);
               setMapError(true);
             }}
           >

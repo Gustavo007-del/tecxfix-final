@@ -15,7 +15,7 @@ import { COLORS } from '../theme/colors';
 import client from '../api/client';
 
 const TechnicianProfileScreen = ({ navigation }) => {
-  const { state, logout } = useContext(AuthContext);
+  const { state, signOut } = useContext(AuthContext);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -25,7 +25,6 @@ const TechnicianProfileScreen = ({ navigation }) => {
       const response = await client.get('/profile/');
       setProfile(response.data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
       Alert.alert('Error', 'Failed to load profile information');
     } finally {
       setLoading(false);
@@ -67,14 +66,13 @@ const TechnicianProfileScreen = ({ navigation }) => {
                     {
                       text: 'OK',
                       onPress: () => {
-                        logout();
+                        signOut();
                       }
                     }
                   ]
                 );
               }
             } catch (error) {
-              console.error('Error deleting account:', error);
               const errorMessage = error.response?.data?.error || 'Failed to delete account';
               Alert.alert('Error', errorMessage);
             } finally {
@@ -96,12 +94,22 @@ const TechnicianProfileScreen = ({ navigation }) => {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
+    <View style={styles.container}>
+      <View style={styles.headerWithBack}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.goBack()}
+        >
+          <MaterialIcons name="arrow-back" size={24} color={COLORS.white} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profile</Text>
+      </View>
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
           <MaterialIcons name="person" size={60} color={COLORS.white} />
@@ -145,23 +153,6 @@ const TechnicianProfileScreen = ({ navigation }) => {
 
       <View style={styles.actionsSection}>
         <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={() => {
-            Alert.alert(
-              'Logout',
-              'Are you sure you want to logout?',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Logout', onPress: logout }
-              ]
-            );
-          }}
-        >
-          <MaterialIcons name="logout" size={20} color={COLORS.primary} />
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
           style={styles.deleteButton}
           onPress={handleDeleteAccount}
           disabled={loading}
@@ -175,7 +166,8 @@ const TechnicianProfileScreen = ({ navigation }) => {
         <Text style={styles.footerText}>TECHFIX v1.0.0</Text>
         <Text style={styles.footerText}>Field Service Management</Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -183,6 +175,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background || '#f5f5f5',
+  },
+  headerWithBack: {
+    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 50,
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 15,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.white,
+  },
+  scrollView: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -274,24 +286,6 @@ const styles = StyleSheet.create({
   actionsSection: {
     paddingHorizontal: 20,
     marginBottom: 20,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginBottom: 15,
-    justifyContent: 'center',
-  },
-  logoutButtonText: {
-    fontSize: 16,
-    color: COLORS.primary,
-    fontWeight: '600',
-    marginLeft: 10,
   },
   deleteButton: {
     flexDirection: 'row',
