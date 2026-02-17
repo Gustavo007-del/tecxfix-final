@@ -96,7 +96,8 @@ const TechnicianProfileScreen = ({ navigation }) => {
       const fallbackPaths = {
         'privacy_policy': '/privacy-policy/',
         'terms_of_service': '/terms-of-service/',
-        'user_agreement': '/user-agreement/'
+        'user_agreement': '/user-agreement/',
+        'account_deletion_policy': '/account-deletion-policy/'
       };
       linkPath = fallbackPaths[linkType] || '';
     }
@@ -219,6 +220,18 @@ const TechnicianProfileScreen = ({ navigation }) => {
           <View style={styles.legalLinkContent}>
             <Text style={styles.legalLinkTitle}>User Agreement</Text>
             <Text style={styles.legalLinkDescription}>Understand your rights and responsibilities</Text>
+          </View>
+          <MaterialIcons name="chevron-right" size={20} color={COLORS.gray} />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.legalLink}
+          onPress={() => handleLegalLink('account_deletion_policy')}
+        >
+          <MaterialIcons name="delete-forever" size={20} color={COLORS.danger} />
+          <View style={styles.legalLinkContent}>
+            <Text style={styles.legalLinkTitle}>Account Deletion Policy</Text>
+            <Text style={styles.legalLinkDescription}>Learn how to delete your account and data</Text>
           </View>
           <MaterialIcons name="chevron-right" size={20} color={COLORS.gray} />
         </TouchableOpacity>
