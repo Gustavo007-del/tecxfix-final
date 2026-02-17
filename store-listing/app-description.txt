@@ -1,0 +1,52 @@
+TECHFIX - Field Service Management App
+
+SHORT DESCRIPTION:
+TECHFIX is a comprehensive field service management solution designed for technician tracking, attendance management, and courier operations. Streamline your workforce with real-time location tracking, automated attendance, and efficient spare parts management.
+
+FULL DESCRIPTION:
+TECHFIX revolutionizes field service operations with powerful features designed for modern businesses:
+
+🔧 CORE FEATURES:
+• Real-time technician location tracking with GPS precision
+• Automated attendance management with check-in/check-out verification
+• Comprehensive courier and spare parts management system
+• Admin dashboard for operational oversight
+• Mobile-first design for field technicians
+
+📍 LOCATION SERVICES:
+• Background location tracking during work hours
+• Precise attendance verification with location stamps
+• Technician safety monitoring and emergency assistance
+• Real-time operational coordination
+
+📊 MANAGEMENT TOOLS:
+• Technician performance tracking and analytics
+• Stock management and inventory control
+• Courier creation and tracking system
+• Order history and receiving management
+• Admin approval workflows
+
+🎯 BUSINESS BENEFITS:
+• Increased operational efficiency
+• Accurate work hour tracking
+• Enhanced technician safety
+• Streamlined communication
+• Data-driven decision making
+
+🔒 SECURITY & PRIVACY:
+• Encrypted data transmission
+• Secure user authentication
+• Privacy-compliant location tracking
+• 6-month data retention policy
+
+PERFECT FOR:
+• Field service companies
+• Technical support teams
+• Delivery and courier services
+• Maintenance organizations
+• Remote workforce management
+
+Download TECHFIX today and transform your field service operations!
+
+KEYWORDS:
+field service, technician tracking, attendance management, courier management, GPS tracking, workforce management, operations, field operations, service management, technician app, admin dashboard, location tracking, spare parts management

@@ -1,0 +1,88 @@
+TECHFIX PRIVACY POLICY
+
+PRIVACY POLICY SUMMARY:
+TECHFIX is committed to protecting your privacy while providing efficient field service management solutions. This policy explains how we collect, use, and protect your information.
+
+INFORMATION WE COLLECT:
+
+📍 Location Data:
+- GPS coordinates (latitude, longitude)
+- Location accuracy information
+- Timestamp of location updates
+- Collected during work hours only
+- Updates every 5 minutes when checked in
+- Background location tracking required
+
+👤 Personal Information:
+- Name and contact details
+- Employee ID and role
+- Attendance records
+- Work-related performance data
+- Authentication credentials
+
+HOW WE USE YOUR INFORMATION:
+
+✅ Primary Uses:
+- Attendance verification with location confirmation
+- Work hour tracking and payroll processing
+- Technician safety monitoring
+- Operational coordination and efficiency
+- Emergency assistance and support
+- Performance analytics and reporting
+
+🔒 Data Security:
+- End-to-end encryption for all data transmission
+- Secure server storage with access controls
+- Limited access to authorized personnel only
+- Regular security audits and updates
+- 6-month data retention policy
+
+🚫 Data Sharing:
+- No third-party data selling or sharing
+- Internal use only for work operations
+- Legal compliance disclosures only
+- User consent required for any additional sharing
+
+YOUR RIGHTS:
+
+🔐 Control Over Your Data:
+- Access your personal information
+- Request corrections to inaccurate data
+- Understand how your data is used
+- Delete your account and associated data
+- Export your data in readable format
+
+📱 App Permissions:
+- Location access (foreground and background)
+- Storage access for app functionality
+- Network access for API communication
+- Notification access for important updates
+
+BACKGROUND LOCATION NOTICE:
+
+TECHFIX requires background location access to function properly. This enables:
+- Automatic attendance tracking
+- Continuous safety monitoring
+- Real-time operational coordination
+- Emergency location assistance
+
+Without background location, core app features will not work as intended.
+
+DATA RETENTION:
+
+- Location data: 6 months
+- Attendance records: 2 years
+- Personal information: Until account deletion
+- Legal requirements may extend retention periods
+
+CONTACT INFORMATION:
+
+For privacy concerns:
+📧 Email: shijilkt27@gmail.com
+📞 Phone: 9061444017
+📍 Address: ASA Lab's, vengeri, kozhikode, kerala
+
+POLICY UPDATES:
+This privacy policy may be updated periodically. Users will be notified of significant changes. Continued use of the app constitutes acceptance of updated terms.
+
+Last updated: January 21, 2026
