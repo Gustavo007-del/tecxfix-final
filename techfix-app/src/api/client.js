@@ -10,24 +10,33 @@ const client = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
 
-// Add JWT token to requests
+// Add JWT token to requests and debugging for all requests
 client.interceptors.request.use(
   async (config) => {
+    console.log('API Request:', config.method?.toUpperCase(), config.url, config.baseURL);
     const token = await AsyncStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('Request error:', error);
+    return Promise.reject(error);
+  }
 );
 
 // Handle 401 responses (expired token)
 client.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('API Response:', response.status, response.config.url);
+    return response;
+  },
   async (error) => {
+    console.error('API Error:', error.response?.status, error.config?.url, error.message);
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
