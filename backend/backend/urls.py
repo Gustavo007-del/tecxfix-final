@@ -13,7 +13,8 @@ from api.views import (
     reject_spare_request,
     get_stock_out_items,mark_stock_as_ordered,get_ordered_items,
     mark_stock_as_received, get_order_history,
-    get_received_history
+    get_received_history,
+    delete_my_account, get_my_profile
 )
 from api.privacy_views import privacy_policy
 
@@ -47,6 +48,10 @@ urlpatterns = [
     path('api/technicians/<int:technician_id>/', get_technician_detail, name='get_technician'),
     path('api/technicians/<int:technician_id>/update/', update_technician, name='update_technician'),
     path('api/technicians/<int:technician_id>/delete/', delete_technician, name='delete_technician'),
+
+    # Technician Profile Management
+    path('api/profile/', get_my_profile, name='get_my_profile'),
+    path('api/delete-account/', delete_my_account, name='delete_my_account'),
 
     
     path('api/get-complaints/', get_complaints),

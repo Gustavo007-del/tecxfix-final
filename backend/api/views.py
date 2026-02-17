@@ -566,6 +566,100 @@ def delete_technician(request, technician_id):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_my_account(request):
+    """Allow technician to delete their own account"""
+    logger.info(f"Delete account request received from user: {request.user.id}")
+    
+    try:
+        # Check if user is a technician
+        if not hasattr(request.user, 'technician'):
+            logger.warning(f"Non-technician user {request.user.id} attempted to delete account")
+            return Response(
+                {'error': 'Only technicians can delete their account'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        user_to_delete = request.user
+        
+        # Check for active courier transactions
+        try:
+            from courier_api.models import CourierTransaction
+            active_transactions = CourierTransaction.objects.filter(
+                Q(created_by=user_to_delete) | 
+                Q(technicians=user_to_delete)
+            )
+            
+            if active_transactions.exists():
+                transaction_ids = list(active_transactions.values_list('id', flat=True))
+                logger.warning(
+                    f"Cannot delete user {user_to_delete.id} - found {active_transactions.count()} "
+                    f"active transactions: {transaction_ids}"
+                )
+                return Response(
+                    {'error': 'Cannot delete account with active courier transactions'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except ImportError:
+            # courier_api app might not exist, continue without this check
+            logger.warning("courier_api app not found, skipping active transactions check")
+        
+        # Log user details before deletion
+        logger.info(f"User to be deleted - Username: {user_to_delete.username}, "
+                   f"Email: {user_to_delete.email}, "
+                   f"Date Joined: {user_to_delete.date_joined}")
+        
+        # Delete the user (this will cascade delete related records)
+        username = user_to_delete.username
+        user_to_delete.delete()
+        logger.info(f"Successfully deleted user account: {username}")
+        
+        return Response({
+            'success': True,
+            'message': 'Your account has been deleted successfully'
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.exception(f"Error deleting user account {request.user.id}: {str(e)}")
+        return Response(
+            {'error': 'An error occurred while deleting your account'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_my_profile(request):
+    """Get current technician's profile information"""
+    try:
+        # Check if user is a technician
+        if not hasattr(request.user, 'technician'):
+            return Response(
+                {'error': 'Technician profile not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        user = request.user
+        tech = user.technician
+        
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'phone': tech.phone,
+            'date_joined': user.date_joined,
+            'role': 'technician'
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.exception(f"Error getting profile for user {request.user.id}: {str(e)}")
+        return Response(
+            {'error': 'Failed to retrieve profile information'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_technician_detail(request, technician_id):

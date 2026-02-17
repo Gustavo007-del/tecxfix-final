@@ -7,6 +7,8 @@ const API_ENDPOINTS = {
   
   // User
   CURRENT_USER: '/users/me/',
+  PROFILE: '/profile/',
+  DELETE_ACCOUNT: '/delete-account/',
   
   // Stock
   COMPANY_STOCK: '/company-stock/',

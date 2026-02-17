@@ -10,6 +10,7 @@ import * as Location from 'expo-location';
 import * as MediaLibrary from 'expo-media-library';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
 import { COLORS } from './src/theme/colors';
+import ErrorBoundary from './src/utils/ErrorBoundary';
 import StockOutScreen from './src/screens/StockOutScreen';
 import StockOrderedScreen from './src/screens/StockOrderedScreen';
 import OrderHistoryScreen from './src/screens/OrderHistoryScreen';
@@ -132,6 +133,10 @@ function AttendanceScreenStack() {
             <Stack.Screen
                 name="CourierHistory"
                 component={TechCourierScreen}
+            />
+            <Stack.Screen
+                name="Profile"
+                component={TechnicianProfileScreen}
             />
         </Stack.Navigator>
     );
@@ -431,48 +436,58 @@ export default function App() {
   // Show disclosure screen first
   if (showDisclosure) {
     return (
-      <SafeAreaProvider>
-        <LocationDisclosureScreen onAccept={handleDisclosureAccept} onDecline={handleDisclosureDecline} />
-      </SafeAreaProvider>
+      <ErrorBoundary>
+        <SafeAreaProvider>
+          <LocationDisclosureScreen onAccept={handleDisclosureAccept} onDecline={handleDisclosureDecline} />
+        </SafeAreaProvider>
+      </ErrorBoundary>
     );
   }
 
   if (loading) {
     return (
-      <SafeAreaProvider>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        </View>
-      </SafeAreaProvider>
+      <ErrorBoundary>
+        <SafeAreaProvider>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+          </View>
+        </SafeAreaProvider>
+      </ErrorBoundary>
     );
   }
 
   if (locationPermission === false || storagePermission === false) {
     return (
-      <SafeAreaProvider>
-        <LocationPermissionScreen onRetry={checkPermissions} />
-      </SafeAreaProvider>
+      <ErrorBoundary>
+        <SafeAreaProvider>
+          <LocationPermissionScreen onRetry={checkPermissions} />
+        </SafeAreaProvider>
+      </ErrorBoundary>
     );
   }
 
   // Only render the app if both permissions are granted
   if (locationPermission === true && storagePermission === true) {
     return (
-      <AuthProvider>
-        <SafeAreaProvider>
-          <RootNavigator />
-        </SafeAreaProvider>
-      </AuthProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <SafeAreaProvider>
+            <RootNavigator />
+          </SafeAreaProvider>
+        </AuthProvider>
+      </ErrorBoundary>
     );
   }
   
   // Fallback in case of any unexpected state
   return (
-    <SafeAreaProvider>
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
 

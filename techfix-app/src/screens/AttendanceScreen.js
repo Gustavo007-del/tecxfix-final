@@ -392,6 +392,13 @@ export default function AttendanceScreen({ navigation }) {
             <MaterialIcons name="local-shipping" size={24} color={COLORS.white} />
             <Text style={[styles.buttonText, { color: COLORS.white, marginLeft: 8 }]}>View My Couriers</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.profileButton]}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <MaterialIcons name="person" size={24} color={COLORS.white} />
+            <Text style={[styles.buttonText, { color: COLORS.white, marginLeft: 8 }]}>My Profile</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -511,12 +518,18 @@ const styles = StyleSheet.create({
     color: COLORS.dark,
     marginLeft: 12,
   },
-  // Add to the styles object:
-courierButton: {
+  courierButton: {
     backgroundColor: COLORS.secondary,
     marginTop: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-},
+  },
+  profileButton: {
+    backgroundColor: COLORS.info || '#2196F3',
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
