@@ -168,13 +168,3 @@ GOOGLE_SHEET_ID = os.environ.get(
 )
 
 COURIER_SHEET_ID = GOOGLE_SHEET_ID
-LOGGING = {
-      'version': 1,
-      'handlers': {'console': {'class': 'logging.StreamHandler'}},
-      'loggers': {
-          'django.db.backends': {
-              'handlers': ['console'],
-              'level': 'DEBUG',
-          }
-      }
-  }
