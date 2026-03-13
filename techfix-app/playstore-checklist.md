@@ -1,4 +1,4 @@
-# TECHFIX Play Store Approval Checklist
+# TEX FIX Play Store Approval Checklist
 
 ## 🔴 CRITICAL MISSING ITEMS (Must Fix Before Submission)
 

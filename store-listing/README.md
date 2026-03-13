@@ -1,4 +1,4 @@
-# TECHFIX Play Store Assets
+# TEX FIX Play Store Assets
 
 This directory contains all required assets for Google Play Store submission.
 

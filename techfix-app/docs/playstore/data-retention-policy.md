@@ -1,8 +1,8 @@
-# TECHFIX Data Retention Policy
+# TEX FIX Data Retention Policy
 **Effective Date: January 21, 2026**
 
 ## Overview
-TECHFIX collects and processes location data for field service management purposes. This policy outlines our data retention practices to ensure compliance with privacy regulations and user rights.
+TEX FIX collects and processes location data for field service management purposes. This policy outlines our data retention practices to ensure compliance with privacy regulations and user rights.
 
 ## Data Types Collected
 
@@ -155,4 +155,4 @@ TECHFIX collects and processes location data for field service management purpos
 - Alerts for policy violations
 - Monthly compliance reports to management
 
-This policy ensures TECHFIX maintains the minimum necessary data for the shortest required duration while protecting user privacy and meeting business requirements.
+This policy ensures TEX FIX maintains the minimum necessary data for the shortest required duration while protecting user privacy and meeting business requirements.

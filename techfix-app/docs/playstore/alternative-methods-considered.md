@@ -1,5 +1,5 @@
 # Alternative Methods Considered for Location Tracking
-**TECHFIX Field Service Management App**
+**TEX FIX Field Service Management App**
 
 ## Core Requirement
 Automated technician attendance tracking and safety monitoring during field service operations.

@@ -1,8 +1,8 @@
-# TECHFIX User Consent Flow Documentation
+# TEX FIX User Consent Flow Documentation
 **Location Permission and Data Processing Consent**
 
 ## Overview
-TECHFIX implements a comprehensive, multi-stage consent flow to ensure users understand and explicitly agree to location data collection and processing.
+TEX FIX implements a comprehensive, multi-stage consent flow to ensure users understand and explicitly agree to location data collection and processing.
 
 ## Consent Flow Stages
 
@@ -10,7 +10,7 @@ TECHFIX implements a comprehensive, multi-stage consent flow to ensure users und
 **Purpose:** Initial app introduction and basic consent
 
 **Screen Content:**
-- Welcome message explaining TECHFIX purpose
+- Welcome message explaining TEX FIX purpose
 - Brief overview of location tracking requirements
 - "Continue" button to proceed to detailed consent
 
@@ -22,7 +22,7 @@ TECHFIX implements a comprehensive, multi-stage consent flow to ensure users und
 **Screen Content:**
 - **Title:** "Location Access Required"
 - **Explanation:** 
-  - "TECHFIX needs location access for:"
+  - "TEX FIX needs location access for:"
   - "✓ Automatic attendance verification"
   - "✓ Field technician safety monitoring"
   - "✓ Real-time work location tracking"
@@ -57,7 +57,7 @@ TECHFIX implements a comprehensive, multi-stage consent flow to ensure users und
 #### 4.1: Location When in Use Permission
 **Dialog Content:**
 - **Title:** "Location During App Usage"
-- **Message:** "TECHFIX needs location access while you're using the app to verify attendance and track work locations."
+- **Message:** "TEX FIX needs location access while you're using the app to verify attendance and track work locations."
 - **Options:** "Allow" / "Deny"
 
 **If Denied:**
@@ -68,7 +68,7 @@ TECHFIX implements a comprehensive, multi-stage consent flow to ensure users und
 #### 4.2: Background Location Permission
 **Dialog Content:**
 - **Title:** "Background Location Access"
-- **Message:** "TECHFIX needs background location to automatically track your work location even when the app is closed. This enables continuous attendance monitoring and safety features."
+- **Message:** "TEX FIX needs background location to automatically track your work location even when the app is closed. This enables continuous attendance monitoring and safety features."
 - **Options:** "Allow all the time" / "Allow only while using app" / "Deny"
 
 **If Partial/Denied:**
@@ -79,7 +79,7 @@ TECHFIX implements a comprehensive, multi-stage consent flow to ensure users und
 #### 4.3: Foreground Service Permission
 **Dialog Content:**
 - **Title:** "Background Service"
-- **Message:** "TECHFIX needs to run background service for continuous location tracking during work hours."
+- **Message:** "TEX FIX needs to run background service for continuous location tracking during work hours."
 - **Options:** "Allow" / "Deny"
 
 ### Stage 5: Work Hours Configuration
@@ -110,7 +110,7 @@ TECHFIX implements a comprehensive, multi-stage consent flow to ensure users und
   - Terms of Service
   - User Agreement
 
-**User Action:** Tap "Start Using TECHFIX"
+**User Action:** Tap "Start Using TEX FIX"
 
 ## Ongoing Consent Management
 

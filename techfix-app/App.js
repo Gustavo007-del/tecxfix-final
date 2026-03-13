@@ -361,7 +361,7 @@ function LocationPermissionScreen({ onRetry }) {
       <MaterialIcons name="location-off" size={64} color={COLORS.danger} />
       <Text style={styles.title}>Location Permission Required</Text>
       <Text style={styles.message}>
-        TECHFIX requires location access for essential field service operations:
+        TEX FIX requires location access for essential field service operations:
         
         • Verify attendance check-in/check-out with precise location
         • Enable continuous location tracking during work hours

@@ -346,7 +346,18 @@ def mark_received(request, courier_id):
     }
     """
     try:
-        courier = CourierTransaction.objects.get(id=courier_id)
+        # Try to find by courier_id string first
+        courier = CourierTransaction.objects.get(courier_id=courier_id)
+        
+    except CourierTransaction.DoesNotExist:
+        try:
+            # If not found by courier_id, try by primary key
+            courier = CourierTransaction.objects.get(id=int(courier_id))
+        except (CourierTransaction.DoesNotExist, ValueError):
+            return Response(
+                {'error': 'Courier not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         
         # Check permission
         if request.user not in courier.technicians.all():

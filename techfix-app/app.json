@@ -2,7 +2,7 @@
   "expo": {
     "name": "TEX FIX",
     "slug": "texfix-app",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -23,6 +23,10 @@
         "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.FOREGROUND_SERVICE"
       ],
+      "blockedPermissions": [
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO"
+      ],
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyDtICApf5bJ_CloGp2D-0caa9Dlr1Rhp1Y"
@@ -36,17 +40,11 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermissions": "TECHFIX requires background location to track technician work locations during field service. This enables:\n\n• Automatic attendance tracking with precise location verification\n• Continuous location monitoring during work hours for operational safety\n• Real-time technician location visibility for administrators\n• Emergency location assistance for field technicians\n\nWithout background location: Attendance tracking would be manual, technician safety monitoring would be lost, and operational efficiency would be significantly reduced.",
-          "locationAlwaysPermission": "TECHFIX needs background location to continuously track technician work locations during field service hours. This ensures accurate attendance records and provides safety monitoring for field technicians.",
-          "locationWhenInUsePermission": "TECHFIX uses your location to verify attendance check-in/check-out and provide field service tracking while you're using the app.",
+          "locationAlwaysAndWhenInUsePermissions": "TEX FIX requires background location to track technician work locations during field service. This enables:\n\n• Automatic attendance tracking with precise location verification\n• Continuous location monitoring during work hours for operational safety\n• Real-time technician location visibility for administrators\n• Emergency location assistance for field technicians\n\nWithout background location: Attendance tracking would be manual, technician safety monitoring would be lost, and operational efficiency would be significantly reduced.",
+          "locationAlwaysPermission": "TEX FIX needs background location to continuously track technician work locations during field service hours. This ensures accurate attendance records and provides safety monitoring for field technicians.",
+          "locationWhenInUsePermission": "TEX FIX uses your location to verify attendance check-in/check-out and provide field service tracking while you're using the app.",
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true
-        }
-      ],
-      [
-        "expo-image",
-        {
-          "photosPermission": false
         }
       ],
       "@react-native-community/datetimepicker",
