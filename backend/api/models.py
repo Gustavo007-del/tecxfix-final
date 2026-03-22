@@ -169,3 +169,28 @@ class StockReceived(models.Model):
     
     def __str__(self):
         return f"{self.complaint_no} - {self.part_name} (Received)"
+
+
+class ProcessedComplaint(models.Model):
+    """Track complaints that have been processed for stock reduction"""
+    complaint_no = models.CharField(max_length=50, unique=True, db_index=True)
+    technician_name = models.CharField(max_length=100)
+    product_code = models.CharField(max_length=50)
+    part_name = models.CharField(max_length=200)
+    quantity_reduced = models.IntegerField()
+    processed_date = models.DateTimeField(auto_now_add=True)
+    stock_reduced = models.BooleanField(default=True)
+    processing_notes = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-processed_date']
+        indexes = [
+            models.Index(fields=['complaint_no', 'processed_date']),
+            models.Index(fields=['technician_name', 'processed_date']),
+            models.Index(fields=['stock_reduced']),
+        ]
+        verbose_name = 'Processed Complaint'
+        verbose_name_plural = 'Processed Complaints'
+    
+    def __str__(self):
+        return f"{self.complaint_no} - {self.technician_name} ({self.quantity_reduced} units)"

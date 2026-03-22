@@ -14,7 +14,8 @@ from api.views import (
     get_stock_out_items,mark_stock_as_ordered,get_ordered_items,
     mark_stock_as_received, get_order_history,
     get_received_history,
-    delete_my_account, get_my_profile
+    delete_my_account, get_my_profile,
+    process_pending_complaints, get_complaint_processing_status
 )
 from api.privacy_views import privacy_policy, terms_of_service, user_agreement, account_deletion_policy
 
@@ -81,6 +82,10 @@ urlpatterns = [
     path('api/stock-ordered/receive/', mark_stock_as_received, name='mark_stock_received'),
     path('api/stock-out/order-history/', get_order_history, name='order_history'),
     path('api/stock-out/received-history/', get_received_history, name='received_history'),
-    path('api/tracking/', include('technician_tracking.urls')),  
+    path('api/tracking/', include('technician_tracking.urls')),
+    
+    # Complaint Processing
+    path('api/complaints/process/', process_pending_complaints, name='process_pending_complaints'),
+    path('api/complaints/processing-status/', get_complaint_processing_status, name='complaint_processing_status'),
 
 ]

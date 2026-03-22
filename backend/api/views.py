@@ -17,7 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import Attendance, Technician, SpareRequest, StockOutOrder, StockReceived
+from .models import Attendance, Technician, SpareRequest, StockOutOrder, StockReceived, ProcessedComplaint
 from .serializers import (
     AttendanceSerializer, AttendanceCheckInSerializer,
     AttendanceCheckOutSerializer, TechnicianSerializer, SpareRequestSerializer,
@@ -1655,6 +1655,137 @@ def get_received_history(request):
         return Response({
             "success": False,
             "error": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ==================== COMPLAINT PROCESSING ENDPOINTS ====================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def process_pending_complaints(request):
+    """
+    Admin only: Process pending complaints and reduce technician stock
+    Expected payload:
+    {
+        "since_date": "2026-03-22",  // optional, defaults to last 7 days
+        "technician_filter": "john"     // optional, filter by technician
+    }
+    """
+    try:
+        if not request.user.is_staff:
+            return Response({
+                "success": False,
+                "error": "Only admin users can process complaints"
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get parameters
+        since_date_str = request.data.get('since_date')
+        technician_filter = request.data.get('technician_filter')
+        
+        # Parse since_date
+        since_date = None
+        if since_date_str:
+            try:
+                since_date = datetime.strptime(since_date_str, "%Y-%m-%d")
+            except ValueError:
+                return Response({
+                    "success": False,
+                    "error": "Invalid since_date format. Use YYYY-MM-DD"
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # Default to last 7 days
+            since_date = timezone.now() - timedelta(days=7)
+        
+        # Import and use the complaint processor
+        from .services.complaint_processor import ComplaintProcessor
+        processor = ComplaintProcessor()
+        
+        # Process complaints
+        result = processor.process_complaints(
+            since_date=since_date,
+            technician_filter=technician_filter
+        )
+        
+        return Response(result, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.exception(f"Error in process_pending_complaints: {e}")
+        return Response({
+            "success": False,
+            "error": f"Server error: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_complaint_processing_status(request):
+    """
+    Admin only: Get status of complaint processing
+    Returns summary of processed complaints and recent errors
+    """
+    try:
+        if not request.user.is_staff:
+            return Response({
+                "success": False,
+                "error": "Only admin users can access this endpoint"
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get processing statistics
+        total_processed = ProcessedComplaint.objects.count()
+        successful_reductions = ProcessedComplaint.objects.filter(stock_reduced=True).count()
+        failed_reductions = ProcessedComplaint.objects.filter(stock_reduced=False).count()
+        
+        # Get recent processed complaints (last 24 hours)
+        last_24h = timezone.now() - timedelta(hours=24)
+        recent_processed = ProcessedComplaint.objects.filter(
+            processed_date__gte=last_24h
+        ).order_by('-processed_date')[:10]
+        
+        # Get recent failures
+        recent_failures = ProcessedComplaint.objects.filter(
+            stock_reduced=False,
+            processed_date__gte=last_24h
+        ).order_by('-processed_date')[:5]
+        
+        return Response({
+            "success": True,
+            "statistics": {
+                "total_processed": total_processed,
+                "successful_reductions": successful_reductions,
+                "failed_reductions": failed_reductions,
+                "success_rate": round(
+                    (successful_reductions / total_processed * 100) if total_processed > 0 else 0, 2
+                )
+            },
+            "recent_processed": [
+                {
+                    "complaint_no": pc.complaint_no,
+                    "technician_name": pc.technician_name,
+                    "product_code": pc.product_code,
+                    "quantity_reduced": pc.quantity_reduced,
+                    "stock_reduced": pc.stock_reduced,
+                    "processed_date": pc.processed_date,
+                    "processing_notes": pc.processing_notes
+                }
+                for pc in recent_processed
+            ],
+            "recent_failures": [
+                {
+                    "complaint_no": pc.complaint_no,
+                    "technician_name": pc.technician_name,
+                    "product_code": pc.product_code,
+                    "processing_notes": pc.processing_notes,
+                    "processed_date": pc.processed_date
+                }
+                for pc in recent_failures
+            ]
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.exception(f"Error in get_complaint_processing_status: {e}")
+        return Response({
+            "success": False,
+            "error": f"Server error: {str(e)}"
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)       
 
 

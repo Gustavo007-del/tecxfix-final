@@ -1,0 +1,281 @@
+# E:\study\techfix\backend\api\services\complaint_processor.py
+import logging
+from datetime import datetime, timedelta
+from django.utils import timezone
+from django.db import transaction
+from ..models import ProcessedComplaint
+from ..views import get_google_sheets_client
+from courier_api.sheets_sync import SheetsSync
+
+logger = logging.getLogger(__name__)
+
+class ComplaintProcessor:
+    """Service to process pending complaints and reduce technician stock"""
+    
+    def __init__(self):
+        self.sheets_sync = SheetsSync()
+        self.processed_count = 0
+        self.errors = []
+        self.stock_reductions = []
+    
+    def extract_date_from_complaint_no(self, complaint_no):
+        """Extract date from complaint number format: PCOTH/DDMMYY/NN"""
+        try:
+            parts = complaint_no.split("/")
+            if len(parts) >= 3:
+                date_str = parts[1]  # DDMMYY format
+                return datetime.strptime(date_str, "%d%m%y")
+        except Exception as e:
+            logger.error(f"Failed to parse date from {complaint_no}: {e}")
+        return None
+    
+    def get_new_pending_complaints(self, since_date=None):
+        """Get new pending complaints from Tracking sheet"""
+        try:
+            client = get_google_sheets_client()
+            sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
+            rows = sheet.get_all_values()
+            
+            # Get already processed complaints
+            processed_complaints = set(
+                ProcessedComplaint.objects.values_list('complaint_no', flat=True)
+            )
+            
+            new_complaints = []
+            
+            for row in rows[1:]:  # Skip header
+                if len(row) < 15:
+                    continue
+                
+                complaint_no = row[1].strip()
+                technician_name = row[14].strip()
+                status = row[11].strip().upper()
+                product_code = row[7].strip()
+                part_name = row[9].strip()
+                quantity_str = row[10].strip()
+                
+                # Skip if already processed
+                if complaint_no in processed_complaints:
+                    continue
+                
+                # Check if status is PENDING
+                if status != 'PENDING':
+                    continue
+                
+                # Parse date
+                complaint_date = self.extract_date_from_complaint_no(complaint_no)
+                if not complaint_date:
+                    continue
+                
+                # Filter by date if provided
+                if since_date and complaint_date < since_date:
+                    continue
+                
+                # Parse quantity
+                try:
+                    quantity = int(quantity_str) if quantity_str else 0
+                    if quantity <= 0:
+                        continue
+                except ValueError:
+                    continue
+                
+                new_complaints.append({
+                    'complaint_no': complaint_no,
+                    'technician_name': technician_name,
+                    'product_code': product_code,
+                    'part_name': part_name,
+                    'quantity': quantity,
+                    'complaint_date': complaint_date,
+                    'row_data': row
+                })
+            
+            return new_complaints
+            
+        except Exception as e:
+            logger.error(f"Error fetching complaints: {e}")
+            self.errors.append(f"Failed to fetch complaints: {str(e)}")
+            return []
+    
+    def get_technician_sheet_name(self, technician_name):
+        """Get technician's sheet name from TechnicianStock model"""
+        try:
+            from courier_api.models import TechnicianStock
+            from django.contrib.auth.models import User
+            
+            # Try to find user by username or first_name
+            user = User.objects.filter(
+                models.Q(username__iexact=technician_name) |
+                models.Q(first_name__iexact=technician_name)
+            ).first()
+            
+            if user:
+                tech_stock = TechnicianStock.objects.filter(technician=user).first()
+                if tech_stock and tech_stock.sheet_technician_name:
+                    return tech_stock.sheet_technician_name
+            
+            # Fallback: return lowercase version
+            return technician_name.lower().replace(' ', '')
+            
+        except Exception as e:
+            logger.error(f"Error getting technician sheet name for {technician_name}: {e}")
+            return technician_name.lower().replace(' ', '')
+    
+    def check_technician_stock(self, technician_sheet_name, product_code, required_qty):
+        """Check if technician has sufficient stock"""
+        try:
+            tech_stock = self.sheets_sync.get_technician_stock(technician_sheet_name)
+            
+            for item in tech_stock:
+                if item['spare_id'].strip() == product_code.strip():
+                    available_qty = item['qty']
+                    if available_qty >= required_qty:
+                        return True, available_qty
+                    else:
+                        return False, available_qty
+            
+            return False, 0  # Item not found
+            
+        except Exception as e:
+            logger.error(f"Error checking technician stock: {e}")
+            return False, 0
+    
+    def reduce_technician_stock(self, technician_sheet_name, product_code, quantity):
+        """Reduce stock from technician's sheet"""
+        try:
+            # Use negative quantity to reduce stock
+            self.sheets_sync.update_technician_stock(
+                technician_sheet_name, 
+                product_code, 
+                -quantity
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Error reducing stock: {e}")
+            return False
+    
+    def process_single_complaint(self, complaint):
+        """Process a single complaint"""
+        try:
+            complaint_no = complaint['complaint_no']
+            technician_name = complaint['technician_name']
+            product_code = complaint['product_code']
+            part_name = complaint['part_name']
+            quantity = complaint['quantity']
+            
+            # Get technician sheet name
+            tech_sheet_name = self.get_technician_sheet_name(technician_name)
+            
+            # Check stock availability
+            has_stock, available_qty = self.check_technician_stock(
+                tech_sheet_name, product_code, quantity
+            )
+            
+            if not has_stock:
+                error_msg = f"Insufficient stock for {product_code}. Available: {available_qty}, Required: {quantity}"
+                self.errors.append(f"{complaint_no}: {error_msg}")
+                
+                # Mark as processed but no stock reduction
+                ProcessedComplaint.objects.create(
+                    complaint_no=complaint_no,
+                    technician_name=technician_name,
+                    product_code=product_code,
+                    part_name=part_name,
+                    quantity_reduced=0,
+                    stock_reduced=False,
+                    processing_notes=error_msg
+                )
+                return False
+            
+            # Reduce stock
+            if self.reduce_technician_stock(tech_sheet_name, product_code, quantity):
+                # Record successful processing
+                ProcessedComplaint.objects.create(
+                    complaint_no=complaint_no,
+                    technician_name=technician_name,
+                    product_code=product_code,
+                    part_name=part_name,
+                    quantity_reduced=quantity,
+                    stock_reduced=True,
+                    processing_notes=f"Stock reduced by {quantity} units"
+                )
+                
+                self.stock_reductions.append({
+                    'complaint_no': complaint_no,
+                    'technician': tech_sheet_name,
+                    'product_code': product_code,
+                    'part_name': part_name,
+                    'qty_reduced': quantity,
+                    'remaining_stock': available_qty - quantity
+                })
+                
+                self.processed_count += 1
+                logger.info(f"Successfully processed complaint {complaint_no}")
+                return True
+            else:
+                error_msg = f"Failed to reduce stock for {product_code}"
+                self.errors.append(f"{complaint_no}: {error_msg}")
+                
+                ProcessedComplaint.objects.create(
+                    complaint_no=complaint_no,
+                    technician_name=technician_name,
+                    product_code=product_code,
+                    part_name=part_name,
+                    quantity_reduced=0,
+                    stock_reduced=False,
+                    processing_notes=error_msg
+                )
+                return False
+                
+        except Exception as e:
+            error_msg = f"Unexpected error: {str(e)}"
+            self.errors.append(f"{complaint['complaint_no']}: {error_msg}")
+            logger.exception(f"Error processing complaint {complaint['complaint_no']}: {e}")
+            return False
+    
+    def process_complaints(self, since_date=None, technician_filter=None):
+        """Main method to process all pending complaints"""
+        logger.info(f"Starting complaint processing since {since_date}")
+        
+        # Reset counters
+        self.processed_count = 0
+        self.errors = []
+        self.stock_reductions = []
+        
+        try:
+            # Get new pending complaints
+            new_complaints = self.get_new_pending_complaints(since_date)
+            
+            if not new_complaints:
+                logger.info("No new pending complaints found")
+                return self._get_result()
+            
+            # Filter by technician if specified
+            if technician_filter:
+                new_complaints = [
+                    c for c in new_complaints 
+                    if c['technician_name'].lower() == technician_filter.lower()
+                ]
+            
+            logger.info(f"Found {len(new_complaints)} pending complaints to process")
+            
+            # Process each complaint
+            for complaint in new_complaints:
+                self.process_single_complaint(complaint)
+            
+            logger.info(f"Processing complete. Processed: {self.processed_count}, Errors: {len(self.errors)}")
+            return self._get_result()
+            
+        except Exception as e:
+            logger.exception(f"Critical error in complaint processing: {e}")
+            self.errors.append(f"Critical processing error: {str(e)}")
+            return self._get_result()
+    
+    def _get_result(self):
+        """Get processing result summary"""
+        return {
+            'success': True,
+            'processed_count': self.processed_count,
+            'stock_reductions': self.stock_reductions,
+            'errors': self.errors,
+            'message': f'Processed {self.processed_count} complaints successfully'
+        }
