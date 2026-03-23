@@ -236,6 +236,14 @@ def admin_member_locations(request, member_id):
         if not date_str:
             return Response({
                 'success': False,
+                'error': 'Date parameter required (YYYY-MM-DD)'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            query_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({
+                'success': False,
                 'error': 'Invalid date format. Use YYYY-MM-DD'
             }, status=status.HTTP_400_BAD_REQUEST)
         
