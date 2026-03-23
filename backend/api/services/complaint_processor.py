@@ -32,6 +32,7 @@ class ComplaintProcessor:
     def get_new_pending_complaints(self, since_date=None):
         """Get new pending complaints from Tracking sheet"""
         try:
+            logger.info(f"Fetching complaints from Google Sheets since {since_date}")
             client = get_google_sheets_client()
             sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
             rows = sheet.get_all_values()
@@ -40,8 +41,10 @@ class ComplaintProcessor:
             processed_complaints = set(
                 ProcessedComplaint.objects.values_list('complaint_no', flat=True)
             )
+            logger.info(f"Found {len(processed_complaints)} already processed complaints")
             
             new_complaints = []
+            skipped_count = 0
             
             for row in rows[1:]:  # Skip header
                 if len(row) < 15:
@@ -56,6 +59,7 @@ class ComplaintProcessor:
                 
                 # Skip if already processed
                 if complaint_no in processed_complaints:
+                    skipped_count += 1
                     continue
                 
                 # Check if status is PENDING
@@ -65,9 +69,10 @@ class ComplaintProcessor:
                 # Parse date
                 complaint_date = self.extract_date_from_complaint_no(complaint_no)
                 if not complaint_date:
+                    logger.warning(f"Could not parse date from complaint {complaint_no}")
                     continue
                 
-                # Filter by date if provided
+                # Filter by date if provided - only process from 22/03/26 onwards
                 if since_date and complaint_date < since_date:
                     continue
                 
@@ -77,6 +82,7 @@ class ComplaintProcessor:
                     if quantity <= 0:
                         continue
                 except ValueError:
+                    logger.warning(f"Invalid quantity '{quantity_str}' for complaint {complaint_no}")
                     continue
                 
                 new_complaints.append({
@@ -89,6 +95,7 @@ class ComplaintProcessor:
                     'row_data': row
                 })
             
+            logger.info(f"Found {len(new_complaints)} new pending complaints. Skipped {skipped_count} already processed.")
             return new_complaints
             
         except Exception as e:
@@ -162,8 +169,11 @@ class ComplaintProcessor:
             part_name = complaint['part_name']
             quantity = complaint['quantity']
             
+            logger.info(f"Processing complaint {complaint_no}: {product_code} x{quantity} for {technician_name}")
+            
             # Get technician sheet name
             tech_sheet_name = self.get_technician_sheet_name(technician_name)
+            logger.debug(f"Technician sheet name: {tech_sheet_name}")
             
             # Check stock availability
             has_stock, available_qty = self.check_technician_stock(
@@ -172,6 +182,7 @@ class ComplaintProcessor:
             
             if not has_stock:
                 error_msg = f"Insufficient stock for {product_code}. Available: {available_qty}, Required: {quantity}"
+                logger.warning(f"{complaint_no}: {error_msg}")
                 self.errors.append(f"{complaint_no}: {error_msg}")
                 
                 # Mark as processed but no stock reduction
@@ -209,10 +220,11 @@ class ComplaintProcessor:
                 })
                 
                 self.processed_count += 1
-                logger.info(f"Successfully processed complaint {complaint_no}")
+                logger.info(f"Successfully processed complaint {complaint_no} - reduced {quantity} units")
                 return True
             else:
                 error_msg = f"Failed to reduce stock for {product_code}"
+                logger.error(f"{complaint_no}: {error_msg}")
                 self.errors.append(f"{complaint_no}: {error_msg}")
                 
                 ProcessedComplaint.objects.create(
@@ -246,20 +258,23 @@ class ComplaintProcessor:
             new_complaints = self.get_new_pending_complaints(since_date)
             
             if not new_complaints:
-                logger.info("No new pending complaints found")
+                logger.info(f"No new pending complaints found since {since_date}")
                 return self._get_result()
             
             # Filter by technician if specified
             if technician_filter:
+                original_count = len(new_complaints)
                 new_complaints = [
                     c for c in new_complaints 
                     if c['technician_name'].lower() == technician_filter.lower()
                 ]
+                logger.info(f"Filtered by technician '{technician_filter}': {original_count} -> {len(new_complaints)} complaints")
             
-            logger.info(f"Found {len(new_complaints)} pending complaints to process")
+            logger.info(f"Found {len(new_complaints)} pending complaints to process since {since_date}")
             
             # Process each complaint
-            for complaint in new_complaints:
+            for i, complaint in enumerate(new_complaints, 1):
+                logger.info(f"Processing complaint {i}/{len(new_complaints)}: {complaint['complaint_no']}")
                 self.process_single_complaint(complaint)
             
             logger.info(f"Processing complete. Processed: {self.processed_count}, Errors: {len(self.errors)}")

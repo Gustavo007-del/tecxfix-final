@@ -1693,8 +1693,11 @@ def process_pending_complaints(request):
                     "error": "Invalid since_date format. Use YYYY-MM-DD"
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            # Default to last 7 days
-            since_date = timezone.now() - timedelta(days=7)
+            # Default to 22/03/26 as requested
+            since_date = datetime.strptime("2026-03-22", "%Y-%m-%d")
+            logger.info(f"Using default date filter from 22/03/26: {since_date}")
+        
+        logger.info(f"Admin {request.user.username} initiated complaint processing since {since_date}")
         
         # Import and use the complaint processor
         from .services.complaint_processor import ComplaintProcessor
@@ -1705,6 +1708,10 @@ def process_pending_complaints(request):
             since_date=since_date,
             technician_filter=technician_filter
         )
+        
+        logger.info(f"Complaint processing completed by admin {request.user.username}. "
+                    f"Processed: {result.get('processed_count', 0)}, "
+                    f"Errors: {len(result.get('errors', []))}")
         
         return Response(result, status=status.HTTP_200_OK)
         
