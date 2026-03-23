@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import client from '../api/client';
+import API_ENDPOINTS from '../api/endpoints';
 import { AuthContext } from '../context/AuthContext';
 import { COLORS } from '../theme/colors';
 
@@ -21,6 +22,7 @@ export default function AdminDashboardScreen({ navigation }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [processingComplaints, setProcessingComplaints] = useState(false);
   const { signOut, state } = useContext(AuthContext);
   const isSpareAdmin = state?.user?.username === 'SpareAdmin';
 
@@ -54,6 +56,55 @@ export default function AdminDashboardScreen({ navigation }) {
         },
       },
     ]);
+  };
+
+  const handleProcessComplaints = async () => {
+    Alert.alert(
+      'Process Pending Complaints',
+      'This will process all pending complaints from 22/03/26 onwards and reduce technician stock accordingly. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Process',
+          onPress: async () => {
+            try {
+              setProcessingComplaints(true);
+              
+              const response = await client.post(API_ENDPOINTS.PROCESS_COMPLAINTS, {
+                since_date: '2026-03-22', // Default date as specified
+                technician_filter: null // Process all technicians
+              });
+
+              const result = response.data;
+              
+              if (result.success) {
+                let message = `Successfully processed ${result.processed_count} complaints.`;
+                
+                if (result.errors && result.errors.length > 0) {
+                  message += `\n\nErrors: ${result.errors.length} items failed.`;
+                }
+
+                if (result.stock_reductions && result.stock_reductions.length > 0) {
+                  message += `\n\nStock reduced for ${result.stock_reductions.length} items.`;
+                }
+
+                Alert.alert('Success', message);
+              } else {
+                Alert.alert('Error', result.error || 'Failed to process complaints');
+              }
+            } catch (error) {
+              console.error('Complaint processing error:', error);
+              Alert.alert(
+                'Error',
+                error.response?.data?.error || 'Failed to process complaints. Please try again.'
+              );
+            } finally {
+              setProcessingComplaints(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (loading) {
@@ -279,6 +330,28 @@ export default function AdminDashboardScreen({ navigation }) {
             <View style={styles.actionContent}>
                 <Text style={styles.actionTitle}>Received History</Text>
                 <Text style={styles.actionSubtitle}>View all received items</Text>
+            </View>
+            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
+        </TouchableOpacity>
+
+        {/* NEW: Process Pending Complaints Button */}
+        <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: processingComplaints ? COLORS.gray : COLORS.warning }]}
+            onPress={handleProcessComplaints}
+            disabled={processingComplaints}
+        >
+            {processingComplaints ? (
+                <ActivityIndicator size={24} color={COLORS.white} />
+            ) : (
+                <MaterialIcons name="pending-actions" size={24} color={COLORS.white} />
+            )}
+            <View style={styles.actionContent}>
+                <Text style={styles.actionTitle}>
+                    {processingComplaints ? 'Processing...' : 'Process Pending Complaints'}
+                </Text>
+                <Text style={styles.actionSubtitle}>
+                    Process pending complaints & reduce stock
+                </Text>
             </View>
             <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>

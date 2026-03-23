@@ -2,7 +2,7 @@
 import logging
 from datetime import datetime, timedelta
 from django.utils import timezone
-from django.db import transaction
+from django.db import transaction, models
 from ..models import ProcessedComplaint
 from ..views import get_google_sheets_client
 from courier_api.sheets_sync import SheetsSync
@@ -21,13 +21,24 @@ class ComplaintProcessor:
     def extract_date_from_complaint_no(self, complaint_no):
         """Extract date from complaint number format: PCOTH/DDMMYY/NN"""
         try:
+            # Skip empty complaint numbers
+            if not complaint_no or not complaint_no.strip():
+                return None
+                
+            complaint_no = complaint_no.strip()
             parts = complaint_no.split("/")
+            
+            # Only process if it has the expected format with at least 3 parts
             if len(parts) >= 3:
                 date_str = parts[1]  # DDMMYY format
                 return datetime.strptime(date_str, "%d%m%y")
-        except Exception as e:
-            logger.error(f"Failed to parse date from {complaint_no}: {e}")
-        return None
+            else:
+                # Skip invalid formats silently - don't log errors
+                return None
+                
+        except Exception:
+            # Skip any date parsing issues silently - don't log errors
+            return None
     
     def get_new_pending_complaints(self, since_date=None):
         """Get new pending complaints from Tracking sheet"""
@@ -69,7 +80,7 @@ class ComplaintProcessor:
                 # Parse date
                 complaint_date = self.extract_date_from_complaint_no(complaint_no)
                 if not complaint_date:
-                    logger.warning(f"Could not parse date from complaint {complaint_no}")
+                    # Skip silently - invalid date format or empty complaint number
                     continue
                 
                 # Filter by date if provided - only process from 22/03/26 onwards
@@ -108,11 +119,12 @@ class ComplaintProcessor:
         try:
             from courier_api.models import TechnicianStock
             from django.contrib.auth.models import User
+            from django.db.models import Q
             
             # Try to find user by username or first_name
             user = User.objects.filter(
-                models.Q(username__iexact=technician_name) |
-                models.Q(first_name__iexact=technician_name)
+                Q(username__iexact=technician_name) |
+                Q(first_name__iexact=technician_name)
             ).first()
             
             if user:

@@ -26,6 +26,10 @@ const API_ENDPOINTS = {
   
   // Technician
   TECHNICIAN_LIST: '/technicians/',
+  
+  // Complaint Processing
+  PROCESS_COMPLAINTS: '/complaints/process/',
+  COMPLAINT_PROCESSING_STATUS: '/complaints/processing-status/',
 };
 
 export default API_ENDPOINTS;
