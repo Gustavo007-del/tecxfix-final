@@ -9,6 +9,13 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # -------------------------------------------------
+# MAP SERVICE SETTINGS
+# -------------------------------------------------
+# Controls whether location tracking and map services are enabled
+# Set to False to disable member location features
+MAP_SERVICE = os.environ.get("MAP_SERVICE", "False") == "True"
+
+# -------------------------------------------------
 # SECURITY
 # -------------------------------------------------
 SECRET_KEY = os.environ.get("SECRET_KEY", "unsafe-dev-secret")

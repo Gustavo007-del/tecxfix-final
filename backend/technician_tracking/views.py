@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 from django.utils import timezone
+from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -180,6 +181,14 @@ def admin_member_list(request):
                 'error': 'Admin access required'
             }, status=status.HTTP_403_FORBIDDEN)
         
+        # Check if MAP_SERVICE is enabled
+        if not getattr(settings, 'MAP_SERVICE', False):
+            return Response({
+                'success': False,
+                'error': 'Map service is currently disabled',
+                'message': 'Location tracking features have been temporarily disabled'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        
         # Get all technicians (users with technician profile)
         technicians = User.objects.filter(
             technician__isnull=False
@@ -196,7 +205,6 @@ def admin_member_list(request):
     except Exception as e:
         logger.exception(f"Error in admin_member_list: {str(e)}")
         return Response({
-            'success': False,
             'error': 'Failed to fetch member list'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -215,17 +223,17 @@ def admin_member_locations(request, member_id):
                 'error': 'Admin access required'
             }, status=status.HTTP_403_FORBIDDEN)
         
+        # Check if MAP_SERVICE is enabled
+        if not getattr(settings, 'MAP_SERVICE', False):
+            return Response({
+                'success': False,
+                'error': 'Map service is currently disabled',
+                'message': 'Location tracking features have been temporarily disabled'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        
         # Get date from query params
         date_str = request.query_params.get('date')
         if not date_str:
-            return Response({
-                'success': False,
-                'error': 'Date parameter required (YYYY-MM-DD)'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            query_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-        except ValueError:
             return Response({
                 'success': False,
                 'error': 'Invalid date format. Use YYYY-MM-DD'
