@@ -73,8 +73,8 @@ class ComplaintProcessor:
                     skipped_count += 1
                     continue
                 
-                # Check if status is PENDING
-                if status != 'PENDING':
+                # Check if status is CLOSED
+                if status != 'CLOSED':
                     continue
                 
                 # Parse date
