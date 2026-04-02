@@ -6,7 +6,7 @@ import logging
 
 import gspread
 from google.oauth2.service_account import Credentials
-
+from django.core.cache import cache
 from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
@@ -93,6 +93,13 @@ class SheetsSync:
     # -----------------------
 
     def get_company_stock(self):
+        cache_key = "company_stock_data"
+        cached_data = cache.get(cache_key)
+        
+        if cached_data is not None:
+            logger.info(f"Returning cached company stock data ({len(cached_data)} items)")
+            return cached_data
+        
         self.authenticate()
 
         spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
@@ -116,7 +123,9 @@ class SheetsSync:
                 "qty": safe_int(r[6]) if len(r) > 6 else 0,
             })
 
-        logger.info(f"Fetched {len(stock)} company stock items")
+        # Cache for 24 hours (86400 seconds)
+        cache.set(cache_key, stock, 86400)
+        logger.info(f"Fetched and cached {len(stock)} company stock items")
         return stock
 
     # -----------------------
@@ -176,6 +185,10 @@ class SheetsSync:
             )
 
         sheet.update_cell(row_idx, 7, new_qty)
+
+        # Invalidate cache after updating stock
+        cache.delete("company_stock_data")
+        logger.info("Company stock cache invalidated")
 
         logger.info(
             f"Company stock updated: {spare_id} {current_qty} → {new_qty}"
