@@ -92,95 +92,18 @@ class SheetsSync:
     # COMPANY STOCK
     # -----------------------
 
-    def get_company_stock(self, page=1, page_size=30, search=None):
+    def get_company_stock(self):
         self.authenticate()
 
         spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
         sheet = spreadsheet.worksheet(self.COMPANY_STOCK_WORKSHEET)
 
-        # If search is provided, we need to search across all data
-        if search:
-            # For search, we need to scan all data but in chunks
-            all_matches = []
-            chunk_size = 2000  # Process 2000 rows at a time to avoid memory issues
-            current_row = 2  # Skip header
-            
-            while True:
-                try:
-                    chunk_end = current_row + chunk_size - 1
-                    chunk_rows = sheet.batch_get([f"{current_row}:{chunk_end}"])[0]
-                    
-                    for r in chunk_rows:
-                        if len(r) < 7 or not r[1]:
-                            continue
-                        
-                        # Search in name and spare_id
-                        if (search.lower() in r[2].lower() or 
-                            search.lower() in r[1].lower()):
-                            all_matches.append({
-                                "spare_id": r[1].strip(),
-                                "name": r[2].strip(),
-                                "mrp": safe_float(r[3]),
-                                "hsn": r[4].strip() if len(r) > 4 else "",
-                                "brand": r[5].strip() if len(r) > 5 else "",
-                                "qty": safe_int(r[6]) if len(r) > 6 else 0,
-                            })
-                    
-                    # If we got less than chunk_size, we're at the end
-                    if len(chunk_rows) < chunk_size:
-                        break
-                        
-                    current_row += chunk_size
-                    
-                except Exception:
-                    break
-            
-            # Apply pagination to search results
-            total_matches = len(all_matches)
-            start_idx = (page - 1) * page_size
-            end_idx = min(start_idx + page_size, total_matches)
-            
-            paginated_results = all_matches[start_idx:end_idx]
-            
-            logger.info(f"Search for '{search}' found {total_matches} items, returning {len(paginated_results)} (page {page})")
-            
-            return {
-                'data': paginated_results,
-                'pagination': {
-                    'current_page': page,
-                    'page_size': page_size,
-                    'total_items': total_matches,
-                    'total_pages': (total_matches + page_size - 1) // page_size,
-                    'has_next': end_idx < total_matches,
-                    'has_prev': page > 1,
-                    'search_query': search
-                }
-            }
-        
-        # Calculate pagination without loading entire sheet
-        start_row = (page - 1) * page_size + 2  # +2 for header (1-based index)
-        end_row = start_row + page_size - 1
-        
-        # Get only the rows we need
-        try:
-            rows = sheet.batch_get([f"{start_row}:{end_row}"])[0]
-        except Exception:
-            # If we go beyond sheet bounds, return empty
-            return {
-                'data': [],
-                'pagination': {
-                    'current_page': page,
-                    'page_size': page_size,
-                    'total_items': None,  # Unknown without full scan
-                    'total_pages': None,
-                    'has_next': True,  # Assume there might be more
-                    'has_prev': page > 1
-                }
-            }
-        
+        rows = sheet.get_all_values()
+        data_rows = rows[1:]
+
         stock = []
 
-        for r in rows:
+        for r in data_rows:
             if len(r) < 7 or not r[1]:
                 continue
 
@@ -193,23 +116,8 @@ class SheetsSync:
                 "qty": safe_int(r[6]) if len(r) > 6 else 0,
             })
 
-        # Determine if there are more pages by checking if we got a full page
-        has_next = len(stock) == page_size
-        has_prev = page > 1
-        
-        logger.info(f"Fetched {len(stock)} company stock items (page {page})")
-        
-        return {
-            'data': stock,
-            'pagination': {
-                'current_page': page,
-                'page_size': page_size,
-                'total_items': None,  # Unknown without full scan
-                'total_pages': None,
-                'has_next': has_next,
-                'has_prev': has_prev
-            }
-        }
+        logger.info(f"Fetched {len(stock)} company stock items")
+        return stock
 
     # -----------------------
     # TECHNICIAN STOCK

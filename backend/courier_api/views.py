@@ -31,7 +31,7 @@ sheets_sync = SheetsSync()
 def company_stock(request):
     """
     Admin endpoint: Fetch all company stock from Google Sheets "Mrp List".
-    Supports search, sort, filter, pagination (no DB storage)
+    Supports search, sort, filter (no DB storage)
     """
     if not request.user.is_staff:
         return Response(
@@ -40,34 +40,29 @@ def company_stock(request):
         )
     
     try:
-        # Get pagination parameters (default: page=1, page_size=30)
-        page = int(request.query_params.get('page', 1))
-        page_size = min(int(request.query_params.get('page_size', 30)), 100)  # Max 100 items
-        search = request.query_params.get('search', '').strip() or None
+        # Get stock from Google Sheets
+        stock_data = sheets_sync.get_company_stock()
         
-        # Get stock from Google Sheets with pagination and search
-        stock_result = sheets_sync.get_company_stock(page=page, page_size=page_size, search=search)
-        stock_data = stock_result['data']
-        pagination = stock_result['pagination']
-        
-        # Apply sort if provided (skip filter for search as it's already applied)
+        # Apply filters if provided
+        search = request.query_params.get('search', '').lower()
         sort_by = request.query_params.get('sort_by', 'name')
-        reverse = request.query_params.get('order') == 'desc'
         
+        if search:
+            stock_data = [
+                s for s in stock_data
+                if search in s['name'].lower() or search in s['spare_id'].lower()
+            ]
+        
+        # Sort
+        reverse = request.query_params.get('order') == 'desc'
         if sort_by in ['name', 'qty', 'mrp', 'spare_id']:
             stock_data = sorted(stock_data, key=lambda x: x.get(sort_by, ''), reverse=reverse)
         
-        # Return paginated response with backward compatibility
-        response_data = {
+        return Response({
             'success': True,
             'count': len(stock_data),
             'data': stock_data
-        }
-        
-        # Add pagination info always now (since we have smaller default page_size)
-        response_data['pagination'] = pagination
-        
-        return Response(response_data, status=status.HTTP_200_OK)
+        }, status=status.HTTP_200_OK)
     
     except Exception as e:
         logger.error(f"Error fetching company stock: {e}")
