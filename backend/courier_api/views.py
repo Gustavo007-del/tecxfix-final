@@ -40,27 +40,20 @@ def company_stock(request):
         )
     
     try:
-        # Get pagination parameters (default: page=1, page_size=100)
+        # Get pagination parameters (default: page=1, page_size=30)
         page = int(request.query_params.get('page', 1))
-        page_size = min(int(request.query_params.get('page_size', 100)), 500)  # Max 500 items
+        page_size = min(int(request.query_params.get('page_size', 30)), 100)  # Max 100 items
+        search = request.query_params.get('search', '').strip() or None
         
-        # Get stock from Google Sheets with pagination
-        stock_result = sheets_sync.get_company_stock(page=page, page_size=page_size)
+        # Get stock from Google Sheets with pagination and search
+        stock_result = sheets_sync.get_company_stock(page=page, page_size=page_size, search=search)
         stock_data = stock_result['data']
         pagination = stock_result['pagination']
         
-        # Apply filters if provided (only on current page data)
-        search = request.query_params.get('search', '').lower()
+        # Apply sort if provided (skip filter for search as it's already applied)
         sort_by = request.query_params.get('sort_by', 'name')
-        
-        if search:
-            stock_data = [
-                s for s in stock_data
-                if search in s['name'].lower() or search in s['spare_id'].lower()
-            ]
-        
-        # Sort
         reverse = request.query_params.get('order') == 'desc'
+        
         if sort_by in ['name', 'qty', 'mrp', 'spare_id']:
             stock_data = sorted(stock_data, key=lambda x: x.get(sort_by, ''), reverse=reverse)
         
@@ -71,9 +64,8 @@ def company_stock(request):
             'data': stock_data
         }
         
-        # Add pagination info if page > 1 or page_size != 100 (explicit pagination)
-        if page > 1 or page_size != 100:
-            response_data['pagination'] = pagination
+        # Add pagination info always now (since we have smaller default page_size)
+        response_data['pagination'] = pagination
         
         return Response(response_data, status=status.HTTP_200_OK)
     
