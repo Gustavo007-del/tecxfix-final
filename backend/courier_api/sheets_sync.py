@@ -92,18 +92,39 @@ class SheetsSync:
     # COMPANY STOCK
     # -----------------------
 
-    def get_company_stock(self):
+    def get_company_stock(self, page=1, page_size=100):
         self.authenticate()
 
         spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
         sheet = spreadsheet.worksheet(self.COMPANY_STOCK_WORKSHEET)
 
-        rows = sheet.get_all_values()
-        data_rows = rows[1:]
-
+        # Get total row count first (still needed for pagination metadata)
+        total_rows = len(sheet.get_all_values())
+        data_rows_count = total_rows - 1  # Exclude header
+        
+        # Calculate pagination
+        start_row = (page - 1) * page_size + 2  # +2 for header (1-based index)
+        end_row = min(start_row + page_size - 1, total_rows)
+        
+        # Get only the rows we need
+        if start_row > total_rows:
+            return {
+                'data': [],
+                'pagination': {
+                    'current_page': page,
+                    'page_size': page_size,
+                    'total_items': data_rows_count,
+                    'total_pages': (data_rows_count + page_size - 1) // page_size,
+                    'has_next': False,
+                    'has_prev': page > 1
+                }
+            }
+        
+        # Get rows in range using gspread's batch_get
+        rows = sheet.batch_get([f"{start_row}:{end_row}"])[0]
         stock = []
 
-        for r in data_rows:
+        for r in rows:
             if len(r) < 7 or not r[1]:
                 continue
 
@@ -116,8 +137,20 @@ class SheetsSync:
                 "qty": safe_int(r[6]) if len(r) > 6 else 0,
             })
 
-        logger.info(f"Fetched {len(stock)} company stock items")
-        return stock
+        total_pages = (data_rows_count + page_size - 1) // page_size
+        logger.info(f"Fetched {len(stock)} company stock items (page {page}/{total_pages})")
+        
+        return {
+            'data': stock,
+            'pagination': {
+                'current_page': page,
+                'page_size': page_size,
+                'total_items': data_rows_count,
+                'total_pages': total_pages,
+                'has_next': page < total_pages,
+                'has_prev': page > 1
+            }
+        }
 
     # -----------------------
     # TECHNICIAN STOCK
