@@ -3,6 +3,8 @@
 import os
 import json
 import logging
+import time
+import psutil
 
 import gspread
 from google.oauth2.service_account import Credentials
@@ -93,13 +95,20 @@ class SheetsSync:
     # -----------------------
 
     def get_company_stock(self):
+        start_time = time.time()
+        process = psutil.Process(os.getpid())
+        memory_before = process.memory_info().rss / 1024 / 1024
+        
         cache_key = "company_stock_data"
         cached_data = cache.get(cache_key)
         
         if cached_data is not None:
-            logger.info(f"Returning cached company stock data ({len(cached_data)} items)")
+            duration = time.time() - start_time
+            logger.info(f"Returning cached company stock data ({len(cached_data)} items) - "
+                       f"Duration: {duration:.2f}s - Memory: {memory_before:.1f}MB")
             return cached_data
         
+        logger.info(f"Fetching company stock from Google Sheets - Memory: {memory_before:.1f}MB")
         self.authenticate()
 
         spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
@@ -107,6 +116,8 @@ class SheetsSync:
 
         rows = sheet.get_all_values()
         data_rows = rows[1:]
+        
+        logger.info(f"Retrieved {len(data_rows)} rows from Google Sheets")
 
         stock = []
 
@@ -125,7 +136,14 @@ class SheetsSync:
 
         # Cache for 24 hours (86400 seconds)
         cache.set(cache_key, stock, 86400)
-        logger.info(f"Fetched and cached {len(stock)} company stock items")
+        
+        duration = time.time() - start_time
+        memory_after = process.memory_info().rss / 1024 / 1024
+        memory_delta = memory_after - memory_before
+        
+        logger.info(f"Fetched and cached {len(stock)} company stock items - "
+                   f"Duration: {duration:.2f}s - "
+                   f"Memory: {memory_before:.1f}MB → {memory_after:.1f}MB (Δ{memory_delta:+.1f}MB)")
         return stock
 
     # -----------------------
@@ -133,6 +151,11 @@ class SheetsSync:
     # -----------------------
 
     def get_technician_stock(self, technician_name):
+        start_time = time.time()
+        process = psutil.Process(os.getpid())
+        memory_before = process.memory_info().rss / 1024 / 1024
+        
+        logger.info(f"Fetching technician stock for '{technician_name}' - Memory: {memory_before:.1f}MB")
         self.authenticate()
 
         spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
@@ -140,6 +163,8 @@ class SheetsSync:
 
         rows = sheet.get_all_values()
         data_rows = rows[1:]
+        
+        logger.info(f"Retrieved {len(data_rows)} rows from technician stock sheet")
 
         stock = []
 
@@ -156,8 +181,14 @@ class SheetsSync:
                 "qty": safe_int(r[2]),
             })
 
+        duration = time.time() - start_time
+        memory_after = process.memory_info().rss / 1024 / 1024
+        memory_delta = memory_after - memory_before
+        
         logger.info(
-            f"Fetched {len(stock)} items for technician '{technician_name}'"
+            f"Fetched {len(stock)} items for technician '{technician_name}' - "
+            f"Duration: {duration:.2f}s - "
+            f"Memory: {memory_before:.1f}MB → {memory_after:.1f}MB (Δ{memory_delta:+.1f}MB)"
         )
         return stock
 
@@ -166,6 +197,11 @@ class SheetsSync:
     # -----------------------
 
     def update_company_stock(self, spare_id, qty_to_reduce):
+        start_time = time.time()
+        process = psutil.Process(os.getpid())
+        memory_before = process.memory_info().rss / 1024 / 1024
+        
+        logger.info(f"Updating company stock: {spare_id} -{qty_to_reduce} - Memory: {memory_before:.1f}MB")
         self.authenticate()
 
         spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
@@ -188,10 +224,15 @@ class SheetsSync:
 
         # Invalidate cache after updating stock
         cache.delete("company_stock_data")
-        logger.info("Company stock cache invalidated")
-
+        
+        duration = time.time() - start_time
+        memory_after = process.memory_info().rss / 1024 / 1024
+        memory_delta = memory_after - memory_before
+        
         logger.info(
-            f"Company stock updated: {spare_id} {current_qty} → {new_qty}"
+            f"Company stock updated: {spare_id} {current_qty} → {new_qty} - "
+            f"Duration: {duration:.2f}s - "
+            f"Memory: {memory_before:.1f}MB → {memory_after:.1f}MB (Δ{memory_delta:+.1f}MB)"
         )
         return True
 

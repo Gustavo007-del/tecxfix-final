@@ -33,7 +33,10 @@ def company_stock(request):
     Admin endpoint: Fetch all company stock from Google Sheets "Mrp List".
     Supports search, sort, filter (no DB storage)
     """
+    logger.info(f"Company stock requested by user: {request.user.username} (is_staff: {request.user.is_staff})")
+    
     if not request.user.is_staff:
+        logger.warning(f"Access denied for company stock - User: {request.user.username}")
         return Response(
             {'error': 'Admin access required'},
             status=status.HTTP_403_FORBIDDEN
@@ -41,6 +44,7 @@ def company_stock(request):
     
     try:
         # Get stock from Google Sheets
+        logger.info("Fetching company stock from Google Sheets...")
         stock_data = sheets_sync.get_company_stock()
         
         # Apply filters if provided
@@ -48,16 +52,20 @@ def company_stock(request):
         sort_by = request.query_params.get('sort_by', 'name')
         
         if search:
+            original_count = len(stock_data)
             stock_data = [
                 s for s in stock_data
                 if search in s['name'].lower() or search in s['spare_id'].lower()
             ]
+            logger.info(f"Search filter '{search}' reduced results from {original_count} to {len(stock_data)} items")
         
         # Sort
         reverse = request.query_params.get('order') == 'desc'
         if sort_by in ['name', 'qty', 'mrp', 'spare_id']:
             stock_data = sorted(stock_data, key=lambda x: x.get(sort_by, ''), reverse=reverse)
+            logger.info(f"Sorted by {sort_by} ({'desc' if reverse else 'asc'})")
         
+        logger.info(f"Company stock request completed successfully - {len(stock_data)} items returned")
         return Response({
             'success': True,
             'count': len(stock_data),
@@ -65,7 +73,7 @@ def company_stock(request):
         }, status=status.HTTP_200_OK)
     
     except Exception as e:
-        logger.error(f"Error fetching company stock: {e}")
+        logger.error(f"Error fetching company stock: {e}", exc_info=True)
         return Response(
             {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -752,12 +760,20 @@ from django.utils import timezone
 @api_view(['GET', 'HEAD'])
 @permission_classes([AllowAny])
 def health(request):
+    import psutil
+    process = psutil.Process(os.getpid())
+    memory_info = process.memory_info()
+    memory_mb = memory_info.rss / 1024 / 1024
+    
+    logger.info(f"Health check - Memory: {memory_mb:.1f}MB - User-Agent: {request.META.get('HTTP_USER_AGENT', 'Unknown')}")
 
     return Response(
         {
             "status": "ok",
             "service": "tecxfix-backend",
-            "timestamp": timezone.now().isoformat()
+            "timestamp": timezone.now().isoformat(),
+            "memory_usage_mb": round(memory_mb, 2),
+            "cpu_percent": process.cpu_percent()
         },
         status=200
     )

@@ -63,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'api.middleware.MemoryAndPerformanceMiddleware',
 ]
 
 # -------------------------------------------------
@@ -180,12 +181,20 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'detailed': {
+            'format': '{levelname} {asctime} {module} {funcName} {lineno:d} {process:d} {thread:d} {message}',
             'style': '{',
         },
     },
     'handlers': {
         'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'detailed',
+        },
+        'memory': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
@@ -194,11 +203,36 @@ LOGGING = {
         'django': {
             'handlers': ['console'],
             'level': 'INFO',
+            'propagate': True,
         },
         'django.request': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
         },
+        'courier_api': {
+            'handlers': ['console', 'memory'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'api': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'technician_tracking': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'gunicorn': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
     },
 }
