@@ -8,6 +8,8 @@ import psutil
 import socket
 import traceback
 from datetime import datetime
+import signal
+from contextlib import contextmanager
 
 import gspread
 from google.oauth2.service_account import Credentials
@@ -15,6 +17,28 @@ from django.core.cache import cache
 from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
+
+
+# -----------------------
+# TIMEOUT CONTEXT MANAGER
+# -----------------------
+
+class TimeoutError(Exception):
+    pass
+
+@contextmanager
+def timeout_context(seconds):
+    def timeout_handler(signum, frame):
+        raise TimeoutError(f"Operation timed out after {seconds} seconds")
+    
+    old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(seconds)
+    
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, old_handler)
 
 
 # -----------------------
@@ -204,14 +228,22 @@ class SheetsSync:
             self.authenticate()
             logger.info("Authentication completed, opening spreadsheet...")
 
-            spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
+            with timeout_context(15):  # 15 second timeout for opening spreadsheet
+                spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
             logger.info(f"Spreadsheet opened: {spreadsheet.title}")
             
-            sheet = spreadsheet.worksheet(self.COMPANY_STOCK_WORKSHEET)
+            with timeout_context(10):  # 10 second timeout for accessing worksheet
+                sheet = spreadsheet.worksheet(self.COMPANY_STOCK_WORKSHEET)
             logger.info(f"Worksheet accessed: {self.COMPANY_STOCK_WORKSHEET}")
 
             logger.info("Fetching all values from worksheet...")
-            rows = sheet.get_all_values()
+            try:
+                with timeout_context(20):  # 20 second timeout for sheets API
+                    rows = sheet.get_all_values()
+            except TimeoutError:
+                logger.error("Google Sheets API call timed out after 20 seconds")
+                raise Exception("Google Sheets API timeout - please try again")
+            
             data_rows = rows[1:]
             
             logger.info(f"Retrieved {len(data_rows)} rows from Google Sheets")

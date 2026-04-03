@@ -35,6 +35,7 @@ sheets_sync = SheetsSync()
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@database_retry(max_attempts=2, delay=1)
 def company_stock(request):
     """
     Admin endpoint: Fetch all company stock from Google Sheets "Mrp List".
