@@ -807,16 +807,16 @@ def health(request):
         # Connection stats
         db_health_monitor.log_connection_stats()
         
-        # Memory analysis
-        if memory_mb > 400:
+        # Memory analysis (adjusted for 500MB Render free tier)
+        if memory_mb > 250:  # 250MB warning threshold
             logger.warning(f"HIGH MEMORY USAGE: {memory_mb:.1f}MB")
             health_data["status"] = "warning"
             health_data["warning"] = f"High memory usage: {memory_mb:.1f}MB"
         
-        if memory_mb > 600:
-            logger.error(f"CRITICAL MEMORY USAGE: {memory_mb:.1f}MB - SIGKILL risk")
+        if memory_mb > 400:  # 400MB critical threshold for Render free tier
+            logger.error(f"CRITICAL MEMORY USAGE: {memory_mb:.1f}MB - SIGKILL risk on Render free tier")
             health_data["status"] = "critical"
-            health_data["error"] = f"Critical memory usage: {memory_mb:.1f}MB - Process at risk of SIGKILL"
+            health_data["error"] = f"Critical memory usage: {memory_mb:.1f}MB - Process at risk of SIGKILL on Render free tier"
         
         duration = time.time() - start_time
         health_data["health_check_duration"] = round(duration, 3)

@@ -99,10 +99,15 @@ DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get("DATABASE_URL"),
         conn_max_age=600,
-        ssl_require=True,
-        options='connect_timeout=10'
+        ssl_require=True
     )
 }
+
+# Add connection timeout via DATABASE_OPTIONS
+if 'default' in DATABASES:
+    DATABASES['default']['OPTIONS'] = {
+        'connect_timeout': 10,
+    }
 
 # Database connection logging
 DATABASE_LOGGING = {

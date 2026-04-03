@@ -53,22 +53,22 @@ class ProcessMonitor:
                     'cpu_percent': self.process.cpu_percent()
                 })
                 
-                # Keep only last 100 samples
-                if len(self.memory_samples) > 100:
-                    self.memory_samples = self.memory_samples[-100:]
+                # Keep only last 50 samples (reduced for memory optimization)
+                if len(self.memory_samples) > 50:
+                    self.memory_samples = self.memory_samples[-50:]
                 
-                # Alert on high memory usage
-                if memory_mb > 500:
+                # Alert on high memory usage (adjusted for 500MB Render free tier)
+                if memory_mb > 250:
                     logger.warning(f"HIGH MEMORY USAGE MONITOR: {memory_mb:.1f}MB")
                 
-                if memory_mb > 700:
-                    logger.error(f"CRITICAL MEMORY USAGE MONITOR: {memory_mb:.1f}MB - SIGKILL risk imminent")
+                if memory_mb > 400:  # 400MB critical threshold for Render free tier
+                    logger.error(f"CRITICAL MEMORY USAGE MONITOR: {memory_mb:.1f}MB - SIGKILL risk imminent on Render free tier")
                     self._emergency_log()
                 
                 # Check for zombie processes
                 self._check_process_health()
                 
-                time.sleep(30)  # Monitor every 30 seconds
+                time.sleep(60)  # Monitor every 60 seconds (reduced frequency for memory optimization)
                 
             except Exception as e:
                 logger.error(f"Process monitoring error: {e}")
