@@ -1,4 +1,10 @@
 # E:\study\techfix\backend\courier_api\views.py
+import os
+import psutil
+import time
+import uuid
+import logging
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -16,8 +22,6 @@ from .serializers import (
 )
 from .sheets_sync import SheetsSync
 from .pdf_generator import generate_courier_pdf
-import uuid
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -752,15 +756,9 @@ def register_technician_stock(request):
             }
         }, status=status.HTTP_201_CREATED)        
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from django.utils import timezone
-
 @api_view(['GET', 'HEAD'])
 @permission_classes([AllowAny])
 def health(request):
-    import psutil
     process = psutil.Process(os.getpid())
     memory_info = process.memory_info()
     memory_mb = memory_info.rss / 1024 / 1024
