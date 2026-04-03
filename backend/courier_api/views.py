@@ -4,6 +4,8 @@ import psutil
 import time
 import uuid
 import logging
+import traceback
+from django.conf import settings
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -759,19 +761,79 @@ def register_technician_stock(request):
 @api_view(['GET', 'HEAD'])
 @permission_classes([AllowAny])
 def health(request):
+    """
+    Comprehensive health check endpoint for debugging SIGKILL and timeout issues
+    """
+    start_time = time.time()
     process = psutil.Process(os.getpid())
     memory_info = process.memory_info()
     memory_mb = memory_info.rss / 1024 / 1024
     
-    logger.info(f"Health check - Memory: {memory_mb:.1f}MB - User-Agent: {request.META.get('HTTP_USER_AGENT', 'Unknown')}")
-
-    return Response(
-        {
-            "status": "ok",
-            "service": "tecxfix-backend",
-            "timestamp": timezone.now().isoformat(),
-            "memory_usage_mb": round(memory_mb, 2),
-            "cpu_percent": process.cpu_percent()
-        },
-        status=200
-    )
+    logger.info(f"=== HEALTH CHECK START === Memory: {memory_mb:.1f}MB - User-Agent: {request.META.get('HTTP_USER_AGENT', 'Unknown')}")
+    
+    health_data = {
+        "status": "ok",
+        "service": "tecxfix-backend",
+        "timestamp": timezone.now().isoformat(),
+        "process_id": os.getpid(),
+        "memory_usage_mb": round(memory_mb, 2),
+        "cpu_percent": process.cpu_percent(),
+        "uptime_seconds": time.time() - process.create_time(),
+    }
+    
+    try:
+        # Database health check
+        from api.db_health import db_health_monitor
+        db_health = db_health_monitor.check_database_health()
+        health_data["database"] = db_health
+        
+        # System resources
+        health_data["system"] = {
+            "cpu_count": psutil.cpu_count(),
+            "memory_total_gb": round(psutil.virtual_memory().total / 1024 / 1024 / 1024, 2),
+            "memory_available_gb": round(psutil.virtual_memory().available / 1024 / 1024 / 1024, 2),
+            "disk_usage_gb": round(psutil.disk_usage('/').used / 1024 / 1024 / 1024, 2),
+            "load_average": os.getloadavg() if hasattr(os, 'getloadavg') else None,
+        }
+        
+        # Django configuration
+        health_data["django"] = {
+            "debug_mode": settings.DEBUG,
+            "database_url_set": bool(os.environ.get("DATABASE_URL")),
+            "google_service_account_set": bool(os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")),
+            "allowed_hosts": settings.ALLOWED_HOSTS,
+        }
+        
+        # Connection stats
+        db_health_monitor.log_connection_stats()
+        
+        # Memory analysis
+        if memory_mb > 400:
+            logger.warning(f"HIGH MEMORY USAGE: {memory_mb:.1f}MB")
+            health_data["status"] = "warning"
+            health_data["warning"] = f"High memory usage: {memory_mb:.1f}MB"
+        
+        if memory_mb > 600:
+            logger.error(f"CRITICAL MEMORY USAGE: {memory_mb:.1f}MB - SIGKILL risk")
+            health_data["status"] = "critical"
+            health_data["error"] = f"Critical memory usage: {memory_mb:.1f}MB - Process at risk of SIGKILL"
+        
+        duration = time.time() - start_time
+        health_data["health_check_duration"] = round(duration, 3)
+        
+        logger.info(f"=== HEALTH CHECK COMPLETED === Status: {health_data['status']} - Duration: {duration:.2f}s")
+        
+        return Response(health_data, status=200)
+        
+    except Exception as e:
+        duration = time.time() - start_time
+        logger.error(f"Health check failed: {e} - Duration: {duration:.2f}s")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        
+        health_data.update({
+            "status": "error",
+            "error": str(e),
+            "health_check_duration": round(duration, 3)
+        })
+        
+        return Response(health_data, status=500)

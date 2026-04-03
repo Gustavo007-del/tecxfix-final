@@ -5,6 +5,9 @@ import json
 import logging
 import time
 import psutil
+import socket
+import traceback
+from datetime import datetime
 
 import gspread
 from google.oauth2.service_account import Credentials
@@ -64,30 +67,87 @@ class SheetsSync:
     def authenticate(self):
         """
         Authenticate lazily using GOOGLE_SERVICE_ACCOUNT_JSON env variable.
+        Enhanced with detailed logging for connection debugging.
         """
         if self.client:
+            logger.debug("Google Sheets client already authenticated")
             return
 
+        start_time = time.time()
+        logger.info("=== GOOGLE SHEETS AUTHENTICATION START ===")
+        
         try:
+            # Check environment variable
             service_account_json = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
+            logger.info(f"Service account JSON env var check: {'SET' if service_account_json else 'NOT_SET'}")
 
             if not service_account_json:
+                logger.error("GOOGLE_SERVICE_ACCOUNT_JSON environment variable not set")
                 raise Exception(
                     "GOOGLE_SERVICE_ACCOUNT_JSON environment variable not set"
                 )
 
-            service_account_info = json.loads(service_account_json)
+            # Parse JSON
+            logger.info("Parsing service account JSON...")
+            try:
+                service_account_info = json.loads(service_account_json)
+                logger.info(f"Service account JSON parsed successfully. Keys: {list(service_account_info.keys())}")
+                if 'client_email' in service_account_info:
+                    logger.info(f"Client email: {service_account_info['client_email']}")
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse service account JSON: {e}")
+                raise
 
+            # Test network connectivity
+            logger.info("Testing network connectivity...")
+            try:
+                # Test DNS resolution
+                socket.gethostbyname('www.googleapis.com')
+                logger.info("DNS resolution for www.googleapis.com: OK")
+                
+                # Test HTTP connection to Google APIs
+                test_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                test_socket.settimeout(10)
+                result = test_socket.connect_ex(('www.googleapis.com', 443))
+                test_socket.close()
+                
+                if result == 0:
+                    logger.info("HTTP connection to www.googleapis.com:443: OK")
+                else:
+                    logger.warning(f"HTTP connection to www.googleapis.com:443 failed with code {result}")
+            except Exception as net_error:
+                logger.error(f"Network connectivity test failed: {net_error}")
+            
+            # Create credentials
+            logger.info("Creating Google credentials...")
             creds = Credentials.from_service_account_info(
                 service_account_info,
                 scopes=self.SCOPES
             )
+            logger.info(f"Credentials created. Scopes: {self.SCOPES}")
+            logger.info(f"Token valid: {creds.valid if hasattr(creds, 'valid') else 'Unknown'}")
 
+            # Authorize client
+            logger.info("Authorizing gspread client...")
             self.client = gspread.authorize(creds)
-            logger.info("Google Sheets authentication successful")
+            
+            duration = time.time() - start_time
+            logger.info(f"=== GOOGLE SHEETS AUTHENTICATION SUCCESS === Duration: {duration:.2f}s")
+            
+            # Test the connection
+            logger.info("Testing Google Sheets connection...")
+            try:
+                # Try to open the spreadsheet to verify connection
+                test_spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
+                logger.info(f"Successfully connected to spreadsheet: {test_spreadsheet.title}")
+            except Exception as test_error:
+                logger.warning(f"Connection test failed: {test_error}")
 
         except Exception as e:
-            logger.error(f"Google Sheets authentication failed: {e}")
+            duration = time.time() - start_time
+            logger.error(f"=== GOOGLE SHEETS AUTHENTICATION FAILED === Duration: {duration:.2f}s")
+            logger.error(f"Error: {e}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
             raise
 
     # -----------------------
@@ -99,6 +159,8 @@ class SheetsSync:
         process = psutil.Process(os.getpid())
         memory_before = process.memory_info().rss / 1024 / 1024
         
+        logger.info(f"=== GET COMPANY STOCK START === Memory: {memory_before:.1f}MB")
+        
         cache_key = "company_stock_data"
         cached_data = cache.get(cache_key)
         
@@ -109,42 +171,66 @@ class SheetsSync:
             return cached_data
         
         logger.info(f"Fetching company stock from Google Sheets - Memory: {memory_before:.1f}MB")
-        self.authenticate()
-
-        spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
-        sheet = spreadsheet.worksheet(self.COMPANY_STOCK_WORKSHEET)
-
-        rows = sheet.get_all_values()
-        data_rows = rows[1:]
         
-        logger.info(f"Retrieved {len(data_rows)} rows from Google Sheets")
+        try:
+            self.authenticate()
+            logger.info("Authentication completed, opening spreadsheet...")
 
-        stock = []
+            spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
+            logger.info(f"Spreadsheet opened: {spreadsheet.title}")
+            
+            sheet = spreadsheet.worksheet(self.COMPANY_STOCK_WORKSHEET)
+            logger.info(f"Worksheet accessed: {self.COMPANY_STOCK_WORKSHEET}")
 
-        for r in data_rows:
-            if len(r) < 7 or not r[1]:
-                continue
+            logger.info("Fetching all values from worksheet...")
+            rows = sheet.get_all_values()
+            data_rows = rows[1:]
+            
+            logger.info(f"Retrieved {len(data_rows)} rows from Google Sheets")
+            logger.info(f"Header row: {rows[0] if rows else 'No headers'}")
 
-            stock.append({
-                "spare_id": r[1].strip(),
-                "name": r[2].strip(),
-                "mrp": safe_float(r[3]),
-                "hsn": r[4].strip() if len(r) > 4 else "",
-                "brand": r[5].strip() if len(r) > 5 else "",
-                "qty": safe_int(r[6]) if len(r) > 6 else 0,
-            })
+            stock = []
+            processed_count = 0
+            skipped_count = 0
 
-        # Cache for 24 hours (86400 seconds)
-        cache.set(cache_key, stock, 86400)
-        
-        duration = time.time() - start_time
-        memory_after = process.memory_info().rss / 1024 / 1024
-        memory_delta = memory_after - memory_before
-        
-        logger.info(f"Fetched and cached {len(stock)} company stock items - "
-                   f"Duration: {duration:.2f}s - "
-                   f"Memory: {memory_before:.1f}MB → {memory_after:.1f}MB (Δ{memory_delta:+.1f}MB)")
-        return stock
+            for idx, r in enumerate(data_rows):
+                if len(r) < 7 or not r[1]:
+                    skipped_count += 1
+                    if skipped_count <= 5:  # Log first 5 skipped rows
+                        logger.debug(f"Skipped row {idx+2}: {r}")
+                    continue
+
+                processed_count += 1
+                stock.append({
+                    "spare_id": r[1].strip(),
+                    "name": r[2].strip(),
+                    "mrp": safe_float(r[3]),
+                    "hsn": r[4].strip() if len(r) > 4 else "",
+                    "brand": r[5].strip() if len(r) > 5 else "",
+                    "qty": safe_int(r[6]) if len(r) > 6 else 0,
+                })
+
+            logger.info(f"Processed {processed_count} valid items, skipped {skipped_count} invalid rows")
+
+            # Cache for 24 hours (86400 seconds)
+            cache.set(cache_key, stock, 86400)
+            logger.info(f"Company stock cached for 24 hours")
+            
+            duration = time.time() - start_time
+            memory_after = process.memory_info().rss / 1024 / 1024
+            memory_delta = memory_after - memory_before
+            
+            logger.info(f"=== GET COMPANY STOCK SUCCESS === "
+                       f"Items: {len(stock)} - Duration: {duration:.2f}s - "
+                       f"Memory: {memory_before:.1f}MB → {memory_after:.1f}MB (Δ{memory_delta:+.1f}MB)")
+            return stock
+            
+        except Exception as e:
+            duration = time.time() - start_time
+            logger.error(f"=== GET COMPANY STOCK FAILED === Duration: {duration:.2f}s")
+            logger.error(f"Error: {e}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise
 
     # -----------------------
     # TECHNICIAN STOCK
