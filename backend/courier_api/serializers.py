@@ -7,6 +7,12 @@ class UserSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'email']
+    
+    def to_representation(self, instance):
+        """Handle null user instances gracefully"""
+        if instance is None:
+            return None
+        return super().to_representation(instance)
 
 class TechnicianStockSerializer(serializers.ModelSerializer):
     technician_info = UserSimpleSerializer(source='technician', read_only=True)
