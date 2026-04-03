@@ -19,7 +19,7 @@ class MemoryAndPerformanceMiddleware:
         self.get_response = get_response
         
     def __call__(self, request):
-        start_time = time.time()
+        overall_start = time.time()
         process = psutil.Process(os.getpid())
         
         # Log initial memory usage
@@ -32,6 +32,7 @@ class MemoryAndPerformanceMiddleware:
         content_length = request.META.get('CONTENT_LENGTH', '0')
         
         logger.info(f"=== REQUEST START ===")
+        logger.info(f"[TIMING] Middleware start at: {time.strftime('%H:%M:%S.%f', time.gmtime())}")
         logger.info(f"Method: {request.method}")
         logger.info(f"Path: {request.path}")
         logger.info(f"Client IP: {client_ip}")
@@ -43,14 +44,23 @@ class MemoryAndPerformanceMiddleware:
         logger.info(f"Thread ID: {threading.get_ident()}")
         
         # Test network connectivity for external requests
+        network_start = time.time()
         if 'sheets' in request.path.lower() or 'google' in request.path.lower():
+            logger.info(f"[TIMING] Starting network connectivity test...")
             self.test_network_connectivity()
+            network_time = time.time() - network_start
+            logger.info(f"[TIMING] Network connectivity test completed in: {network_time:.3f}s")
         
         try:
+            # Time the actual request processing
+            request_start = time.time()
+            logger.info(f"[TIMING] Passing request to Django view...")
             response = self.get_response(request)
+            request_time = time.time() - request_start
+            logger.info(f"[TIMING] Django view processing completed in: {request_time:.3f}s")
             
             # Calculate request duration
-            duration = time.time() - start_time
+            duration = time.time() - overall_start
             
             # Log final memory usage
             memory_after = process.memory_info()
@@ -58,16 +68,20 @@ class MemoryAndPerformanceMiddleware:
             memory_delta = final_memory_mb - initial_memory_mb
             
             # Get response details
+            response_start = time.time()
             response_size = len(getattr(response, 'content', b''))
+            response_processing_time = time.time() - response_start
             
             logger.info(f"=== REQUEST END ===")
+            logger.info(f"[TIMING] Overall request duration: {duration:.3f}s")
+            logger.info(f"[TIMING] View processing time: {request_time:.3f}s")
+            logger.info(f"[TIMING] Response processing time: {response_processing_time:.3f}s")
             logger.info(f"Status: {response.status_code}")
-            logger.info(f"Duration: {duration:.2f}s")
             logger.info(f"Response Size: {response_size} bytes")
             logger.info(f"Memory: {initial_memory_mb:.1f}MB → {final_memory_mb:.1f}MB (Δ{memory_delta:+.1f}MB)")
             logger.info(f"User: {getattr(request.user, 'username', 'anonymous')}")
             
-            # Determine log level based on performance
+            # Determine log level based on performance (adjusted for 500MB limit)
             if duration > 30 or final_memory_mb > 500:
                 log_level = logging.ERROR
             elif duration > 10 or final_memory_mb > 200:
@@ -84,9 +98,12 @@ class MemoryAndPerformanceMiddleware:
                       f"User: {getattr(request.user, 'username', 'anonymous')}")
             
             # Add performance headers
+            header_start = time.time()
             response['X-Response-Time'] = f"{duration:.3f}s"
             response['X-Memory-Usage'] = f"{final_memory_mb:.1f}MB"
             response['X-Process-ID'] = str(os.getpid())
+            header_time = time.time() - header_start
+            logger.info(f"[TIMING] Header processing time: {header_time:.3f}s")
             
             # Alert on critical issues
             if final_memory_mb > 500:  # 500MB threshold
@@ -100,14 +117,16 @@ class MemoryAndPerformanceMiddleware:
                            f"Memory: {final_memory_mb:.1f}MB - "
                            f"May cause timeout issues")
             
+            logger.info(f"[TIMING] Middleware completed at: {time.strftime('%H:%M:%S.%f', time.gmtime())}")
             return response
             
         except Exception as e:
-            duration = time.time() - start_time
+            duration = time.time() - overall_start
             memory_after = process.memory_info()
             final_memory_mb = memory_after.rss / 1024 / 1024
             
             logger.error(f"=== REQUEST ERROR ===")
+            logger.error(f"[TIMING] Error occurred after: {duration:.3f}s")
             logger.error(f"Method: {request.method}")
             logger.error(f"Path: {request.path}")
             logger.error(f"Duration: {duration:.2f}s")

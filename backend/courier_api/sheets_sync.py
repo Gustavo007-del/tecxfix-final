@@ -75,10 +75,14 @@ class SheetsSync:
 
         start_time = time.time()
         logger.info("=== GOOGLE SHEETS AUTHENTICATION START ===")
+        logger.info(f"[TIMING] Sheets authentication started at: {time.strftime('%H:%M:%S.%f', time.gmtime())}")
         
         try:
             # Check environment variable
+            env_start = time.time()
             service_account_json = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
+            env_time = time.time() - env_start
+            logger.info(f"[TIMING] Environment variable check completed in: {env_time:.3f}s")
             logger.info(f"Service account JSON env var check: {'SET' if service_account_json else 'NOT_SET'}")
 
             if not service_account_json:
@@ -88,7 +92,8 @@ class SheetsSync:
                 )
 
             # Parse JSON
-            logger.info("Parsing service account JSON...")
+            logger.info("[TIMING] Parsing service account JSON...")
+            parse_start = time.time()
             try:
                 service_account_info = json.loads(service_account_json)
                 logger.info(f"Service account JSON parsed successfully. Keys: {list(service_account_info.keys())}")
@@ -97,55 +102,78 @@ class SheetsSync:
             except json.JSONDecodeError as e:
                 logger.error(f"Failed to parse service account JSON: {e}")
                 raise
+            parse_time = time.time() - parse_start
+            logger.info(f"[TIMING] JSON parsing completed in: {parse_time:.3f}s")
 
             # Test network connectivity
-            logger.info("Testing network connectivity...")
+            logger.info("[TIMING] Testing network connectivity...")
+            net_start = time.time()
             try:
                 # Test DNS resolution
+                dns_start = time.time()
                 socket.gethostbyname('www.googleapis.com')
+                dns_time = time.time() - dns_start
+                logger.info(f"[TIMING] DNS resolution completed in: {dns_time:.3f}s")
                 logger.info("DNS resolution for www.googleapis.com: OK")
                 
                 # Test HTTP connection to Google APIs
+                http_start = time.time()
                 test_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 test_socket.settimeout(10)
                 result = test_socket.connect_ex(('www.googleapis.com', 443))
                 test_socket.close()
+                http_time = time.time() - http_start
                 
                 if result == 0:
+                    logger.info(f"[TIMING] HTTP connection test completed in: {http_time:.3f}s")
                     logger.info("HTTP connection to www.googleapis.com:443: OK")
                 else:
                     logger.warning(f"HTTP connection to www.googleapis.com:443 failed with code {result}")
             except Exception as net_error:
                 logger.error(f"Network connectivity test failed: {net_error}")
+            net_time = time.time() - net_start
+            logger.info(f"[TIMING] Network connectivity test completed in: {net_time:.3f}s")
             
             # Create credentials
-            logger.info("Creating Google credentials...")
+            logger.info("[TIMING] Creating Google credentials...")
+            creds_start = time.time()
             creds = Credentials.from_service_account_info(
                 service_account_info,
                 scopes=self.SCOPES
             )
+            creds_time = time.time() - creds_start
+            logger.info(f"[TIMING] Credentials creation completed in: {creds_time:.3f}s")
             logger.info(f"Credentials created. Scopes: {self.SCOPES}")
             logger.info(f"Token valid: {creds.valid if hasattr(creds, 'valid') else 'Unknown'}")
 
             # Authorize client
-            logger.info("Authorizing gspread client...")
+            logger.info("[TIMING] Authorizing gspread client...")
+            auth_start = time.time()
             self.client = gspread.authorize(creds)
+            auth_time = time.time() - auth_start
+            logger.info(f"[TIMING] Gspread authorization completed in: {auth_time:.3f}s")
             
             duration = time.time() - start_time
             logger.info(f"=== GOOGLE SHEETS AUTHENTICATION SUCCESS === Duration: {duration:.2f}s")
             
             # Test the connection
-            logger.info("Testing Google Sheets connection...")
+            logger.info("[TIMING] Testing Google Sheets connection...")
+            test_start = time.time()
             try:
                 # Try to open the spreadsheet to verify connection
                 test_spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
+                test_time = time.time() - test_start
+                logger.info(f"[TIMING] Connection test completed in: {test_time:.3f}s")
                 logger.info(f"Successfully connected to spreadsheet: {test_spreadsheet.title}")
             except Exception as test_error:
+                test_time = time.time() - test_start
+                logger.error(f"[TIMING] Connection test failed after: {test_time:.3f}s")
                 logger.warning(f"Connection test failed: {test_error}")
 
         except Exception as e:
             duration = time.time() - start_time
             logger.error(f"=== GOOGLE SHEETS AUTHENTICATION FAILED === Duration: {duration:.2f}s")
+            logger.error(f"[TIMING] Authentication failed after: {duration:.3f}s")
             logger.error(f"Error: {e}")
             logger.error(f"Traceback: {traceback.format_exc()}")
             raise

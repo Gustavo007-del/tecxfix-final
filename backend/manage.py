@@ -63,15 +63,28 @@ def main():
     startup_logger.info("Django settings module set")
     
     try:
+        # Time the imports
+        import_start = time.time()
+        startup_logger.info(f"[TIMING] Starting Django imports at: {time.strftime('%H:%M:%S.%f', time.gmtime())}")
+        
         startup_logger.info("Importing Django management commands...")
+        django_start = time.time()
         from django.core.management import execute_from_command_line
+        django_time = time.time() - django_start
+        startup_logger.info(f"[TIMING] Django core import completed in: {django_time:.3f}s")
+        
         startup_logger.info("Django imported successfully")
         
         # Log the command being executed
         if len(sys.argv) > 1:
             startup_logger.info(f"Executing Django command: {' '.join(sys.argv[1:])}")
         
+        import_time = time.time() - import_start
+        startup_logger.info(f"[TIMING] All imports completed in: {import_time:.3f}s")
+        
     except ImportError as exc:
+        import_time = time.time() - import_start
+        startup_logger.error(f"Django import failed after: {import_time:.3f}s")
         startup_logger.error(f"Django import failed: {exc}")
         startup_logger.error(f"Python path: {sys.path}")
         raise ImportError(
@@ -80,19 +93,31 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
     except Exception as e:
+        import_time = time.time() - import_start
+        startup_logger.error(f"Unexpected error during Django startup after: {import_time:.3f}s")
         startup_logger.error(f"Unexpected error during Django startup: {e}")
         startup_logger.error(f"Traceback: {traceback.format_exc()}")
         raise
     
     try:
-        startup_logger.info("Executing Django management command...")
+        # Time the command execution
+        exec_start = time.time()
+        startup_logger.info(f"[TIMING] Starting Django command execution at: {time.strftime('%H:%M:%S.%f', time.gmtime())}")
+        
         execute_from_command_line(sys.argv)
+        
+        exec_time = time.time() - exec_start
+        startup_logger.info(f"[TIMING] Django command completed in: {exec_time:.3f}s")
         startup_logger.info("Django command completed successfully")
     except Exception as e:
+        exec_time = time.time() - exec_start
+        startup_logger.error(f"Django command failed after: {exec_time:.3f}s")
         startup_logger.error(f"Django command failed: {e}")
         startup_logger.error(f"Traceback: {traceback.format_exc()}")
         raise
     finally:
+        total_time = time.time() - import_start
+        startup_logger.info(f"[TIMING] Total Django process time: {total_time:.3f}s")
         startup_logger.info("=== DJANGO PROCESS ENDING ===")
 
 

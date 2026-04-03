@@ -25,31 +25,43 @@ class DatabaseHealthMonitor:
         }
     
     def check_database_health(self):
-        """Comprehensive database health check"""
+        """Comprehensive database health check with detailed timing"""
         start_time = time.time()
         logger.info("=== DATABASE HEALTH CHECK START ===")
+        logger.info(f"[TIMING] DB health check started at: {time.strftime('%H:%M:%S.%f', time.gmtime())}")
         
         try:
             # Test basic connection
-            logger.info("Testing database connection...")
+            logger.info("[TIMING] Testing database connection...")
+            conn_start = time.time()
+            
             with connection.cursor() as cursor:
                 cursor.execute("SELECT 1")
                 result = cursor.fetchone()
-                logger.info(f"Database connection test: {result}")
+                
+            conn_time = time.time() - conn_start
+            logger.info(f"[TIMING] Database connection established in: {conn_time:.3f}s")
+            logger.info(f"Database connection test: {result}")
             
             # Get connection info
+            info_start = time.time()
             db_settings = connection.settings_dict
             logger.info(f"Database engine: {db_settings.get('ENGINE', 'Unknown')}")
             logger.info(f"Database name: {db_settings.get('NAME', 'Unknown')}")
             logger.info(f"Database host: {db_settings.get('HOST', 'Unknown')}")
             logger.info(f"Database port: {db_settings.get('PORT', 'Unknown')}")
             logger.info(f"Connection max age: {db_settings.get('conn_max_age', 'Not set')}")
+            info_time = time.time() - info_start
+            logger.info(f"[TIMING] Connection info gathered in: {info_time:.3f}s")
             
             # Check connection pool status
+            pool_start = time.time()
             if hasattr(connection, 'connection') and connection.connection:
                 logger.info("Database connection is active")
             else:
                 logger.warning("Database connection is not established")
+            pool_time = time.time() - pool_start
+            logger.info(f"[TIMING] Connection pool status checked in: {pool_time:.3f}s")
             
             # Test query performance
             self._test_query_performance()
@@ -58,7 +70,11 @@ class DatabaseHealthMonitor:
             self._check_connection_age()
             
             # Test cache connectivity
+            cache_start = time.time()
+            logger.info("[TIMING] Testing cache connectivity...")
             self._test_cache_health()
+            cache_time = time.time() - cache_start
+            logger.info(f"[TIMING] Cache health check completed in: {cache_time:.3f}s")
             
             duration = time.time() - start_time
             logger.info(f"=== DATABASE HEALTH CHECK COMPLETED === Duration: {duration:.2f}s")
@@ -66,12 +82,15 @@ class DatabaseHealthMonitor:
             return {
                 'status': 'healthy',
                 'duration': duration,
+                'connection_time': conn_time,
+                'cache_time': cache_time,
                 'timestamp': datetime.now().isoformat()
             }
             
         except Exception as e:
             duration = time.time() - start_time
             logger.error(f"=== DATABASE HEALTH CHECK FAILED === Duration: {duration:.2f}s")
+            logger.error(f"[TIMING] DB health check failed after: {duration:.3f}s")
             logger.error(f"Error: {e}")
             logger.error(f"Traceback: {traceback.format_exc()}")
             
@@ -85,25 +104,28 @@ class DatabaseHealthMonitor:
             }
     
     def _test_query_performance(self):
-        """Test basic query performance"""
+        """Test basic query performance with detailed timing"""
         try:
-            start_time = time.time()
-            
             # Test simple query
+            logger.info("[TIMING] Testing simple query performance...")
+            simple_start = time.time()
+            
             with connection.cursor() as cursor:
                 cursor.execute("SELECT version()")
                 version = cursor.fetchone()
-                logger.info(f"Database version: {version[0] if version else 'Unknown'}")
             
-            query_time = time.time() - start_time
-            logger.info(f"Simple query time: {query_time:.3f}s")
+            simple_time = time.time() - simple_start
+            logger.info(f"Database version: {version[0] if version else 'Unknown'}")
+            logger.info(f"[TIMING] Simple query time: {simple_time:.3f}s")
             
-            if query_time > 1.0:
-                logger.warning(f"Slow simple query detected: {query_time:.3f}s")
+            if simple_time > 1.0:
+                logger.warning(f"Slow simple query detected: {simple_time:.3f}s")
                 self.connection_stats['slow_queries'] += 1
             
             # Test table access (safe query)
-            start_time = time.time()
+            logger.info("[TIMING] Testing table access performance...")
+            table_start = time.time()
+            
             with connection.cursor() as cursor:
                 cursor.execute("""
                     SELECT table_name 
@@ -112,15 +134,34 @@ class DatabaseHealthMonitor:
                     LIMIT 5
                 """)
                 tables = cursor.fetchall()
-                logger.info(f"Accessible tables (sample): {[t[0] for t in tables]}")
             
-            table_query_time = time.time() - start_time
-            logger.info(f"Table query time: {table_query_time:.3f}s")
+            table_time = time.time() - table_start
+            logger.info(f"Accessible tables (sample): {[t[0] for t in tables]}")
+            logger.info(f"[TIMING] Table query time: {table_time:.3f}s")
             
-            self.connection_stats['total_queries'] += 2
+            if table_time > 2.0:
+                logger.warning(f"Slow table query detected: {table_time:.3f}s")
+                self.connection_stats['slow_queries'] += 1
+            
+            # Test connection latency
+            logger.info("[TIMING] Testing connection latency...")
+            latency_start = time.time()
+            
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1 as ping")
+                ping_result = cursor.fetchone()
+            
+            latency_time = time.time() - latency_start
+            logger.info(f"[TIMING] Connection latency: {latency_time:.3f}s")
+            
+            if latency_time > 0.5:
+                logger.warning(f"High connection latency: {latency_time:.3f}s")
+            
+            self.connection_stats['total_queries'] += 3
             
         except Exception as e:
             logger.error(f"Query performance test failed: {e}")
+            logger.error(f"[TIMING] Query performance test failed")
     
     def _check_connection_age(self):
         """Check database connection age"""
