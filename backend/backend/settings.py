@@ -106,7 +106,10 @@ DATABASES = {
 # Add connection timeout via DATABASE_OPTIONS
 if 'default' in DATABASES:
     DATABASES['default']['OPTIONS'] = {
-        'connect_timeout': 10,
+        'connect_timeout': 30,  # Increased from 10 to 30 seconds
+        'options': '-c statement_timeout=30000',  # 30 second statement timeout
+        'MAX_CONNS': 20,  # Maximum connections in pool
+        'MIN_CONNS': 5,   # Minimum connections to maintain
     }
 
 # Database connection logging

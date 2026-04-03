@@ -24,6 +24,7 @@ from .serializers import (
 )
 from .sheets_sync import SheetsSync
 from .pdf_generator import generate_courier_pdf
+from api.db_retry import database_retry
 
 logger = logging.getLogger(__name__)
 
@@ -184,6 +185,7 @@ def create_courier(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@database_retry(max_attempts=3, delay=1)
 def courier_list(request):
     """
     Admin endpoint: Get all courier history with optional status filter
