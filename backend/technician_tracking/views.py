@@ -1,9 +1,7 @@
 import logging
-import signal
 from datetime import datetime
 from django.utils import timezone
 from django.conf import settings
-from django.db import transaction
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -17,12 +15,6 @@ from .serializers import (
     TechnicianLocationSerializer,
 )
 
-class TimeoutError(Exception):
-    pass
-
-def timeout_handler(signum, frame):
-    raise TimeoutError("Operation timed out")
-
 logger = logging.getLogger(__name__)
 
 
@@ -34,55 +26,40 @@ def tracking_check_in(request):
     Creates a new session and marks it as active
     """
     try:
-        # Set timeout for entire operation
-        signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(20)  # 20 second timeout
+        user = request.user
+        today = timezone.now().date()
         
-        try:
-            user = request.user
-            
-            # Check if active session already exists
-            with transaction.atomic():
-                active_session = TechnicianTrackingSession.objects.filter(
-                    technician=user,
-                    is_active=True,
-                    date=timezone.now().date()
-                ).select_for_update(skip_locked=True).first()
-                
-                if active_session:
-                    serializer = TechnicianTrackingSessionSerializer(active_session)
-                    return Response({
-                        'success': True,
-                        'message': 'Active session already exists',
-                        'data': serializer.data
-                    }, status=status.HTTP_200_OK)
-                
-                # Create new session
-                session = TechnicianTrackingSession.objects.create(
-                    technician=user,
-                    check_in_time=timezone.now(),
-                    is_active=True,
-                    date=timezone.now().date()
-                )
-                
-                serializer = TechnicianTrackingSessionSerializer(session)
-                logger.info(f"Tracking session started for {user.username}")
-                
-                return Response({
-                    'success': True,
-                    'message': 'Tracking session started',
-                    'data': serializer.data
-                }, status=status.HTTP_201_CREATED)
-                
-        finally:
-            signal.alarm(0)  # Cancel timeout
-            
-    except TimeoutError:
-        logger.error(f"Tracking check-in timeout for user {request.user.username}")
+        # Check if active session already exists
+        active_session = TechnicianTrackingSession.objects.filter(
+            technician=user,
+            is_active=True,
+            date=today
+        ).first()
+        
+        if active_session:
+            serializer = TechnicianTrackingSessionSerializer(active_session)
+            return Response({
+                'success': True,
+                'message': 'Active session already exists',
+                'data': serializer.data
+            }, status=status.HTTP_200_OK)
+        
+        # Create new session
+        session = TechnicianTrackingSession.objects.create(
+            technician=user,
+            check_in_time=timezone.now(),
+            is_active=True,
+            date=today
+        )
+        
+        serializer = TechnicianTrackingSessionSerializer(session)
+        logger.info(f"Tracking session started for {user.username}")
+        
         return Response({
-            'success': False,
-            'error': 'Request timeout - please try again'
-        }, status=status.HTTP_408_REQUEST_TIMEOUT)
+            'success': True,
+            'message': 'Tracking session started',
+            'data': serializer.data
+        }, status=status.HTTP_201_CREATED)
         
     except Exception as e:
         logger.exception(f"Error in tracking_check_in: {str(e)}")
@@ -100,49 +77,35 @@ def tracking_check_out(request):
     Marks the session as inactive
     """
     try:
-        # Set timeout for entire operation
-        signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(20)  # 20 second timeout
+        user = request.user
+        today = timezone.now().date()
         
-        try:
-            user = request.user
-            
-            # Find active session
-            with transaction.atomic():
-                active_session = TechnicianTrackingSession.objects.filter(
-                    technician=user,
-                    is_active=True
-                ).select_for_update(skip_locked=True).first()
-                
-                if not active_session:
-                    return Response({
-                        'success': False,
-                        'error': 'No active tracking session found'
-                    }, status=status.HTTP_404_NOT_FOUND)
-                
-                # End session
-                active_session.check_out_time = timezone.now()
-                active_session.is_active = False
-                active_session.save()
-                
-                serializer = TechnicianTrackingSessionSerializer(active_session)
-                logger.info(f"Tracking session ended for {user.username}")
-                
-                return Response({
-                    'success': True,
-                    'message': 'Tracking session ended',
-                    'data': serializer.data
-                }, status=status.HTTP_200_OK)
-                
-        finally:
-            signal.alarm(0)  # Cancel timeout
-            
-    except TimeoutError:
-        logger.error(f"Tracking check-out timeout for user {request.user.username}")
+        # Find active session for today
+        active_session = TechnicianTrackingSession.objects.filter(
+            technician=user,
+            is_active=True,
+            date=today
+        ).first()
+        
+        if not active_session:
+            return Response({
+                'success': False,
+                'error': 'No active tracking session found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # End session
+        active_session.check_out_time = timezone.now()
+        active_session.is_active = False
+        active_session.save()
+        
+        serializer = TechnicianTrackingSessionSerializer(active_session)
+        logger.info(f"Tracking session ended for {user.username}")
+        
         return Response({
-            'success': False,
-            'error': 'Request timeout - please try again'
-        }, status=status.HTTP_408_REQUEST_TIMEOUT)
+            'success': True,
+            'message': 'Tracking session ended',
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
         
     except Exception as e:
         logger.exception(f"Error in tracking_check_out: {str(e)}")
@@ -160,61 +123,46 @@ def update_location(request):
     Creates location points every 5 minutes
     """
     try:
-        # Set timeout for entire operation
-        signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(20)  # 20 second timeout
+        user = request.user
+        today = timezone.now().date()
         
-        try:
-            user = request.user
-            
-            # Validate input
-            serializer = LocationUpdateSerializer(data=request.data)
-            if not serializer.is_valid():
-                return Response({
-                    'success': False,
-                    'error': serializer.errors
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Use select_for_update to prevent locking issues
-            with transaction.atomic():
-                # Find active session with minimal query
-                active_session = TechnicianTrackingSession.objects.filter(
-                    technician=user,
-                    is_active=True
-                ).select_for_update(skip_locked=True).first()
-                
-                if not active_session:
-                    return Response({
-                        'success': False,
-                        'error': 'No active tracking session'
-                    }, status=status.HTTP_404_NOT_FOUND)
-                
-                # Create location point with minimal data
-                location = TechnicianLocation.objects.create(
-                    session=active_session,
-                    latitude=serializer.validated_data['latitude'],
-                    longitude=serializer.validated_data['longitude'],
-                    accuracy=serializer.validated_data.get('accuracy'),
-                    timestamp=timezone.now()
-                )
-                
-                location_serializer = TechnicianLocationSerializer(location)
-                
-                return Response({
-                    'success': True,
-                    'message': 'Location updated',
-                    'data': location_serializer.data
-                }, status=status.HTTP_201_CREATED)
-                
-        finally:
-            signal.alarm(0)  # Cancel timeout
-            
-    except TimeoutError:
-        logger.error(f"Location update timeout for user {request.user.username}")
+        # Validate input
+        serializer = LocationUpdateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({
+                'success': False,
+                'error': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Find active session for today
+        active_session = TechnicianTrackingSession.objects.filter(
+            technician=user,
+            is_active=True,
+            date=today
+        ).first()
+        
+        if not active_session:
+            return Response({
+                'success': False,
+                'error': 'No active tracking session'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Create location point
+        location = TechnicianLocation.objects.create(
+            session=active_session,
+            latitude=serializer.validated_data['latitude'],
+            longitude=serializer.validated_data['longitude'],
+            accuracy=serializer.validated_data.get('accuracy'),
+            timestamp=timezone.now()
+        )
+        
+        location_serializer = TechnicianLocationSerializer(location)
+        
         return Response({
-            'success': False,
-            'error': 'Request timeout - please try again'
-        }, status=status.HTTP_408_REQUEST_TIMEOUT)
+            'success': True,
+            'message': 'Location updated',
+            'data': location_serializer.data
+        }, status=status.HTTP_201_CREATED)
         
     except Exception as e:
         logger.exception(f"Error in update_location: {str(e)}")
@@ -231,47 +179,32 @@ def admin_member_list(request):
     Admin endpoint: Get all technicians/members with tracking info
     """
     try:
-        # Set timeout for entire operation
-        signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(20)  # 20 second timeout
-        
-        try:
-            if not request.user.is_staff:
-                return Response({
-                    'success': False,
-                    'error': 'Admin access required'
-                }, status=status.HTTP_403_FORBIDDEN)
-            
-            # Check if MAP_SERVICE is enabled
-            if not getattr(settings, 'MAP_SERVICE', False):
-                return Response({
-                    'success': False,
-                    'error': 'Map service is currently disabled',
-                    'message': 'Location tracking features have been temporarily disabled'
-                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            
-            # Get all technicians (non-staff users)
-            technicians = User.objects.filter(
-                is_staff=False
-            ).order_by('first_name', 'last_name')
-            
-            serializer = MemberSummarySerializer(technicians, many=True)
-            
+        if not request.user.is_staff:
             return Response({
-                'success': True,
-                'data': serializer.data,
-                'count': technicians.count()
-            }, status=status.HTTP_200_OK)
-            
-        finally:
-            signal.alarm(0)  # Cancel timeout
-            
-    except TimeoutError:
-        logger.error(f"Admin member list timeout for user {request.user.username}")
+                'success': False,
+                'error': 'Admin access required'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check if MAP_SERVICE is enabled
+        if not getattr(settings, 'MAP_SERVICE', False):
+            return Response({
+                'success': False,
+                'error': 'Map service is currently disabled',
+                'message': 'Location tracking features have been temporarily disabled'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        
+        # Get all technicians (users with technician profile)
+        technicians = User.objects.filter(
+            technician__isnull=False
+        ).order_by('first_name', 'last_name')
+        
+        serializer = MemberSummarySerializer(technicians, many=True)
+        
         return Response({
-            'success': False,
-            'error': 'Request timeout - please try again'
-        }, status=status.HTTP_408_REQUEST_TIMEOUT)
+            'success': True,
+            'data': serializer.data,
+            'count': technicians.count()
+        }, status=status.HTTP_200_OK)
         
     except Exception as e:
         logger.exception(f"Error in admin_member_list: {str(e)}")
@@ -388,10 +321,12 @@ def get_active_session(request):
     """
     try:
         user = request.user
+        today = timezone.now().date()
         
         active_session = TechnicianTrackingSession.objects.filter(
             technician=user,
-            is_active=True
+            is_active=True,
+            date=today
         ).first()
         
         if not active_session:
