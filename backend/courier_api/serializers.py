@@ -7,7 +7,6 @@ class UserSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'email']
-        allow_null = True
 
 class TechnicianStockSerializer(serializers.ModelSerializer):
     technician_info = UserSimpleSerializer(source='technician', read_only=True)
