@@ -7,6 +7,7 @@ class UserSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'email']
+        allow_null = True
 
 class TechnicianStockSerializer(serializers.ModelSerializer):
     technician_info = UserSimpleSerializer(source='technician', read_only=True)
@@ -25,7 +26,7 @@ class CourierItemSerializer(serializers.Serializer):
     hsn = serializers.CharField(required=False, allow_blank=True)
 
 class CourierTransactionSerializer(serializers.ModelSerializer):
-    created_by_info = UserSimpleSerializer(source='created_by', read_only=True)
+    created_by_info = UserSimpleSerializer(source='created_by', read_only=True, allow_null=True)
     technicians_info = UserSimpleSerializer(source='technicians', many=True, read_only=True)
     total_amount = serializers.SerializerMethodField()
     

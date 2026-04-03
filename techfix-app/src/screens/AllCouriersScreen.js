@@ -46,7 +46,26 @@ export default function AllCouriersScreen({ navigation }) {
                 setCouriers([]);
             }
         } catch (error) {
-            Alert.alert('Error', 'Failed to fetch couriers');
+            console.error('Courier fetch error:', error);
+            let errorMessage = 'Failed to fetch couriers';
+            
+            if (error.response) {
+                // Server responded with error status
+                if (error.response.status === 401) {
+                    errorMessage = 'Authentication expired. Please login again.';
+                } else if (error.response.status === 403) {
+                    errorMessage = 'Admin access required to view couriers.';
+                } else if (error.response.status === 500) {
+                    errorMessage = 'Server error. Please try again later.';
+                } else {
+                    errorMessage = `Error: ${error.response.status} - ${error.response.data?.error || 'Unknown error'}`;
+                }
+            } else if (error.request) {
+                // Network error
+                errorMessage = 'Network error. Please check your connection.';
+            }
+            
+            Alert.alert('Error', errorMessage);
             setCouriers([]);
         } finally {
             setLoading(false);

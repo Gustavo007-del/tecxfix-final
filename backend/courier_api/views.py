@@ -202,8 +202,8 @@ def courier_list(request):
         if status_filter:
             queryset = queryset.filter(status=status_filter)
         
-        # Sort by date descending
-        queryset = queryset.order_by('-sent_time')
+        # Optimize database queries to prevent timeouts
+        queryset = queryset.select_related('created_by').prefetch_related('technicians').order_by('-sent_time')
         
         serializer = CourierTransactionSerializer(queryset, many=True)
         
