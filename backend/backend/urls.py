@@ -15,7 +15,8 @@ from api.views import (
     mark_stock_as_received, get_order_history,
     get_received_history,
     delete_my_account, get_my_profile,
-    process_pending_complaints, get_complaint_processing_status
+    process_pending_complaints, get_complaint_processing_status,
+    create_sales_request, get_sales_requests, approve_sales_request, reject_sales_request
 )
 from api.privacy_views import privacy_policy, terms_of_service, user_agreement, account_deletion_policy
 
@@ -87,5 +88,11 @@ urlpatterns = [
     # Complaint Processing
     path('api/complaints/process/', process_pending_complaints, name='process_pending_complaints'),
     path('api/complaints/processing-status/', get_complaint_processing_status, name='complaint_processing_status'),
+
+    # Sales Requests
+    path('api/sales/requests/', get_sales_requests, name='get_sales_requests'),
+    path('api/sales/requests/create/', create_sales_request, name='create_sales_request'),
+    path('api/sales/requests/<int:request_id>/approve/', approve_sales_request, name='approve_sales_request'),
+    path('api/sales/requests/<int:request_id>/reject/', reject_sales_request, name='reject_sales_request'),
 
 ]

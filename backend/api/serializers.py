@@ -1,7 +1,7 @@
 # E:\study\techfix\backend\api\serializers.py
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Technician, Attendance, SpareRequest
+from .models import Technician, Attendance, SpareRequest, SalesRequest, SalesRequestProduct
 from .geocoding import get_location_name
 from .models import StockOutOrder, StockReceived
 
@@ -158,3 +158,79 @@ class StockReceivedSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
+
+
+class SalesRequestProductSerializer(serializers.ModelSerializer):
+    """Serializer for SalesRequestProduct model"""
+    
+    class Meta:
+        model = SalesRequestProduct
+        fields = [
+            'id',
+            'product_id',
+            'product_name',
+            'product_code',
+            'quantity',
+            'mrp',
+            'service_charge',
+        ]
+
+
+class SalesRequestSerializer(serializers.ModelSerializer):
+    """Serializer for SalesRequest model"""
+    technician_name = serializers.CharField(source='technician.first_name', read_only=True)
+    approved_by_name = serializers.CharField(source='approved_by.first_name', read_only=True, allow_null=True)
+    products = SalesRequestProductSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = SalesRequest
+        fields = [
+            'id',
+            'technician',
+            'technician_name',
+            'type',
+            'company_name',
+            'compliant_number',
+            'total_amount',
+            'status',
+            'requested_at',
+            'reviewed_at',
+            'approved_by',
+            'approved_by_name',
+            'admin_notes',
+            'products',
+        ]
+        read_only_fields = [
+            'id',
+            'technician_name',
+            'approved_by_name',
+            'requested_at',
+            'reviewed_at',
+        ]
+
+
+class SalesRequestCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating sales requests"""
+    products = SalesRequestProductSerializer(many=True)
+    
+    class Meta:
+        model = SalesRequest
+        fields = [
+            'type',
+            'company_name',
+            'compliant_number',
+            'total_amount',
+            'products',
+        ]
+    
+    def create(self, validated_data):
+        products_data = validated_data.pop('products')
+        sales_request = SalesRequest.objects.create(**validated_data)
+        
+        for product_data in products_data:
+            SalesRequestProduct.objects.create(
+                sales_request=sales_request,
+                **product_data
+            )
+        
+        return sales_request

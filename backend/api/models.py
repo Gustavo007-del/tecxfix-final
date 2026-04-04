@@ -194,3 +194,72 @@ class ProcessedComplaint(models.Model):
     
     def __str__(self):
         return f"{self.complaint_no} - {self.technician_name} ({self.quantity_reduced} units)"
+
+
+class SalesRequest(models.Model):
+    """Track sales requests from technicians"""
+    
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ]
+    
+    TYPE_CHOICES = [
+        ('DIRECT', 'Direct'),
+        ('COMPLIANT', 'Compliant'),
+    ]
+    
+    # Request details
+    technician = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sales_requests')
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='DIRECT')
+    company_name = models.CharField(max_length=200)
+    compliant_number = models.CharField(max_length=50, blank=True, null=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Status tracking
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='PENDING'
+    )
+    
+    # Timestamps
+    requested_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Admin action
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='approved_sales_requests'
+    )
+    admin_notes = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-requested_at']
+        verbose_name = 'Sales Request'
+        verbose_name_plural = 'Sales Requests'
+    
+    def __str__(self):
+        return f"{self.company_name} - {self.technician.username} ({self.status})"
+
+
+class SalesRequestProduct(models.Model):
+    """Products included in a sales request"""
+    sales_request = models.ForeignKey(SalesRequest, on_delete=models.CASCADE, related_name='products')
+    product_id = models.IntegerField()  # Demo product ID
+    product_name = models.CharField(max_length=200)
+    product_code = models.CharField(max_length=50)
+    quantity = models.IntegerField()
+    mrp = models.DecimalField(max_digits=10, decimal_places=2)
+    service_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    class Meta:
+        verbose_name = 'Sales Request Product'
+        verbose_name_plural = 'Sales Request Products'
+    
+    def __str__(self):
+        return f"{self.product_name} x {self.quantity}"

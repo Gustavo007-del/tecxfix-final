@@ -356,6 +356,19 @@ export default function AdminDashboardScreen({ navigation }) {
             <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>
 
+        {/* NEW: Sales Requests Button */}
+        <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('AdminSalesRequestScreen')}
+        >
+            <MaterialIcons name="sell" size={24} color={COLORS.white} />
+            <View style={styles.actionContent}>
+                <Text style={styles.actionTitle}>Sales Requests</Text>
+                <Text style={styles.actionSubtitle}>Review and approve sales requests</Text>
+            </View>
+            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
+        </TouchableOpacity>
+
         </View>
       </ScrollView>
     </View>

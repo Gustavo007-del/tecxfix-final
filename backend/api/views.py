@@ -17,11 +17,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import Attendance, Technician, SpareRequest, StockOutOrder, StockReceived, ProcessedComplaint
+from .models import Attendance, Technician, SpareRequest, StockOutOrder, StockReceived, ProcessedComplaint, SalesRequest, SalesRequestProduct
 from .serializers import (
     AttendanceSerializer, AttendanceCheckInSerializer,
     AttendanceCheckOutSerializer, TechnicianSerializer, SpareRequestSerializer,
-    StockOutOrderSerializer, StockReceivedSerializer
+    StockOutOrderSerializer, StockReceivedSerializer, SalesRequestSerializer, SalesRequestCreateSerializer
 )
 
 # sheets
@@ -1793,6 +1793,191 @@ def get_complaint_processing_status(request):
         return Response({
             "success": False,
             "error": f"Server error: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)       
+
+
+# ==================== SALES REQUESTS ====================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_sales_request(request):
+    """Create a new sales request (Technician only)"""
+    try:
+        # Check if user is a technician
+        if not hasattr(request.user, 'technician'):
+            return Response({
+                'success': False,
+                'error': 'Only technicians can create sales requests'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = SalesRequestCreateSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response({
+                'success': False,
+                'error': 'Invalid data',
+                'details': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create sales request with technician
+        validated_data = serializer.validated_data
+        products_data = validated_data.pop('products')
+        
+        sales_request = SalesRequest.objects.create(
+            technician=request.user,
+            **validated_data
+        )
+        
+        # Create products
+        for product_data in products_data:
+            SalesRequestProduct.objects.create(
+                sales_request=sales_request,
+                **product_data
+            )
+        
+        logger.info(f"Sales request {sales_request.id} created by technician {request.user.username}")
+        
+        return Response({
+            'success': True,
+            'message': 'Sales request created successfully',
+            'request_id': sales_request.id
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        logger.exception(f"Error creating sales request: {e}")
+        return Response({
+            'success': False,
+            'error': 'Failed to create sales request'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_sales_requests(request):
+    """Get sales requests (Admin only)"""
+    try:
+        if not request.user.is_staff:
+            return Response({
+                'success': False,
+                'error': 'Admin access required'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Optional filtering
+        status_filter = request.query_params.get('status')
+        
+        queryset = SalesRequest.objects.all().prefetch_related('products')
+        
+        if status_filter:
+            queryset = queryset.filter(status=status_filter.upper())
+        
+        serializer = SalesRequestSerializer(queryset, many=True)
+        
+        return Response({
+            'success': True,
+            'results': serializer.data
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.exception(f"Error fetching sales requests: {e}")
+        return Response({
+            'success': False,
+            'error': 'Failed to fetch sales requests'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def approve_sales_request(request, request_id):
+    """Approve a sales request (Admin only)"""
+    try:
+        if not request.user.is_staff:
+            return Response({
+                'success': False,
+                'error': 'Admin access required'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            sales_request = SalesRequest.objects.get(id=request_id)
+        except SalesRequest.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Sales request not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        if sales_request.status != 'PENDING':
+            return Response({
+                'success': False,
+                'error': 'Sales request is not pending'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update status
+        sales_request.status = 'APPROVED'
+        sales_request.approved_by = request.user
+        sales_request.reviewed_at = timezone.now()
+        sales_request.save()
+        
+        # TODO: Reduce technician stock here
+        # This would integrate with your stock management system
+        
+        logger.info(f"Sales request {request_id} approved by admin {request.user.username}")
+        
+        return Response({
+            'success': True,
+            'message': 'Sales request approved successfully'
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.exception(f"Error approving sales request {request_id}: {e}")
+        return Response({
+            'success': False,
+            'error': 'Failed to approve sales request'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reject_sales_request(request, request_id):
+    """Reject a sales request (Admin only)"""
+    try:
+        if not request.user.is_staff:
+            return Response({
+                'success': False,
+                'error': 'Admin access required'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            sales_request = SalesRequest.objects.get(id=request_id)
+        except SalesRequest.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Sales request not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        if sales_request.status != 'PENDING':
+            return Response({
+                'success': False,
+                'error': 'Sales request is not pending'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update status
+        sales_request.status = 'REJECTED'
+        sales_request.approved_by = request.user
+        sales_request.reviewed_at = timezone.now()
+        sales_request.admin_notes = request.data.get('admin_notes', '')
+        sales_request.save()
+        
+        logger.info(f"Sales request {request_id} rejected by admin {request.user.username}")
+        
+        return Response({
+            'success': True,
+            'message': 'Sales request rejected successfully'
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.exception(f"Error rejecting sales request {request_id}: {e}")
+        return Response({
+            'success': False,
+            'error': 'Failed to reject sales request'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)       
 
 
