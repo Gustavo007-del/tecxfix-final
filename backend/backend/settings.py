@@ -110,11 +110,11 @@ DATABASES = {
 #         }
 #     }
 # Add connection timeout via DATABASE_OPTIONS
-if 'default' in DATABASES:
-    DATABASES['default']['OPTIONS'] = {
-        'connect_timeout': 30,  # Increased from 10 to 30 seconds
-        'options': '-c statement_timeout=30000',  # 30 second statement timeout
-    }
+# if 'default' in DATABASES:
+#     DATABASES['default']['OPTIONS'] = {
+#         'connect_timeout': 30,  # Increased from 10 to 30 seconds
+#         'options': '-c statement_timeout=30000',  # 30 second statement timeout
+#     }
 
 # Database connection logging
 DATABASE_LOGGING = {
