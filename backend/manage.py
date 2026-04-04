@@ -66,7 +66,7 @@ def main():
     try:
         # Time the imports
         import_start = time.time()
-        startup_logger.info(f"[TIMING] Starting Django imports at: {time.strftime('%H:%M:%S.%f', time.gmtime())}")
+        startup_logger.info(f"[TIMING] Starting Django imports at: {time.strftime('%H:%M:%S', time.gmtime())}")
         
         startup_logger.info("Importing Django management commands...")
         django_start = time.time()
@@ -103,7 +103,7 @@ def main():
     try:
         # Time the command execution
         exec_start = time.time()
-        startup_logger.info(f"[TIMING] Starting Django command execution at: {time.strftime('%H:%M:%S.%f', time.gmtime())}")
+        startup_logger.info(f"[TIMING] Starting Django command execution at: {time.strftime('%H:%M:%S', time.gmtime())}")
         
         execute_from_command_line(sys.argv)
         

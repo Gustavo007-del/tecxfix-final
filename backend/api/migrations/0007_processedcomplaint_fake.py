@@ -2,6 +2,11 @@
 from django.db import migrations, models
 
 
+def create_processed_complaint_table(apps, schema_editor):
+    """No-op function to mark existing table as tracked"""
+    pass
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -11,7 +16,7 @@ class Migration(migrations.Migration):
     operations = [
         # Use RunPython to mark existing table as tracked
         migrations.RunPython(
-            code='def create_processed_complaint_table(apps, schema_editor):\n    pass',
+            code=create_processed_complaint_table,
             reverse_code=migrations.RunPython.noop
         ),
     ]

@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0007_processedcomplaint_existing'),
+        ('api', '0007_processedcomplaint_fake'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
