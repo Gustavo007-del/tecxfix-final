@@ -95,13 +95,13 @@ TEMPLATES = [
 # -------------------------------------------------
 # DATABASE (POSTGRES – RENDER)
 # -------------------------------------------------
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default=os.environ.get("DATABASE_URL"),
-#         conn_max_age=0,  # Disabled - no connection persistence
-#         ssl_require=True
-#     )
-# }
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get("DATABASE_URL"),
+        conn_max_age=0,  # Disabled - no connection persistence
+        ssl_require=True
+    )
+}
 # settings.py
 # DATABASES = {
 #         'default': {
