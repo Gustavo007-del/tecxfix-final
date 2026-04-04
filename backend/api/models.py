@@ -185,9 +185,9 @@ class ProcessedComplaint(models.Model):
     class Meta:
         ordering = ['-processed_date']
         indexes = [
-            models.Index(fields=['complaint_no', 'processed_date']),
-            models.Index(fields=['technician_name', 'processed_date']),
-            models.Index(fields=['stock_reduced']),
+            models.Index(fields=['complaint_no', 'processed_date'], name='idx_processedcomplaint_complaint_processed'),
+            models.Index(fields=['technician_name', 'processed_date'], name='idx_processedcomplaint_technician_processed'),
+            models.Index(fields=['stock_reduced'], name='idx_processedcomplaint_stock_reduced'),
         ]
         verbose_name = 'Processed Complaint'
         verbose_name_plural = 'Processed Complaints'
