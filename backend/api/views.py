@@ -25,6 +25,31 @@ from .serializers import (
 )
 from courier_api.sheets_sync import SheetsSync
 
+# API Root View
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def api_root(request):
+    """API Root - Returns available endpoints"""
+    return Response({
+        'message': 'TechFix API',
+        'version': '1.0.0',
+        'endpoints': {
+            'authentication': {
+                'technician_login': '/api/login/technician/',
+                'admin_login': '/api/login/admin/',
+                'token_refresh': '/api/token/refresh/'
+            },
+            'products': {
+                'search': '/api/products/search/'
+            },
+            'sales': {
+                'requests': '/api/sales/requests/',
+                'create_request': '/api/sales/requests/create/'
+            },
+            'documentation': 'https://docs.tecxfix.com'
+        }
+    }, status=status.HTTP_200_OK)
+
 # sheets
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
@@ -1988,9 +2013,8 @@ def search_products(request):
     """Search products from company stock with caching"""
     try:
         search_query = request.query_params.get('search', '').strip()
-        company_filter = request.query_params.get('company', '').strip()
         
-        logger.info(f"Product search by {request.user.username}: query='{search_query}', company='{company_filter}'")
+        logger.info(f"Product search by {request.user.username}: query='{search_query}'")
         
         # Get cached company stock data
         sheets_sync = SheetsSync()
@@ -2013,9 +2037,7 @@ def search_products(request):
             if product.get('qty', 0) <= 0:
                 continue
                 
-            # Apply company filter if specified
-            if company_filter and product.get('brand', '').lower() != company_filter.lower():
-                continue
+            
             
             # Apply search filter (name or spare_id)
             if search_query:

@@ -17,7 +17,8 @@ from api.views import (
     delete_my_account, get_my_profile,
     process_pending_complaints, get_complaint_processing_status,
     create_sales_request, get_sales_requests, approve_sales_request, reject_sales_request,
-    search_products
+    search_products,
+    api_root
 )
 from api.privacy_views import privacy_policy, terms_of_service, user_agreement, account_deletion_policy
 
@@ -26,6 +27,9 @@ from courier_api import urls as courier_urls
 
 
 urlpatterns = [
+    # API Root
+    path('', api_root, name='api_root'),
+    
     path('admin/', admin.site.urls),
     
     # Legal Documents
