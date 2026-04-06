@@ -60,8 +60,8 @@ export default function AdminDashboardScreen({ navigation }) {
 
   const handleProcessComplaints = async () => {
     Alert.alert(
-      'Process Pending Complaints',
-      'This will process all pending complaints from 22/03/26 onwards and reduce technician stock accordingly. Continue?',
+      'Process Completed Complaints',
+      'This will process all Completed complaints from 22/03/26 onwards and reduce technician stock accordingly. Continue?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -347,10 +347,10 @@ export default function AdminDashboardScreen({ navigation }) {
             )}
             <View style={styles.actionContent}>
                 <Text style={styles.actionTitle}>
-                    {processingComplaints ? 'Processing...' : 'Process Pending Complaints'}
+                    {processingComplaints ? 'Processing...' : 'Process Completed Complaints'}
                 </Text>
                 <Text style={styles.actionSubtitle}>
-                    Process pending complaints & reduce stock
+                    Process completed complaints & reduce stock
                 </Text>
             </View>
             <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />

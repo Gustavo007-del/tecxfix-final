@@ -222,9 +222,11 @@ class SalesRequestCreateSerializer(serializers.ModelSerializer):
             'total_amount',
             'products',
         ]
+        read_only_fields = ['technician']
     
     def create(self, validated_data):
         products_data = validated_data.pop('products')
+        validated_data['technician'] = self.context['request'].user
         sales_request = SalesRequest.objects.create(**validated_data)
         
         for product_data in products_data:

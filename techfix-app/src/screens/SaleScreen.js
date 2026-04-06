@@ -122,9 +122,9 @@ export default function SaleScreen({ navigation }) {
   };
 
   const updateServiceCharge = (productId, charge) => {
-    const numCharge = parseFloat(charge) || 0;
+    const numericCharge = parseFloat(charge) || 0;
     setSelectedProducts(prev => prev.map(p => 
-      p.id === productId ? { ...p, serviceCharge: numCharge } : p
+      p.id === productId ? { ...p, serviceCharge: numericCharge } : p
     ));
   };
 
@@ -151,7 +151,7 @@ export default function SaleScreen({ navigation }) {
       const saleData = {
         type: saleType,
         company_name: companyName,
-        compliant_number: saleType === 'compliant' ? compliantNumber : null,
+        compliant_number: compliantNumber || null,
         products: selectedProducts.map(p => ({
           product_id: p.id,
           product_name: p.name,
@@ -160,8 +160,7 @@ export default function SaleScreen({ navigation }) {
           mrp: p.mrp,
           service_charge: p.serviceCharge
         })),
-        total_amount: totalAmount,
-        technician_id: state.user?.id
+        total_amount: totalAmount
       };
 
       console.log('Submitting sale request:', saleData);
@@ -215,13 +214,21 @@ export default function SaleScreen({ navigation }) {
         </View>
 
         {/* Form Content */}
-        <View style={styles.formContainer}>
+        <TouchableOpacity 
+          style={styles.formContainer}
+          activeOpacity={1}
+          onPress={() => {
+            setShowCompanyDropdown(false);
+            setShowProductDropdown(false);
+          }}
+        >
           {/* Type Dropdown */}
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Sale Type *</Text>
             <TouchableOpacity
               style={styles.dropdown}
-              onPress={() => {
+              onPress={(e) => {
+                e?.stopPropagation?.();
                 setSaleType(saleType === 'direct' ? 'compliant' : 'direct');
               }}
             >
@@ -237,7 +244,10 @@ export default function SaleScreen({ navigation }) {
             <Text style={styles.label}>Company Name *</Text>
             <TouchableOpacity
               style={styles.dropdown}
-              onPress={() => setShowCompanyDropdown(!showCompanyDropdown)}
+              onPress={(e) => {
+                e?.stopPropagation?.();
+                setShowCompanyDropdown(!showCompanyDropdown);
+              }}
             >
               <Text style={[styles.dropdownText, !companyName && styles.placeholderText]}>
                 {companyName || 'Select Company'}
@@ -247,18 +257,21 @@ export default function SaleScreen({ navigation }) {
             
             {showCompanyDropdown && (
               <View style={styles.dropdownList}>
-                {DEMO_COMPANIES.map((company, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.dropdownItem}
-                    onPress={() => {
-                      setCompanyName(company);
-                      setShowCompanyDropdown(false);
-                    }}
-                  >
-                    <Text style={styles.dropdownItemText}>{company}</Text>
-                  </TouchableOpacity>
-                ))}
+                <ScrollView nestedScrollEnabled={true} style={{maxHeight: 150}}>
+                  {DEMO_COMPANIES.map((company, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={styles.dropdownItem}
+                      onPress={(e) => {
+                        e?.stopPropagation?.();
+                        setCompanyName(company);
+                        setShowCompanyDropdown(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownItemText}>{company}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
             )}
           </View>
@@ -287,6 +300,9 @@ export default function SaleScreen({ navigation }) {
                 onChangeText={setProductSearch}
                 placeholder="Type product name or code..."
                 placeholderTextColor={COLORS.gray}
+                onFocus={(e) => {
+                  e?.stopPropagation?.();
+                }}
               />
               {loading ? (
                 <ActivityIndicator size="small" color={COLORS.primary} />
@@ -304,19 +320,24 @@ export default function SaleScreen({ navigation }) {
                     <Text style={styles.loadingText}>Searching products...</Text>
                   </View>
                 ) : filteredProducts.length > 0 ? (
-                  filteredProducts.map((product) => (
-                    <TouchableOpacity
-                      key={product.id}
-                      style={styles.productDropdownItem}
-                      onPress={() => handleProductSelect(product)}
-                    >
-                      <View>
-                        <Text style={styles.productName}>{product.name}</Text>
-                        <Text style={styles.productCode}>{product.code} - MRP: ₹{product.mrp} - Stock: {product.stock}</Text>
-                      </View>
-                      <MaterialIcons name="add-circle" size={24} color={COLORS.primary} />
-                    </TouchableOpacity>
-                  ))
+                  <ScrollView nestedScrollEnabled={true} style={{maxHeight: 180}}>
+                    {filteredProducts.map((product) => (
+                      <TouchableOpacity
+                        key={`${product.id}-${Math.random()}`}
+                        style={styles.productDropdownItem}
+                        onPress={(e) => {
+                          e?.stopPropagation?.();
+                          handleProductSelect(product);
+                        }}
+                      >
+                        <View>
+                          <Text style={styles.productName}>{product.name}</Text>
+                          <Text style={styles.productCode}>{product.code} - MRP: ₹{product.mrp} - Stock: {product.stock}</Text>
+                        </View>
+                        <MaterialIcons name="add-circle" size={24} color={COLORS.primary} />
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
                 ) : productSearch.trim() ? (
                   <View style={styles.noResultsContainer}>
                     <Text style={styles.noResultsText}>No products found</Text>
@@ -393,7 +414,7 @@ export default function SaleScreen({ navigation }) {
               </>
             )}
           </TouchableOpacity>
-        </View>
+      </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -461,7 +482,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.gray,
     borderRadius: 8,
     marginTop: 4,
-    maxHeight: 150,
+    maxHeight: 200,
     elevation: 3,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
