@@ -828,3 +828,998 @@ INFO 2026-04-04 18:28:28,567 manage main 121 18140 16752 [TIMING] Total Django p
 INFO 2026-04-04 18:28:28,567 manage main 121 18140 16752 [TIMING] Total Django process time: 3.258s
 INFO 2026-04-04 18:28:28,569 manage main 122 18140 16752 === DJANGO PROCESS ENDING ===
 INFO 2026-04-04 18:28:28,569 manage main 122 18140 16752 === DJANGO PROCESS ENDING ===
+ERROR 2026-04-06 19:30:57,400 manage main 115 14248 11828 Django command failed after: 4.092s
+ERROR 2026-04-06 19:30:57,400 manage main 115 14248 11828 Django command failed after: 4.092s
+ERROR 2026-04-06 19:30:57,401 manage main 116 14248 11828 Django command failed: Migration api.0008_add_sales_models dependencies reference nonexistent parent node ('api', '0007_processedcomplaint_fake')
+ERROR 2026-04-06 19:30:57,401 manage main 116 14248 11828 Django command failed: Migration api.0008_add_sales_models dependencies reference nonexistent parent node ('api', '0007_processedcomplaint_fake')
+ERROR 2026-04-06 19:30:57,415 manage main 117 14248 11828 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\commands\makemigrations.py", line 140, in handle
+    loader = MigrationLoader(None, ignore_no_migrations=True)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\loader.py", line 59, in __init__
+    self.build_graph()
+    ~~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\loader.py", line 313, in build_graph
+    self.graph.validate_consistency()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\graph.py", line 199, in validate_consistency
+    [n.raise_error() for n in self.node_map.values() if isinstance(n, DummyNode)]
+     ~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\graph.py", line 60, in raise_error
+    raise NodeNotFoundError(self.error_message, self.key, origin=self.origin)
+django.db.migrations.exceptions.NodeNotFoundError: Migration api.0008_add_sales_models dependencies reference nonexistent parent node ('api', '0007_processedcomplaint_fake')
+
+ERROR 2026-04-06 19:30:57,415 manage main 117 14248 11828 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\commands\makemigrations.py", line 140, in handle
+    loader = MigrationLoader(None, ignore_no_migrations=True)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\loader.py", line 59, in __init__
+    self.build_graph()
+    ~~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\loader.py", line 313, in build_graph
+    self.graph.validate_consistency()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\graph.py", line 199, in validate_consistency
+    [n.raise_error() for n in self.node_map.values() if isinstance(n, DummyNode)]
+     ~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\graph.py", line 60, in raise_error
+    raise NodeNotFoundError(self.error_message, self.key, origin=self.origin)
+django.db.migrations.exceptions.NodeNotFoundError: Migration api.0008_add_sales_models dependencies reference nonexistent parent node ('api', '0007_processedcomplaint_fake')
+
+INFO 2026-04-06 19:30:57,446 manage main 121 14248 11828 [TIMING] Total Django process time: 4.660s
+INFO 2026-04-06 19:30:57,446 manage main 121 14248 11828 [TIMING] Total Django process time: 4.660s
+INFO 2026-04-06 19:30:57,447 manage main 122 14248 11828 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:30:57,447 manage main 122 14248 11828 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:32:14,218 manage main 111 18036 17808 [TIMING] Django command completed in: 2.985s
+INFO 2026-04-06 19:32:14,218 manage main 111 18036 17808 [TIMING] Django command completed in: 2.985s
+INFO 2026-04-06 19:32:14,219 manage main 112 18036 17808 Django command completed successfully
+INFO 2026-04-06 19:32:14,219 manage main 112 18036 17808 Django command completed successfully
+INFO 2026-04-06 19:32:14,223 manage main 121 18036 17808 [TIMING] Total Django process time: 3.324s
+INFO 2026-04-06 19:32:14,223 manage main 121 18036 17808 [TIMING] Total Django process time: 3.324s
+INFO 2026-04-06 19:32:14,225 manage main 122 18036 17808 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:32:14,225 manage main 122 18036 17808 === DJANGO PROCESS ENDING ===
+DEBUG 2026-04-06 19:32:26,794 schema execute 192 15012 18584 CREATE TABLE "api_processedcomplaint" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "complaint_no" varchar(50) NOT NULL UNIQUE, "technician_name" varchar(100) NOT NULL, "product_code" varchar(50) NOT NULL, "part_name" varchar(200) NOT NULL, "quantity_reduced" integer NOT NULL, "processed_date" datetime NOT NULL, "stock_reduced" bool NOT NULL, "processing_notes" text NOT NULL); (params None)
+ERROR 2026-04-06 19:32:26,801 manage main 115 15012 18584 Django command failed after: 2.749s
+ERROR 2026-04-06 19:32:26,801 manage main 115 15012 18584 Django command failed after: 2.749s
+ERROR 2026-04-06 19:32:26,802 manage main 116 15012 18584 Django command failed: table "api_processedcomplaint" already exists
+ERROR 2026-04-06 19:32:26,802 manage main 116 15012 18584 Django command failed: table "api_processedcomplaint" already exists
+ERROR 2026-04-06 19:32:26,833 manage main 117 15012 18584 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+sqlite3.OperationalError: table "api_processedcomplaint" already exists
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\commands\migrate.py", line 354, in handle
+    post_migrate_state = executor.migrate(
+        targets,
+    ...<3 lines>...
+        fake_initial=fake_initial,
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 137, in migrate
+    state = self._migrate_all_forwards(
+        state, plan, full_plan, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 169, in _migrate_all_forwards
+    state = self.apply_migration(
+        state, migration, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 257, in apply_migration
+    state = migration.apply(state, schema_editor)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\migration.py", line 132, in apply
+    operation.database_forwards(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.app_label, schema_editor, old_state, project_state
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\operations\models.py", line 100, in database_forwards
+    schema_editor.create_model(model)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 513, in create_model
+    self.execute(sql, params or None)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 205, in execute
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+django.db.utils.OperationalError: table "api_processedcomplaint" already exists
+
+ERROR 2026-04-06 19:32:26,833 manage main 117 15012 18584 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+sqlite3.OperationalError: table "api_processedcomplaint" already exists
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\commands\migrate.py", line 354, in handle
+    post_migrate_state = executor.migrate(
+        targets,
+    ...<3 lines>...
+        fake_initial=fake_initial,
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 137, in migrate
+    state = self._migrate_all_forwards(
+        state, plan, full_plan, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 169, in _migrate_all_forwards
+    state = self.apply_migration(
+        state, migration, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 257, in apply_migration
+    state = migration.apply(state, schema_editor)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\migration.py", line 132, in apply
+    operation.database_forwards(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.app_label, schema_editor, old_state, project_state
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\operations\models.py", line 100, in database_forwards
+    schema_editor.create_model(model)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 513, in create_model
+    self.execute(sql, params or None)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 205, in execute
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+django.db.utils.OperationalError: table "api_processedcomplaint" already exists
+
+INFO 2026-04-06 19:32:26,884 manage main 121 15012 18584 [TIMING] Total Django process time: 3.137s
+INFO 2026-04-06 19:32:26,884 manage main 121 15012 18584 [TIMING] Total Django process time: 3.137s
+INFO 2026-04-06 19:32:26,885 manage main 122 15012 18584 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:32:26,885 manage main 122 15012 18584 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:33:23,471 manage main 111 5572 1436 [TIMING] Django command completed in: 3.272s
+INFO 2026-04-06 19:33:23,471 manage main 111 5572 1436 [TIMING] Django command completed in: 3.272s
+INFO 2026-04-06 19:33:23,473 manage main 112 5572 1436 Django command completed successfully
+INFO 2026-04-06 19:33:23,473 manage main 112 5572 1436 Django command completed successfully
+INFO 2026-04-06 19:33:23,474 manage main 121 5572 1436 [TIMING] Total Django process time: 3.737s
+INFO 2026-04-06 19:33:23,474 manage main 121 5572 1436 [TIMING] Total Django process time: 3.737s
+INFO 2026-04-06 19:33:23,477 manage main 122 5572 1436 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:33:23,477 manage main 122 5572 1436 === DJANGO PROCESS ENDING ===
+DEBUG 2026-04-06 19:33:31,530 schema execute 192 16924 18636 CREATE TABLE "api_processedcomplaint" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "complaint_no" varchar(50) NOT NULL UNIQUE, "technician_name" varchar(100) NOT NULL, "product_code" varchar(50) NOT NULL, "part_name" varchar(200) NOT NULL, "quantity_reduced" integer NOT NULL, "processed_date" datetime NOT NULL, "stock_reduced" bool NOT NULL, "processing_notes" text NOT NULL); (params None)
+ERROR 2026-04-06 19:33:31,533 manage main 115 16924 18636 Django command failed after: 2.911s
+ERROR 2026-04-06 19:33:31,533 manage main 115 16924 18636 Django command failed after: 2.911s
+ERROR 2026-04-06 19:33:31,534 manage main 116 16924 18636 Django command failed: table "api_processedcomplaint" already exists
+ERROR 2026-04-06 19:33:31,534 manage main 116 16924 18636 Django command failed: table "api_processedcomplaint" already exists
+ERROR 2026-04-06 19:33:31,554 manage main 117 16924 18636 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+sqlite3.OperationalError: table "api_processedcomplaint" already exists
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\commands\migrate.py", line 354, in handle
+    post_migrate_state = executor.migrate(
+        targets,
+    ...<3 lines>...
+        fake_initial=fake_initial,
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 137, in migrate
+    state = self._migrate_all_forwards(
+        state, plan, full_plan, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 169, in _migrate_all_forwards
+    state = self.apply_migration(
+        state, migration, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 257, in apply_migration
+    state = migration.apply(state, schema_editor)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\migration.py", line 132, in apply
+    operation.database_forwards(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.app_label, schema_editor, old_state, project_state
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\operations\models.py", line 100, in database_forwards
+    schema_editor.create_model(model)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 513, in create_model
+    self.execute(sql, params or None)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 205, in execute
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+django.db.utils.OperationalError: table "api_processedcomplaint" already exists
+
+ERROR 2026-04-06 19:33:31,554 manage main 117 16924 18636 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+sqlite3.OperationalError: table "api_processedcomplaint" already exists
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\commands\migrate.py", line 354, in handle
+    post_migrate_state = executor.migrate(
+        targets,
+    ...<3 lines>...
+        fake_initial=fake_initial,
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 137, in migrate
+    state = self._migrate_all_forwards(
+        state, plan, full_plan, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 169, in _migrate_all_forwards
+    state = self.apply_migration(
+        state, migration, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 257, in apply_migration
+    state = migration.apply(state, schema_editor)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\migration.py", line 132, in apply
+    operation.database_forwards(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.app_label, schema_editor, old_state, project_state
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\operations\models.py", line 100, in database_forwards
+    schema_editor.create_model(model)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 513, in create_model
+    self.execute(sql, params or None)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 205, in execute
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+django.db.utils.OperationalError: table "api_processedcomplaint" already exists
+
+INFO 2026-04-06 19:33:31,620 manage main 121 16924 18636 [TIMING] Total Django process time: 3.536s
+INFO 2026-04-06 19:33:31,620 manage main 121 16924 18636 [TIMING] Total Django process time: 3.536s
+INFO 2026-04-06 19:33:31,622 manage main 122 16924 18636 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:33:31,622 manage main 122 16924 18636 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:35:24,832 manage main 111 10004 18028 [TIMING] Django command completed in: 2.667s
+INFO 2026-04-06 19:35:24,832 manage main 111 10004 18028 [TIMING] Django command completed in: 2.667s
+INFO 2026-04-06 19:35:24,833 manage main 112 10004 18028 Django command completed successfully
+INFO 2026-04-06 19:35:24,833 manage main 112 10004 18028 Django command completed successfully
+INFO 2026-04-06 19:35:24,834 manage main 121 10004 18028 [TIMING] Total Django process time: 2.999s
+INFO 2026-04-06 19:35:24,834 manage main 121 10004 18028 [TIMING] Total Django process time: 2.999s
+INFO 2026-04-06 19:35:24,835 manage main 122 10004 18028 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:35:24,835 manage main 122 10004 18028 === DJANGO PROCESS ENDING ===
+DEBUG 2026-04-06 19:35:31,915 schema execute 192 11356 18740 CREATE TABLE "api_processedcomplaint" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "complaint_no" varchar(50) NOT NULL UNIQUE, "technician_name" varchar(100) NOT NULL, "product_code" varchar(50) NOT NULL, "part_name" varchar(200) NOT NULL, "quantity_reduced" integer NOT NULL, "processed_date" datetime NOT NULL, "stock_reduced" bool NOT NULL, "processing_notes" text NOT NULL); (params None)
+ERROR 2026-04-06 19:35:31,918 manage main 115 11356 18740 Django command failed after: 2.849s
+ERROR 2026-04-06 19:35:31,918 manage main 115 11356 18740 Django command failed after: 2.849s
+ERROR 2026-04-06 19:35:31,919 manage main 116 11356 18740 Django command failed: table "api_processedcomplaint" already exists
+ERROR 2026-04-06 19:35:31,919 manage main 116 11356 18740 Django command failed: table "api_processedcomplaint" already exists
+ERROR 2026-04-06 19:35:31,938 manage main 117 11356 18740 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+sqlite3.OperationalError: table "api_processedcomplaint" already exists
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\commands\migrate.py", line 354, in handle
+    post_migrate_state = executor.migrate(
+        targets,
+    ...<3 lines>...
+        fake_initial=fake_initial,
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 137, in migrate
+    state = self._migrate_all_forwards(
+        state, plan, full_plan, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 169, in _migrate_all_forwards
+    state = self.apply_migration(
+        state, migration, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 257, in apply_migration
+    state = migration.apply(state, schema_editor)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\migration.py", line 132, in apply
+    operation.database_forwards(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.app_label, schema_editor, old_state, project_state
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\operations\models.py", line 100, in database_forwards
+    schema_editor.create_model(model)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 513, in create_model
+    self.execute(sql, params or None)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 205, in execute
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+django.db.utils.OperationalError: table "api_processedcomplaint" already exists
+
+ERROR 2026-04-06 19:35:31,938 manage main 117 11356 18740 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+sqlite3.OperationalError: table "api_processedcomplaint" already exists
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\commands\migrate.py", line 354, in handle
+    post_migrate_state = executor.migrate(
+        targets,
+    ...<3 lines>...
+        fake_initial=fake_initial,
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 137, in migrate
+    state = self._migrate_all_forwards(
+        state, plan, full_plan, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 169, in _migrate_all_forwards
+    state = self.apply_migration(
+        state, migration, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 257, in apply_migration
+    state = migration.apply(state, schema_editor)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\migration.py", line 132, in apply
+    operation.database_forwards(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.app_label, schema_editor, old_state, project_state
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\operations\models.py", line 100, in database_forwards
+    schema_editor.create_model(model)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 513, in create_model
+    self.execute(sql, params or None)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 205, in execute
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+django.db.utils.OperationalError: table "api_processedcomplaint" already exists
+
+INFO 2026-04-06 19:35:32,020 manage main 121 11356 18740 [TIMING] Total Django process time: 3.248s
+INFO 2026-04-06 19:35:32,020 manage main 121 11356 18740 [TIMING] Total Django process time: 3.248s
+INFO 2026-04-06 19:35:32,026 manage main 122 11356 18740 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:35:32,026 manage main 122 11356 18740 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:39:36,238 manage main 111 1056 4652 [TIMING] Django command completed in: 3.378s
+INFO 2026-04-06 19:39:36,238 manage main 111 1056 4652 [TIMING] Django command completed in: 3.378s
+INFO 2026-04-06 19:39:36,239 manage main 112 1056 4652 Django command completed successfully
+INFO 2026-04-06 19:39:36,239 manage main 112 1056 4652 Django command completed successfully
+INFO 2026-04-06 19:39:36,241 manage main 121 1056 4652 [TIMING] Total Django process time: 3.692s
+INFO 2026-04-06 19:39:36,241 manage main 121 1056 4652 [TIMING] Total Django process time: 3.692s
+INFO 2026-04-06 19:39:36,242 manage main 122 1056 4652 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:39:36,242 manage main 122 1056 4652 === DJANGO PROCESS ENDING ===
+DEBUG 2026-04-06 19:39:45,895 schema execute 192 9420 7520 CREATE TABLE "api_processedcomplaint" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "complaint_no" varchar(50) NOT NULL UNIQUE, "technician_name" varchar(100) NOT NULL, "product_code" varchar(50) NOT NULL, "part_name" varchar(200) NOT NULL, "quantity_reduced" integer NOT NULL, "processed_date" datetime NOT NULL, "stock_reduced" bool NOT NULL, "processing_notes" text NOT NULL); (params None)
+ERROR 2026-04-06 19:39:45,897 manage main 115 9420 7520 Django command failed after: 2.668s
+ERROR 2026-04-06 19:39:45,897 manage main 115 9420 7520 Django command failed after: 2.668s
+ERROR 2026-04-06 19:39:45,899 manage main 116 9420 7520 Django command failed: table "api_processedcomplaint" already exists
+ERROR 2026-04-06 19:39:45,899 manage main 116 9420 7520 Django command failed: table "api_processedcomplaint" already exists
+ERROR 2026-04-06 19:39:45,915 manage main 117 9420 7520 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+sqlite3.OperationalError: table "api_processedcomplaint" already exists
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\commands\migrate.py", line 354, in handle
+    post_migrate_state = executor.migrate(
+        targets,
+    ...<3 lines>...
+        fake_initial=fake_initial,
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 137, in migrate
+    state = self._migrate_all_forwards(
+        state, plan, full_plan, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 169, in _migrate_all_forwards
+    state = self.apply_migration(
+        state, migration, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 257, in apply_migration
+    state = migration.apply(state, schema_editor)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\migration.py", line 132, in apply
+    operation.database_forwards(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.app_label, schema_editor, old_state, project_state
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\operations\models.py", line 100, in database_forwards
+    schema_editor.create_model(model)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 513, in create_model
+    self.execute(sql, params or None)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 205, in execute
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+django.db.utils.OperationalError: table "api_processedcomplaint" already exists
+
+ERROR 2026-04-06 19:39:45,915 manage main 117 9420 7520 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+sqlite3.OperationalError: table "api_processedcomplaint" already exists
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\commands\migrate.py", line 354, in handle
+    post_migrate_state = executor.migrate(
+        targets,
+    ...<3 lines>...
+        fake_initial=fake_initial,
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 137, in migrate
+    state = self._migrate_all_forwards(
+        state, plan, full_plan, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 169, in _migrate_all_forwards
+    state = self.apply_migration(
+        state, migration, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 257, in apply_migration
+    state = migration.apply(state, schema_editor)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\migration.py", line 132, in apply
+    operation.database_forwards(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.app_label, schema_editor, old_state, project_state
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\operations\models.py", line 100, in database_forwards
+    schema_editor.create_model(model)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 513, in create_model
+    self.execute(sql, params or None)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 205, in execute
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+django.db.utils.OperationalError: table "api_processedcomplaint" already exists
+
+INFO 2026-04-06 19:39:45,964 manage main 121 9420 7520 [TIMING] Total Django process time: 3.043s
+INFO 2026-04-06 19:39:45,964 manage main 121 9420 7520 [TIMING] Total Django process time: 3.043s
+INFO 2026-04-06 19:39:45,966 manage main 122 9420 7520 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:39:45,966 manage main 122 9420 7520 === DJANGO PROCESS ENDING ===
+DEBUG 2026-04-06 19:40:16,344 schema execute 192 6552 17576 CREATE TABLE "api_processedcomplaint" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "complaint_no" varchar(50) NOT NULL UNIQUE, "technician_name" varchar(100) NOT NULL, "product_code" varchar(50) NOT NULL, "part_name" varchar(200) NOT NULL, "quantity_reduced" integer NOT NULL, "processed_date" datetime NOT NULL, "stock_reduced" bool NOT NULL, "processing_notes" text NOT NULL); (params None)
+DEBUG 2026-04-06 19:40:16,387 schema execute 192 6552 17576 CREATE TABLE "api_salesrequest" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "type" varchar(20) NOT NULL, "company_name" varchar(200) NOT NULL, "compliant_number" varchar(50) NULL, "total_amount" decimal NOT NULL, "status" varchar(20) NOT NULL, "requested_at" datetime NOT NULL, "reviewed_at" datetime NULL, "admin_notes" text NOT NULL, "approved_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "technician_id" integer NOT NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED); (params None)
+ERROR 2026-04-06 19:40:16,392 manage main 115 6552 17576 Django command failed after: 3.222s
+ERROR 2026-04-06 19:40:16,392 manage main 115 6552 17576 Django command failed after: 3.222s
+ERROR 2026-04-06 19:40:16,394 manage main 116 6552 17576 Django command failed: table "api_salesrequest" already exists
+ERROR 2026-04-06 19:40:16,394 manage main 116 6552 17576 Django command failed: table "api_salesrequest" already exists
+ERROR 2026-04-06 19:40:16,413 manage main 117 6552 17576 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+sqlite3.OperationalError: table "api_salesrequest" already exists
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\commands\migrate.py", line 354, in handle
+    post_migrate_state = executor.migrate(
+        targets,
+    ...<3 lines>...
+        fake_initial=fake_initial,
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 137, in migrate
+    state = self._migrate_all_forwards(
+        state, plan, full_plan, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 169, in _migrate_all_forwards
+    state = self.apply_migration(
+        state, migration, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 257, in apply_migration
+    state = migration.apply(state, schema_editor)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\migration.py", line 132, in apply
+    operation.database_forwards(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.app_label, schema_editor, old_state, project_state
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\operations\models.py", line 100, in database_forwards
+    schema_editor.create_model(model)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 513, in create_model
+    self.execute(sql, params or None)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 205, in execute
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+django.db.utils.OperationalError: table "api_salesrequest" already exists
+
+ERROR 2026-04-06 19:40:16,413 manage main 117 6552 17576 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+sqlite3.OperationalError: table "api_salesrequest" already exists
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\base.py", line 111, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\core\management\commands\migrate.py", line 354, in handle
+    post_migrate_state = executor.migrate(
+        targets,
+    ...<3 lines>...
+        fake_initial=fake_initial,
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 137, in migrate
+    state = self._migrate_all_forwards(
+        state, plan, full_plan, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 169, in _migrate_all_forwards
+    state = self.apply_migration(
+        state, migration, fake=fake, fake_initial=fake_initial
+    )
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\executor.py", line 257, in apply_migration
+    state = migration.apply(state, schema_editor)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\migration.py", line 132, in apply
+    operation.database_forwards(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.app_label, schema_editor, old_state, project_state
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\migrations\operations\models.py", line 100, in database_forwards
+    schema_editor.create_model(model)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 513, in create_model
+    self.execute(sql, params or None)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\base\schema.py", line 205, in execute
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ~~~~~~~~~~~~~~~~~~~^^^^^
+  File "E:\study\techfix\backend\venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 355, in execute
+    return super().execute(query)
+           ~~~~~~~~~~~~~~~^^^^^^^
+django.db.utils.OperationalError: table "api_salesrequest" already exists
+
+INFO 2026-04-06 19:40:16,481 manage main 121 6552 17576 [TIMING] Total Django process time: 3.664s
+INFO 2026-04-06 19:40:16,481 manage main 121 6552 17576 [TIMING] Total Django process time: 3.664s
+INFO 2026-04-06 19:40:16,485 manage main 122 6552 17576 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:40:16,485 manage main 122 6552 17576 === DJANGO PROCESS ENDING ===
+DEBUG 2026-04-06 19:42:22,384 schema execute 188 11916 11396 CREATE TABLE "api_processedcomplaint" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "complaint_no" varchar(50) NOT NULL UNIQUE, "technician_name" varchar(100) NOT NULL, "product_code" varchar(50) NOT NULL, "part_name" varchar(200) NOT NULL, "quantity_reduced" integer NOT NULL, "processed_date" datetime NOT NULL, "stock_reduced" bool NOT NULL, "processing_notes" text NOT NULL); (params None)
+DEBUG 2026-04-06 19:42:22,427 schema execute 188 11916 11396 CREATE TABLE "api_salesrequest" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "type" varchar(20) NOT NULL, "company_name" varchar(200) NOT NULL, "compliant_number" varchar(50) NULL, "total_amount" decimal NOT NULL, "status" varchar(20) NOT NULL, "requested_at" datetime NOT NULL, "reviewed_at" datetime NULL, "admin_notes" text NOT NULL, "approved_by_id" integer NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED, "technician_id" integer NOT NULL REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED); (params None)
+DEBUG 2026-04-06 19:42:22,467 schema execute 188 11916 11396 CREATE TABLE "api_salesrequestproduct" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "product_id" integer NOT NULL, "product_name" varchar(200) NOT NULL, "product_code" varchar(50) NOT NULL, "quantity" integer NOT NULL, "mrp" decimal NOT NULL, "service_charge" decimal NOT NULL, "sales_request_id" bigint NOT NULL REFERENCES "api_salesrequest" ("id") DEFERRABLE INITIALLY DEFERRED); (params None)
+DEBUG 2026-04-06 19:42:22,468 schema execute 188 11916 11396 CREATE INDEX "proc_complaint_date_idx" ON "api_processedcomplaint" ("complaint_no", "processed_date"); (params ())
+DEBUG 2026-04-06 19:42:22,469 schema execute 188 11916 11396 CREATE INDEX "proc_tech_date_idx" ON "api_processedcomplaint" ("technician_name", "processed_date"); (params ())
+DEBUG 2026-04-06 19:42:22,470 schema execute 188 11916 11396 CREATE INDEX "proc_stock_idx" ON "api_processedcomplaint" ("stock_reduced"); (params ())
+DEBUG 2026-04-06 19:42:22,472 schema execute 188 11916 11396 CREATE INDEX "api_salesrequest_approved_by_id_f46494dc" ON "api_salesrequest" ("approved_by_id"); (params ())
+DEBUG 2026-04-06 19:42:22,475 schema execute 188 11916 11396 CREATE INDEX "api_salesrequest_technician_id_0fef9c47" ON "api_salesrequest" ("technician_id"); (params ())
+DEBUG 2026-04-06 19:42:22,476 schema execute 188 11916 11396 CREATE INDEX "api_salesrequestproduct_sales_request_id_6294f71f" ON "api_salesrequestproduct" ("sales_request_id"); (params ())
+INFO 2026-04-06 19:42:22,598 manage main 111 11916 11396 [TIMING] Django command completed in: 8.732s
+INFO 2026-04-06 19:42:22,598 manage main 111 11916 11396 [TIMING] Django command completed in: 8.732s
+INFO 2026-04-06 19:42:22,598 manage main 112 11916 11396 Django command completed successfully
+INFO 2026-04-06 19:42:22,598 manage main 112 11916 11396 Django command completed successfully
+INFO 2026-04-06 19:42:22,599 manage main 121 11916 11396 [TIMING] Total Django process time: 9.334s
+INFO 2026-04-06 19:42:22,599 manage main 121 11916 11396 [TIMING] Total Django process time: 9.334s
+INFO 2026-04-06 19:42:22,599 manage main 122 11916 11396 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:42:22,599 manage main 122 11916 11396 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:42:43,097 manage main 111 12216 16940 [TIMING] Django command completed in: 4.796s
+INFO 2026-04-06 19:42:43,097 manage main 111 12216 16940 [TIMING] Django command completed in: 4.796s
+INFO 2026-04-06 19:42:43,098 manage main 112 12216 16940 Django command completed successfully
+INFO 2026-04-06 19:42:43,098 manage main 112 12216 16940 Django command completed successfully
+INFO 2026-04-06 19:42:43,099 manage main 121 12216 16940 [TIMING] Total Django process time: 5.621s
+INFO 2026-04-06 19:42:43,099 manage main 121 12216 16940 [TIMING] Total Django process time: 5.621s
+INFO 2026-04-06 19:42:43,099 manage main 122 12216 16940 === DJANGO PROCESS ENDING ===
+INFO 2026-04-06 19:42:43,099 manage main 122 12216 16940 === DJANGO PROCESS ENDING ===
