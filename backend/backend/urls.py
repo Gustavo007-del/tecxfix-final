@@ -16,7 +16,8 @@ from api.views import (
     get_received_history,
     delete_my_account, get_my_profile,
     process_pending_complaints, get_complaint_processing_status,
-    create_sales_request, get_sales_requests, approve_sales_request, reject_sales_request
+    create_sales_request, get_sales_requests, approve_sales_request, reject_sales_request,
+    search_products
 )
 from api.privacy_views import privacy_policy, terms_of_service, user_agreement, account_deletion_policy
 
@@ -94,5 +95,8 @@ urlpatterns = [
     path('api/sales/requests/create/', create_sales_request, name='create_sales_request'),
     path('api/sales/requests/<int:request_id>/approve/', approve_sales_request, name='approve_sales_request'),
     path('api/sales/requests/<int:request_id>/reject/', reject_sales_request, name='reject_sales_request'),
+
+    # Product Search
+    path('api/products/search/', search_products, name='search_products'),
 
 ]

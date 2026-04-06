@@ -23,6 +23,7 @@ from .serializers import (
     AttendanceCheckOutSerializer, TechnicianSerializer, SpareRequestSerializer,
     StockOutOrderSerializer, StockReceivedSerializer, SalesRequestSerializer, SalesRequestCreateSerializer
 )
+from courier_api.sheets_sync import SheetsSync
 
 # sheets
 from google.oauth2.service_account import Credentials
@@ -1978,6 +1979,83 @@ def reject_sales_request(request, request_id):
         return Response({
             'success': False,
             'error': 'Failed to reject sales request'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)       
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_products(request):
+    """Search products from company stock with caching"""
+    try:
+        search_query = request.query_params.get('search', '').strip()
+        company_filter = request.query_params.get('company', '').strip()
+        
+        logger.info(f"Product search by {request.user.username}: query='{search_query}', company='{company_filter}'")
+        
+        # Get cached company stock data
+        sheets_sync = SheetsSync()
+        try:
+            all_products = sheets_sync.get_company_stock()
+            logger.info(f"Retrieved {len(all_products)} products from cache/sheets")
+        except Exception as e:
+            logger.error(f"Error fetching company stock: {e}")
+            return Response({
+                'success': False,
+                'error': 'Unable to fetch product data',
+                'message': 'Please try again later'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        
+        # Filter products based on search criteria
+        filtered_products = []
+        
+        for product in all_products:
+            # Skip products with no stock
+            if product.get('qty', 0) <= 0:
+                continue
+                
+            # Apply company filter if specified
+            if company_filter and product.get('brand', '').lower() != company_filter.lower():
+                continue
+            
+            # Apply search filter (name or spare_id)
+            if search_query:
+                name_match = search_query.lower() in product.get('name', '').lower()
+                code_match = search_query.lower() in product.get('spare_id', '').lower()
+                
+                if not (name_match or code_match):
+                    continue
+            
+            # Map to expected format for frontend
+            filtered_products.append({
+                'id': product.get('spare_id', ''),  # Using spare_id as unique identifier
+                'name': product.get('name', ''),
+                'code': product.get('spare_id', ''),
+                'mrp': float(product.get('mrp', 0)),
+                'company': product.get('brand', ''),
+                'hsn': product.get('hsn', ''),
+                'stock': product.get('qty', 0)
+            })
+        
+        # Limit results to prevent large responses
+        max_results = 100
+        if len(filtered_products) > max_results:
+            filtered_products = filtered_products[:max_results]
+            logger.info(f"Limited results to {max_results} products")
+        
+        logger.info(f"Returning {len(filtered_products)} filtered products")
+        
+        return Response({
+            'success': True,
+            'products': filtered_products,
+            'total_available': len(filtered_products)
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.exception(f"Error in product search: {e}")
+        return Response({
+            'success': False,
+            'error': 'Failed to search products',
+            'message': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)       
 
 
