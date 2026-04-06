@@ -30,6 +30,9 @@ const API_ENDPOINTS = {
   // Complaint Processing
   PROCESS_COMPLAINTS: '/complaints/process/',
   COMPLAINT_PROCESSING_STATUS: '/complaints/processing-status/',
+  
+  // Product Search
+  SEARCH_PRODUCTS: '/products/search/',
 };
 
 export default API_ENDPOINTS;

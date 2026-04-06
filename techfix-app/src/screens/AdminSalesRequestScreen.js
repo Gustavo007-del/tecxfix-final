@@ -135,7 +135,11 @@ export default function AdminSalesRequestScreen({ navigation }) {
     try {
       setProcessingId(requestId);
       
-      const response = await client.post(`/sales/requests/${requestId}/${status}/`);
+      const endpoint = status === 'approved' 
+        ? `/sales/requests/${requestId}/approve/`
+        : `/sales/requests/${requestId}/reject/`;
+      
+      const response = await client.post(endpoint);
       
       if (response.data.success) {
         Alert.alert(

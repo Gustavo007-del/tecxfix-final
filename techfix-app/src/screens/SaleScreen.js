@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
-import client from '../api/client';
+import client, { API_ENDPOINTS } from '../api/client';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { COLORS } from '../theme/colors';
 
@@ -23,17 +23,6 @@ const DEMO_COMPANIES = [
   'Smart Devices Co',
   'Innovation Labs',
   'Future Tech Ltd'
-];
-
-const DEMO_PRODUCTS = [
-  { id: 1, name: 'Laptop Battery', code: 'LB001', mrp: 2500, company: 'Tech Solutions Pvt Ltd' },
-  { id: 2, name: 'Mouse Wireless', code: 'MW002', mrp: 450, company: 'Digital Systems Inc' },
-  { id: 3, name: 'Keyboard USB', code: 'KU003', mrp: 800, company: 'Smart Devices Co' },
-  { id: 4, name: 'Monitor 24"', code: 'M24004', mrp: 12000, company: 'Innovation Labs' },
-  { id: 5, name: 'Webcam HD', code: 'WH005', mrp: 1500, company: 'Future Tech Ltd' },
-  { id: 6, name: 'USB Cable', code: 'UC006', mrp: 150, company: 'Tech Solutions Pvt Ltd' },
-  { id: 7, name: 'Power Adapter', code: 'PA007', mrp: 600, company: 'Digital Systems Inc' },
-  { id: 8, name: 'Headphones', code: 'HP008', mrp: 1800, company: 'Smart Devices Co' },
 ];
 
 export default function SaleScreen({ navigation }) {
@@ -52,6 +41,7 @@ export default function SaleScreen({ navigation }) {
   const [showProductDropdown, setShowProductDropdown] = useState(false);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [allProducts, setAllProducts] = useState([]);
 
   // Calculate total whenever selected products change
   useEffect(() => {
@@ -61,21 +51,42 @@ export default function SaleScreen({ navigation }) {
     setTotalAmount(total);
   }, [selectedProducts]);
 
-  // Filter products based on search and selected company
+  // Search products from API
   useEffect(() => {
     if (productSearch.trim()) {
-      const filtered = DEMO_PRODUCTS.filter(product => 
-        (companyName ? product.company === companyName : true) &&
-        (product.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-         product.code.toLowerCase().includes(productSearch.toLowerCase()))
-      );
-      setFilteredProducts(filtered);
-      setShowProductDropdown(true);
+      searchProducts();
     } else {
       setFilteredProducts([]);
       setShowProductDropdown(false);
     }
   }, [productSearch, companyName]);
+
+  const searchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await client.get(API_ENDPOINTS.SEARCH_PRODUCTS, {
+        params: {
+          search: productSearch,
+          company: companyName
+        }
+      });
+
+      if (response.data.success) {
+        setFilteredProducts(response.data.products);
+        setShowProductDropdown(true);
+      } else {
+        console.error('Product search failed:', response.data.error);
+        setFilteredProducts([]);
+        setShowProductDropdown(false);
+      }
+    } catch (error) {
+      console.error('Error searching products:', error);
+      setFilteredProducts([]);
+      setShowProductDropdown(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleProductSelect = (product) => {
     const existingProduct = selectedProducts.find(p => p.id === product.id);
@@ -156,7 +167,7 @@ export default function SaleScreen({ navigation }) {
       console.log('Submitting sale request:', saleData);
 
       // API call to submit sale request
-      const response = await client.post('/sales/requests/', saleData);
+      const response = await client.post('/sales/requests/create/', saleData);
 
       if (response.data.success) {
         Alert.alert(
@@ -277,25 +288,40 @@ export default function SaleScreen({ navigation }) {
                 placeholder="Type product name or code..."
                 placeholderTextColor={COLORS.gray}
               />
-              <MaterialIcons name="search" size={20} color={COLORS.gray} />
+              {loading ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <MaterialIcons name="search" size={20} color={COLORS.gray} />
+              )}
             </View>
             
             {/* Product Dropdown */}
-            {showProductDropdown && filteredProducts.length > 0 && (
+            {showProductDropdown && (
               <View style={styles.productDropdownList}>
-                {filteredProducts.map((product) => (
-                  <TouchableOpacity
-                    key={product.id}
-                    style={styles.productDropdownItem}
-                    onPress={() => handleProductSelect(product)}
-                  >
-                    <View>
-                      <Text style={styles.productName}>{product.name}</Text>
-                      <Text style={styles.productCode}>{product.code} - MRP: ₹{product.mrp}</Text>
-                    </View>
-                    <MaterialIcons name="add-circle" size={24} color={COLORS.primary} />
-                  </TouchableOpacity>
-                ))}
+                {loading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color={COLORS.primary} />
+                    <Text style={styles.loadingText}>Searching products...</Text>
+                  </View>
+                ) : filteredProducts.length > 0 ? (
+                  filteredProducts.map((product) => (
+                    <TouchableOpacity
+                      key={product.id}
+                      style={styles.productDropdownItem}
+                      onPress={() => handleProductSelect(product)}
+                    >
+                      <View>
+                        <Text style={styles.productName}>{product.name}</Text>
+                        <Text style={styles.productCode}>{product.code} - MRP: ₹{product.mrp} - Stock: {product.stock}</Text>
+                      </View>
+                      <MaterialIcons name="add-circle" size={24} color={COLORS.primary} />
+                    </TouchableOpacity>
+                  ))
+                ) : productSearch.trim() ? (
+                  <View style={styles.noResultsContainer}>
+                    <Text style={styles.noResultsText}>No products found</Text>
+                  </View>
+                ) : null}
               </View>
             )}
           </View>
@@ -305,7 +331,7 @@ export default function SaleScreen({ navigation }) {
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Selected Products</Text>
               {selectedProducts.map((product, index) => (
-                <View key={product.id} style={styles.productCard}>
+                <View key={`${product.id}-${index}`} style={styles.productCard}>
                   <View style={styles.productInfo}>
                     <Text style={styles.productName}>{product.name}</Text>
                     <Text style={styles.productCode}>{product.code}</Text>
@@ -615,5 +641,25 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginLeft: 12,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  loadingText: {
+    marginLeft: 8,
+    color: COLORS.gray,
+    fontSize: 14,
+  },
+  noResultsContainer: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  noResultsText: {
+    color: COLORS.gray,
+    fontSize: 14,
+    fontStyle: 'italic',
   },
 });
