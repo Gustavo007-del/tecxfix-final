@@ -157,7 +157,7 @@ export default function SaleScreen({ navigation }) {
         company_name: companyName,
         compliant_number: compliantNumber || null,
         products: selectedProducts.map(p => ({
-          product_id: parseInt(p.id),
+          product_id: p.id, // Use spare_id directly as string
           product_name: p.name,
           product_code: p.code,
           quantity: parseInt(p.quantity),
