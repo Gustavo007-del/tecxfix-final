@@ -224,6 +224,22 @@ class SalesRequestCreateSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['technician']
     
+    def validate(self, data):
+        """Validate and calculate total_amount from products"""
+        products = data.get('products', [])
+        submitted_total = data.get('total_amount', 0)
+        
+        # Calculate actual total from products
+        calculated_total = sum(
+            (product['quantity'] * product['mrp']) + product['service_charge']
+            for product in products
+        )
+        
+        # Use calculated total to ensure accuracy
+        data['total_amount'] = calculated_total
+        
+        return data
+    
     def create(self, validated_data):
         products_data = validated_data.pop('products')
         validated_data['technician'] = self.context['request'].user

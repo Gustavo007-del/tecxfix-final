@@ -263,7 +263,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
                 <Text style={styles.productsLabel}>
                   {request.products?.length || 0} Product(s)
                 </Text>
-                <Text style={styles.totalAmount}>Total: ₹{request.total_amount}</Text>
+                <Text style={styles.totalAmount}>Total: ¥{parseFloat(request.total_amount || 0).toFixed(2)}</Text>
               </View>
 
               <View style={styles.requestActions}>
@@ -376,13 +376,13 @@ export default function AdminSalesRequestScreen({ navigation }) {
                     </View>
                     <View style={styles.productDetails}>
                       <Text style={styles.productDetailText}>
-                        Quantity: {product.quantity} × ₹{product.mrp} = ₹{product.quantity * product.mrp}
+                        Quantity: {product.quantity} × ₹{parseFloat(product.mrp).toFixed(2)} = ₹{(parseFloat(product.quantity) * parseFloat(product.mrp)).toFixed(2)}
                       </Text>
                       <Text style={styles.productDetailText}>
-                        Service Charge: ₹{product.service_charge}
+                        Service Charge: ₹{parseFloat(product.service_charge || 0).toFixed(2)}
                       </Text>
                       <Text style={styles.productTotal}>
-                        Total: ₹{(product.quantity * product.mrp) + product.service_charge}
+                        Total: ₹{((parseFloat(product.quantity) * parseFloat(product.mrp)) + parseFloat(product.service_charge || 0)).toFixed(2)}
                       </Text>
                     </View>
                   </View>
@@ -391,7 +391,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
 
               <View style={styles.totalSection}>
                 <Text style={styles.grandTotalLabel}>Grand Total:</Text>
-                <Text style={styles.grandTotalAmount}>₹{selectedRequest.total_amount}</Text>
+                <Text style={styles.grandTotalAmount}>₹{parseFloat(selectedRequest.total_amount || 0).toFixed(2)}</Text>
               </View>
             </ScrollView>
           )}

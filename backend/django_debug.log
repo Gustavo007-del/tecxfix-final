@@ -2731,3 +2731,63 @@ INFO 2026-04-07 12:54:52,714 wsgi <module> 58 23492 20872 === DJANGO WSGI STARTU
 INFO 2026-04-07 12:54:52,714 wsgi <module> 58 23492 20872 === DJANGO WSGI STARTUP COMPLETED ===
 INFO 2026-04-07 12:54:52,715 wsgi <module> 94 23492 20872 WSGI middleware applied successfully
 INFO 2026-04-07 12:54:52,715 wsgi <module> 94 23492 20872 WSGI middleware applied successfully
+INFO 2026-04-07 13:19:04,911 autoreload trigger_reload 265 23492 16308 D:\tf\techfix\backend\api\serializers.py changed, reloading.
+INFO 2026-04-07 13:19:04,911 autoreload trigger_reload 265 23492 16308 D:\tf\techfix\backend\api\serializers.py changed, reloading.
+INFO 2026-04-07 13:19:04,912 manage main 121 23492 16308 [TIMING] Total Django process time: 1453.562s
+INFO 2026-04-07 13:19:04,912 manage main 121 23492 16308 [TIMING] Total Django process time: 1453.562s
+INFO 2026-04-07 13:19:04,913 manage main 122 23492 16308 === DJANGO PROCESS ENDING ===
+INFO 2026-04-07 13:19:04,913 manage main 122 23492 16308 === DJANGO PROCESS ENDING ===
+INFO 2026-04-07 13:19:06,599 autoreload run_with_reloader 681 9972 22368 Watching for file changes with StatReloader
+INFO 2026-04-07 13:19:06,599 autoreload run_with_reloader 681 9972 22368 Watching for file changes with StatReloader
+INFO 2026-04-07 13:19:07,883 wsgi <module> 29 9972 10368 === DJANGO WSGI STARTUP INITIATED ===
+INFO 2026-04-07 13:19:07,883 wsgi <module> 29 9972 10368 === DJANGO WSGI STARTUP INITIATED ===
+INFO 2026-04-07 13:19:07,883 wsgi <module> 30 9972 10368 Python executable: D:\tf\techfix\venv\Scripts\python.exe
+INFO 2026-04-07 13:19:07,883 wsgi <module> 30 9972 10368 Python executable: D:\tf\techfix\venv\Scripts\python.exe
+INFO 2026-04-07 13:19:07,884 wsgi <module> 31 9972 10368 Python version: 3.14.2 (tags/v3.14.2:df79316, Dec  5 2025, 17:18:21) [MSC v.1944 64 bit (AMD64)]
+INFO 2026-04-07 13:19:07,884 wsgi <module> 31 9972 10368 Python version: 3.14.2 (tags/v3.14.2:df79316, Dec  5 2025, 17:18:21) [MSC v.1944 64 bit (AMD64)]
+INFO 2026-04-07 13:19:07,884 wsgi <module> 32 9972 10368 Process ID: 9972
+INFO 2026-04-07 13:19:07,884 wsgi <module> 32 9972 10368 Process ID: 9972
+INFO 2026-04-07 13:19:07,887 wsgi <module> 33 9972 10368 Working directory: D:\tf\techfix\backend
+INFO 2026-04-07 13:19:07,887 wsgi <module> 33 9972 10368 Working directory: D:\tf\techfix\backend
+INFO 2026-04-07 13:19:07,888 wsgi <module> 34 9972 10368 Django settings: backend.settings
+INFO 2026-04-07 13:19:07,888 wsgi <module> 34 9972 10368 Django settings: backend.settings
+INFO 2026-04-07 13:19:07,890 wsgi <module> 39 9972 10368 Starting process monitoring...
+INFO 2026-04-07 13:19:07,890 wsgi <module> 39 9972 10368 Starting process monitoring...
+INFO 2026-04-07 13:19:07,891 process_monitor setup_signal_handlers 151 9972 10368 Setting up signal handlers...
+INFO 2026-04-07 13:19:07,891 process_monitor setup_signal_handlers 151 9972 10368 Setting up signal handlers...
+ERROR 2026-04-07 13:19:07,892 wsgi <module> 46 9972 10368 Process monitoring failed to start: module 'signal' has no attribute 'SIGUSR1'
+ERROR 2026-04-07 13:19:07,892 wsgi <module> 46 9972 10368 Process monitoring failed to start: module 'signal' has no attribute 'SIGUSR1'
+ERROR 2026-04-07 13:19:07,894 wsgi <module> 47 9972 10368 Traceback: Traceback (most recent call last):
+  File "D:\tf\techfix\backend\backend\wsgi.py", line 40, in <module>
+    start_process_monitoring()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\tf\techfix\backend\backend\process_monitor.py", line 181, in start_process_monitoring
+    setup_signal_handlers()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\tf\techfix\backend\backend\process_monitor.py", line 157, in setup_signal_handlers
+    signal.SIGUSR1,  # Custom signal for debugging
+    ^^^^^^^^^^^^^^
+AttributeError: module 'signal' has no attribute 'SIGUSR1'
+
+ERROR 2026-04-07 13:19:07,894 wsgi <module> 47 9972 10368 Traceback: Traceback (most recent call last):
+  File "D:\tf\techfix\backend\backend\wsgi.py", line 40, in <module>
+    start_process_monitoring()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\tf\techfix\backend\backend\process_monitor.py", line 181, in start_process_monitoring
+    setup_signal_handlers()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\tf\techfix\backend\backend\process_monitor.py", line 157, in setup_signal_handlers
+    signal.SIGUSR1,  # Custom signal for debugging
+    ^^^^^^^^^^^^^^
+AttributeError: module 'signal' has no attribute 'SIGUSR1'
+
+INFO 2026-04-07 13:19:07,897 wsgi <module> 50 9972 10368 Creating WSGI application...
+INFO 2026-04-07 13:19:07,897 wsgi <module> 50 9972 10368 Creating WSGI application...
+INFO 2026-04-07 13:19:07,904 wsgi <module> 52 9972 10368 WSGI application created successfully
+INFO 2026-04-07 13:19:07,904 wsgi <module> 52 9972 10368 WSGI application created successfully
+INFO 2026-04-07 13:19:07,904 wsgi <module> 56 9972 10368 WSGI environment variables will be logged per request
+INFO 2026-04-07 13:19:07,904 wsgi <module> 56 9972 10368 WSGI environment variables will be logged per request
+INFO 2026-04-07 13:19:07,905 wsgi <module> 58 9972 10368 === DJANGO WSGI STARTUP COMPLETED ===
+INFO 2026-04-07 13:19:07,905 wsgi <module> 58 9972 10368 === DJANGO WSGI STARTUP COMPLETED ===
+INFO 2026-04-07 13:19:07,906 wsgi <module> 94 9972 10368 WSGI middleware applied successfully
+INFO 2026-04-07 13:19:07,906 wsgi <module> 94 9972 10368 WSGI middleware applied successfully
