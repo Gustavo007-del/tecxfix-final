@@ -18,7 +18,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { COLORS } from '../theme/colors';
 
 const DEMO_COMPANIES = [
-  'Tech Solutions Pvt Ltd',
+  'PARRYWARE',
   'Digital Systems Inc',
   'Smart Devices Co',
   'Innovation Labs',
@@ -149,7 +149,7 @@ export default function SaleScreen({ navigation }) {
       setSubmitting(true);
 
       const saleData = {
-        type: saleType,
+        type: saleType.toUpperCase(),
         company_name: companyName,
         compliant_number: compliantNumber || null,
         products: selectedProducts.map(p => ({
