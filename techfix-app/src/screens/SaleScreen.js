@@ -153,14 +153,14 @@ export default function SaleScreen({ navigation }) {
         company_name: companyName,
         compliant_number: compliantNumber || null,
         products: selectedProducts.map(p => ({
-          product_id: p.id,
+          product_id: parseInt(p.id),
           product_name: p.name,
           product_code: p.code,
-          quantity: p.quantity,
-          mrp: p.mrp,
-          service_charge: p.serviceCharge
+          quantity: parseInt(p.quantity),
+          mrp: parseFloat(p.mrp),
+          service_charge: parseFloat(p.serviceCharge || 0)
         })),
-        total_amount: totalAmount
+        total_amount: parseFloat(totalAmount)
       };
 
       console.log('Submitting sale request:', saleData);

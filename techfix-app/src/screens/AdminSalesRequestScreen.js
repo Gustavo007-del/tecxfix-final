@@ -174,7 +174,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'approved':
         return COLORS.success;
       case 'rejected':
@@ -186,7 +186,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
   };
 
   const getStatusText = (status) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'approved':
         return 'Approved';
       case 'rejected':
@@ -275,7 +275,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
                   <Text style={styles.detailButtonText}>View Details</Text>
                 </TouchableOpacity>
 
-                {request.status === 'pending' && (
+                {request.status?.toLowerCase() === 'pending' && (
                   <View style={styles.actionButtons}>
                     <TouchableOpacity
                       style={[styles.actionButton, styles.approveButton]}
