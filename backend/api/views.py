@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.db import transaction
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import datetime
+from datetime import datetime, date
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -1690,38 +1690,31 @@ def get_received_history(request):
 @permission_classes([IsAuthenticated])
 def process_pending_complaints(request):
     """
-    Admin only: Process pending complaints and reduce technician stock
+    Admin only: Process completed complaints and reduce technician stock
     Expected payload:
     {
-        "since_date": "2026-03-22",  // optional, defaults to last 7 days
-        "technician_filter": "john"     // optional, filter by technician
+        "since_date": "2026-04-25",  // optional, defaults to yesterday (April 25, 2026)
+        "technician_filter": "John Doe"  // optional, filter by technician name
     }
     """
     try:
         if not request.user.is_staff:
             return Response({
-                "success": False,
-                "error": "Only admin users can process complaints"
+                'success': False,
+                'error': 'Admin access required'
             }, status=status.HTTP_403_FORBIDDEN)
         
-        # Get parameters
+        # Get parameters from request
         since_date_str = request.data.get('since_date')
         technician_filter = request.data.get('technician_filter')
         
-        # Parse since_date
-        since_date = None
+        # Parse since_date or use default (yesterday: April 25, 2026)
         if since_date_str:
-            try:
-                since_date = datetime.strptime(since_date_str, "%Y-%m-%d")
-            except ValueError:
-                return Response({
-                    "success": False,
-                    "error": "Invalid since_date format. Use YYYY-MM-DD"
-                }, status=status.HTTP_400_BAD_REQUEST)
+            since_date = datetime.strptime(since_date_str, '%Y-%m-%d').date()
         else:
-            # Default to 22/03/26 as requested
-            since_date = datetime.strptime("2026-03-22", "%Y-%m-%d")
-            logger.info(f"Using default date filter from 22/03/26: {since_date}")
+            # Default to yesterday (April 25, 2026)
+            since_date = date(2026, 4, 25)
+            logger.info(f"Using default date filter from yesterday: {since_date}")
         
         logger.info(f"Admin {request.user.username} initiated complaint processing since {since_date}")
         

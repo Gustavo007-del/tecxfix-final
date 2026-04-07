@@ -58,7 +58,7 @@ class ComplaintProcessor:
             skipped_count = 0
             
             for row in rows[1:]:  # Skip header
-                if len(row) < 15:
+                if len(row) < 16:  # Need column P (index 15)
                     continue
                 
                 complaint_no = row[1].strip()
@@ -67,6 +67,7 @@ class ComplaintProcessor:
                 product_code = row[7].strip()
                 part_name = row[9].strip()
                 quantity_str = row[10].strip()
+                column_p_date = row[15].strip() if len(row) > 15 else ""  # Column P
                 
                 # Skip if already processed
                 if complaint_no in processed_complaints:
@@ -77,15 +78,30 @@ class ComplaintProcessor:
                 if status != 'CLOSED':
                     continue
                 
-                # Parse date
+                # Parse date from complaint number
                 complaint_date = self.extract_date_from_complaint_no(complaint_no)
                 if not complaint_date:
                     # Skip silently - invalid date format or empty complaint number
                     continue
                 
-                # Filter by date if provided - only process from 22/03/26 onwards
+                # Filter by date if provided - only process from start date onwards
                 if since_date and complaint_date < since_date:
                     continue
+                
+                # Check if column P has a date and if it's before start date
+                skip_stock_reduction = False
+                if column_p_date:
+                    try:
+                        # Parse date from column P (format: "23-Jul-2025")
+                        column_p_parsed = datetime.strptime(column_p_date, "%d-%b-%Y")
+                        if column_p_parsed < since_date:
+                            skip_stock_reduction = True
+                            logger.info(f"Skipping stock reduction for {complaint_no} - column P date {column_p_date} is before start date {since_date}")
+                        else:
+                            logger.info(f"Will reduce stock for {complaint_no} - column P date {column_p_date} is after start date {since_date}")
+                    except ValueError:
+                        # If date parsing fails, continue with normal processing
+                        logger.warning(f"Invalid date format in column P: '{column_p_date}' for complaint {complaint_no}")
                 
                 # Parse quantity
                 try:
@@ -103,7 +119,9 @@ class ComplaintProcessor:
                     'part_name': part_name,
                     'quantity': quantity,
                     'complaint_date': complaint_date,
-                    'row_data': row
+                    'row_data': row,
+                    'skip_stock_reduction': skip_stock_reduction,
+                    'column_p_date': column_p_date
                 })
             
             logger.info(f"Found {len(new_complaints)} new pending complaints. Skipped {skipped_count} already processed.")
@@ -180,12 +198,30 @@ class ComplaintProcessor:
             product_code = complaint['product_code']
             part_name = complaint['part_name']
             quantity = complaint['quantity']
+            skip_stock_reduction = complaint.get('skip_stock_reduction', False)
+            column_p_date = complaint.get('column_p_date', '')
             
             logger.info(f"Processing complaint {complaint_no}: {product_code} x{quantity} for {technician_name}")
+            if skip_stock_reduction:
+                logger.info(f"Skipping stock reduction for {complaint_no} - column P date {column_p_date} is before start date")
             
             # Get technician sheet name
             tech_sheet_name = self.get_technician_sheet_name(technician_name)
             logger.debug(f"Technician sheet name: {tech_sheet_name}")
+            
+            # If skipping stock reduction, mark as processed with no reduction
+            if skip_stock_reduction:
+                ProcessedComplaint.objects.create(
+                    complaint_no=complaint_no,
+                    technician_name=technician_name,
+                    product_code=product_code,
+                    part_name=part_name,
+                    quantity_reduced=0,
+                    stock_reduced=False,
+                    processing_notes=f"Stock reduction skipped - column P date {column_p_date} is before start date"
+                )
+                self.processed_count += 1
+                return True
             
             # Check stock availability
             has_stock, available_qty = self.check_technician_stock(
