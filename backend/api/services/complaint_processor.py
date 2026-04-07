@@ -85,7 +85,7 @@ class ComplaintProcessor:
                     continue
                 
                 # Filter by date if provided - only process from start date onwards
-                if since_date and complaint_date < since_date:
+                if since_date and complaint_date.date() < since_date:
                     continue
                 
                 # Check if column P has a date and if it's before start date
@@ -94,7 +94,7 @@ class ComplaintProcessor:
                     try:
                         # Parse date from column P (format: "23-Jul-2025")
                         column_p_parsed = datetime.strptime(column_p_date, "%d-%b-%Y")
-                        if column_p_parsed < since_date:
+                        if column_p_parsed.date() < since_date:
                             skip_stock_reduction = True
                             logger.info(f"Skipping stock reduction for {complaint_no} - column P date {column_p_date} is before start date {since_date}")
                         else:

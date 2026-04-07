@@ -91,7 +91,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
         ? `/sales/requests/${requestId}/approve/`
         : `/sales/requests/${requestId}/reject/`;
       
-      const response = await client.post(endpoint);
+      const response = await client.post(endpoint, {}, { timeout: 30000 }); // 30 second timeout for approval
       
       if (response.data.success) {
         Alert.alert(

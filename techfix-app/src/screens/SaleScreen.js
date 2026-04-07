@@ -19,10 +19,14 @@ import { COLORS } from '../theme/colors';
 
 const DEMO_COMPANIES = [
   'PARRYWARE',
-  'Digital Systems Inc',
-  'Smart Devices Co',
-  'Innovation Labs',
-  'Future Tech Ltd'
+  'GROHE',
+  'HINDWARE',
+  'VARMORA',
+  'ALLWELL',
+  'ROCA',
+  'TEXARO',
+  'VIORA',
+  'ASHIRVAD',
 ];
 
 export default function SaleScreen({ navigation }) {
