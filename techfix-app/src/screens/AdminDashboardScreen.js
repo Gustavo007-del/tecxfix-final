@@ -61,7 +61,7 @@ export default function AdminDashboardScreen({ navigation }) {
   const handleProcessComplaints = async () => {
     Alert.alert(
       'Process Completed Complaints',
-      'This will process all Completed complaints from 22/03/26 onwards and reduce technician stock accordingly. Continue?',
+      'This will process all Completed complaints from 06/04/26 onwards and reduce technician stock accordingly. Continue?',
       [
         { text: 'Cancel', style: 'cancel' },
         {

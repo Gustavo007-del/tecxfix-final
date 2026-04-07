@@ -192,6 +192,8 @@ class ComplaintProcessor:
     
     def process_single_complaint(self, complaint):
         """Process a single complaint"""
+        from django.db import transaction
+        
         try:
             complaint_no = complaint['complaint_no']
             technician_name = complaint['technician_name']
@@ -205,86 +207,94 @@ class ComplaintProcessor:
             if skip_stock_reduction:
                 logger.info(f"Skipping stock reduction for {complaint_no} - column P date {column_p_date} is before start date")
             
-            # Get technician sheet name
-            tech_sheet_name = self.get_technician_sheet_name(technician_name)
-            logger.debug(f"Technician sheet name: {tech_sheet_name}")
-            
-            # If skipping stock reduction, mark as processed with no reduction
-            if skip_stock_reduction:
-                ProcessedComplaint.objects.create(
-                    complaint_no=complaint_no,
-                    technician_name=technician_name,
-                    product_code=product_code,
-                    part_name=part_name,
-                    quantity_reduced=0,
-                    stock_reduced=False,
-                    processing_notes=f"Stock reduction skipped - column P date {column_p_date} is before start date"
-                )
-                self.processed_count += 1
+            # Check if already processed (prevent duplicates)
+            if ProcessedComplaint.objects.filter(complaint_no=complaint_no).exists():
+                logger.info(f"Complaint {complaint_no} already processed, skipping")
                 return True
             
-            # Check stock availability
-            has_stock, available_qty = self.check_technician_stock(
-                tech_sheet_name, product_code, quantity
-            )
-            
-            if not has_stock:
-                error_msg = f"Insufficient stock for {product_code}. Available: {available_qty}, Required: {quantity}"
-                logger.warning(f"{complaint_no}: {error_msg}")
-                self.errors.append(f"{complaint_no}: {error_msg}")
+            # Use transaction to prevent race conditions
+            with transaction.atomic():
+                # Double-check within transaction
+                if ProcessedComplaint.objects.filter(complaint_no=complaint_no).exists():
+                    logger.info(f"Complaint {complaint_no} already processed in transaction, skipping")
+                    return True
                 
-                # Mark as processed but no stock reduction
-                ProcessedComplaint.objects.create(
-                    complaint_no=complaint_no,
-                    technician_name=technician_name,
-                    product_code=product_code,
-                    part_name=part_name,
-                    quantity_reduced=0,
-                    stock_reduced=False,
-                    processing_notes=error_msg
-                )
-                return False
-            
-            # Reduce stock
-            if self.reduce_technician_stock(tech_sheet_name, product_code, quantity):
-                # Record successful processing
-                ProcessedComplaint.objects.create(
-                    complaint_no=complaint_no,
-                    technician_name=technician_name,
-                    product_code=product_code,
-                    part_name=part_name,
-                    quantity_reduced=quantity,
-                    stock_reduced=True,
-                    processing_notes=f"Stock reduced by {quantity} units"
+                # Get technician sheet name
+                tech_sheet_name = self.get_technician_sheet_name(technician_name)
+                logger.debug(f"Technician sheet name: {tech_sheet_name}")
+                
+                # If skipping stock reduction, mark as processed with no reduction
+                if skip_stock_reduction:
+                    ProcessedComplaint.objects.create(
+                        complaint_no=complaint_no,
+                        technician_name=technician_name,
+                        product_code=product_code,
+                        part_name=part_name,
+                        quantity_reduced=0,
+                        stock_reduced=False,
+                        processing_notes=f"Stock reduction skipped - column P date {column_p_date} is before start date"
+                    )
+                    self.processed_count += 1
+                    return True
+                
+                # Check stock availability
+                has_stock, available_qty = self.check_technician_stock(
+                    tech_sheet_name, product_code, quantity
                 )
                 
-                self.stock_reductions.append({
-                    'complaint_no': complaint_no,
-                    'technician': tech_sheet_name,
-                    'product_code': product_code,
-                    'part_name': part_name,
-                    'qty_reduced': quantity,
-                    'remaining_stock': available_qty - quantity
-                })
+                if not has_stock:
+                    error_msg = f"Insufficient stock for {product_code}. Available: {available_qty}, Required: {quantity}"
+                    logger.warning(f"{complaint_no}: {error_msg}")
+                    self.errors.append(f"{complaint_no}: {error_msg}")
+                    
+                    # Mark as processed but no stock reduction
+                    ProcessedComplaint.objects.create(
+                        complaint_no=complaint_no,
+                        technician_name=technician_name,
+                        product_code=product_code,
+                        part_name=part_name,
+                        quantity_reduced=0,
+                        stock_reduced=False,
+                        processing_notes=error_msg
+                    )
+                    self.processed_count += 1
+                    return False
                 
-                self.processed_count += 1
-                logger.info(f"Successfully processed complaint {complaint_no} - reduced {quantity} units")
-                return True
-            else:
-                error_msg = f"Failed to reduce stock for {product_code}"
-                logger.error(f"{complaint_no}: {error_msg}")
-                self.errors.append(f"{complaint_no}: {error_msg}")
-                
-                ProcessedComplaint.objects.create(
-                    complaint_no=complaint_no,
-                    technician_name=technician_name,
-                    product_code=product_code,
-                    part_name=part_name,
-                    quantity_reduced=0,
-                    stock_reduced=False,
-                    processing_notes=error_msg
-                )
-                return False
+                # Reduce stock
+                if self.reduce_technician_stock(tech_sheet_name, product_code, quantity):
+                    # Record successful processing
+                    ProcessedComplaint.objects.create(
+                        complaint_no=complaint_no,
+                        technician_name=technician_name,
+                        product_code=product_code,
+                        part_name=part_name,
+                        quantity_reduced=quantity,
+                        stock_reduced=True,
+                        processing_notes=f"Stock reduced successfully by {quantity}"
+                    )
+                    self.processed_count += 1
+                    self.stock_reductions.append({
+                        'complaint_no': complaint_no,
+                        'technician': technician_name,
+                        'product_code': product_code,
+                        'quantity_reduced': quantity
+                    })
+                    return True
+                else:
+                    error_msg = f"Failed to reduce stock for {product_code}"
+                    logger.error(f"{complaint_no}: {error_msg}")
+                    self.errors.append(f"{complaint_no}: {error_msg}")
+                    ProcessedComplaint.objects.create(
+                        complaint_no=complaint_no,
+                        technician_name=technician_name,
+                        product_code=product_code,
+                        part_name=part_name,
+                        quantity_reduced=0,
+                        stock_reduced=False,
+                        processing_notes=error_msg
+                    )
+                    self.processed_count += 1
+                    return False
                 
         except Exception as e:
             error_msg = f"Unexpected error: {str(e)}"
