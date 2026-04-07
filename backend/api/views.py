@@ -1935,19 +1935,27 @@ def approve_sales_request(request, request_id):
         sales_request.reviewed_at = timezone.now()
         sales_request.save()
         
-        # Reduce company stock for each product
+        # Reduce technician stock for each product
         from courier_api.sheets_sync import SheetsSync
+        from .services.complaint_processor import ComplaintProcessor
         sheets_sync = SheetsSync()
+        processor = ComplaintProcessor()
         
         for product in sales_request.products.all():
             try:
-                sheets_sync.update_company_stock(
-                    spare_id=product.product_code,
-                    qty_to_reduce=product.quantity
+                # Get technician sheet name
+                technician_name = sales_request.technician.first_name if sales_request.technician else "Unknown"
+                tech_sheet_name = processor.get_technician_sheet_name(technician_name)
+                
+                # Reduce from technician stock (not company stock)
+                sheets_sync.update_technician_stock(
+                    technician_sheet_name,
+                    product.product_code,
+                    -product.quantity
                 )
-                logger.info(f"Reduced stock for {product.product_code}: -{product.quantity}")
+                logger.info(f"Reduced {product.quantity} from technician {technician_name} stock for {product.product_code}")
             except Exception as e:
-                logger.error(f"Failed to reduce stock for {product.product_code}: {e}")
+                logger.error(f"Failed to reduce technician stock for {product.product_code}: {e}")
                 # Continue with other products even if one fails
                 continue
         
