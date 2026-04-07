@@ -38,56 +38,8 @@ export default function AdminSalesRequestScreen({ navigation }) {
       setSalesRequests(response.data.results || response.data || []);
     } catch (error) {
       console.error('Error fetching sales requests:', error);
-      // For demo purposes, add mock data
-      setSalesRequests([
-        {
-          id: 1,
-          technician_name: 'John Doe',
-          technician_id: 1,
-          type: 'direct',
-          company_name: 'Tech Solutions Pvt Ltd',
-          compliant_number: null,
-          total_amount: 3450,
-          status: 'pending',
-          created_at: new Date().toISOString(),
-          products: [
-            {
-              product_name: 'Laptop Battery',
-              product_code: 'LB001',
-              quantity: 1,
-              mrp: 2500,
-              service_charge: 200
-            },
-            {
-              product_name: 'USB Cable',
-              product_code: 'UC006',
-              quantity: 2,
-              mrp: 150,
-              service_charge: 100
-            }
-          ]
-        },
-        {
-          id: 2,
-          technician_name: 'Jane Smith',
-          technician_id: 2,
-          type: 'compliant',
-          company_name: 'Digital Systems Inc',
-          compliant_number: 'COMP12345',
-          total_amount: 800,
-          status: 'pending',
-          created_at: new Date().toISOString(),
-          products: [
-            {
-              product_name: 'Keyboard USB',
-              product_code: 'KU003',
-              quantity: 1,
-              mrp: 800,
-              service_charge: 0
-            }
-          ]
-        }
-      ]);
+      // Don't show mock data - show empty list instead
+      setSalesRequests([]);
     } finally {
       setLoading(false);
     }

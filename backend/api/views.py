@@ -1942,8 +1942,21 @@ def approve_sales_request(request, request_id):
         sales_request.reviewed_at = timezone.now()
         sales_request.save()
         
-        # TODO: Reduce technician stock here
-        # This would integrate with your stock management system
+        # Reduce company stock for each product
+        from courier_api.sheets_sync import SheetsSync
+        sheets_sync = SheetsSync()
+        
+        for product in sales_request.products.all():
+            try:
+                sheets_sync.update_company_stock(
+                    spare_id=product.product_code,
+                    qty_to_reduce=product.quantity
+                )
+                logger.info(f"Reduced stock for {product.product_code}: -{product.quantity}")
+            except Exception as e:
+                logger.error(f"Failed to reduce stock for {product.product_code}: {e}")
+                # Continue with other products even if one fails
+                continue
         
         logger.info(f"Sales request {request_id} approved by admin {request.user.username}")
         
