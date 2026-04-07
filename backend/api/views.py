@@ -1949,7 +1949,7 @@ def approve_sales_request(request, request_id):
                 
                 # Reduce from technician stock (not company stock)
                 sheets_sync.update_technician_stock(
-                    technician_sheet_name,
+                    tech_sheet_name,
                     product.product_code,
                     -product.quantity
                 )
