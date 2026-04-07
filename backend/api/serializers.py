@@ -167,7 +167,6 @@ class SalesRequestProductSerializer(serializers.ModelSerializer):
         model = SalesRequestProduct
         fields = [
             'id',
-            'product_id',
             'product_name',
             'product_code',
             'quantity',

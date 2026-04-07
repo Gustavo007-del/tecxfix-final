@@ -250,7 +250,6 @@ class SalesRequest(models.Model):
 class SalesRequestProduct(models.Model):
     """Products included in a sales request"""
     sales_request = models.ForeignKey(SalesRequest, on_delete=models.CASCADE, related_name='products')
-    product_id = models.CharField(max_length=50)  # Spare ID as string
     product_name = models.CharField(max_length=200)
     product_code = models.CharField(max_length=50)
     quantity = models.IntegerField()
