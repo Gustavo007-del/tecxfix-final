@@ -173,37 +173,30 @@ export default function AdminSalesRequestScreen({ navigation }) {
     try {
       setDownloadingPdf(true);
       
-      const token = state.user?.token;
+      // Get token from AuthContext state
+      const token = state.userToken;
       if (!token) {
         Alert.alert('Error', 'Authentication token not found');
         return;
       }
       
-      const response = await client.get(`/sales/requests/${requestId}/pdf/`, {
-        responseType: 'blob'
-      });
+      // For React Native, we'll open the PDF in a browser with the token
+      const pdfUrl = `http://localhost:8000/api/sales/requests/${requestId}/pdf/?token=${token}`;
       
-      if (response.status === 200) {
-        // For React Native, we'll open the PDF in a browser
-        const pdfUrl = `http://localhost:8000/api/sales/requests/${requestId}/pdf/?token=${token}`;
-        
-        Alert.alert(
-          'PDF Ready',
-          'The PDF has been generated. Would you like to open it in your browser?',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-            {
-              text: 'Open PDF',
-              onPress: () => Linking.openURL(pdfUrl),
-            },
-          ]
-        );
-      } else {
-        throw new Error('Failed to generate PDF');
-      }
+      Alert.alert(
+        'PDF Ready',
+        'The PDF has been generated. Would you like to open it in your browser?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Open PDF',
+            onPress: () => Linking.openURL(pdfUrl),
+          },
+        ]
+      );
       
     } catch (error) {
       console.error('Error downloading PDF:', error);

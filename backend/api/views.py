@@ -2022,14 +2022,33 @@ def reject_sales_request(request, request_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 def download_sales_request_pdf(request, request_id):
     """Download sales request as PDF (Admin only)"""
     try:
-        if not request.user.is_staff:
+        # Check authentication via token parameter or session
+        from rest_framework_simplejwt.authentication import JWTAuthentication
+        from rest_framework_simplejwt.exceptions import InvalidToken
+        
+        token = request.GET.get('token')
+        user = None
+        
+        if token:
+            # Try to authenticate with the provided token
+            jwt_auth = JWTAuthentication()
+            try:
+                validated_token = jwt_auth.get_validated_token(token)
+                user = jwt_auth.get_user(validated_token)
+            except InvalidToken:
+                pass
+        
+        # Fallback to session authentication
+        if not user and hasattr(request, 'user') and request.user.is_authenticated:
+            user = request.user
+        
+        if not user or not user.is_staff:
             return Response({
                 'success': False,
-                'error': 'Only admins can download sales request PDFs'
+                'error': 'Authentication required. Only admins can download sales request PDFs.'
             }, status=status.HTTP_403_FORBIDDEN)
         
         try:
