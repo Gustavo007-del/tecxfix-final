@@ -154,7 +154,10 @@ export default function AdminSalesRequestScreen({ navigation }) {
   const formatDate = (dateString) => {
     try {
       if (!dateString) return 'N/A';
+    try {
+      if (!dateString) return 'N/A';
       const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid Date';
       if (isNaN(date.getTime())) return 'Invalid Date';
       return date.toLocaleDateString('en-IN', {
         day: '2-digit',
@@ -163,6 +166,10 @@ export default function AdminSalesRequestScreen({ navigation }) {
         hour: '2-digit',
         minute: '2-digit'
       });
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return 'Invalid Date';
+    }
     } catch (error) {
       console.error('Date formatting error:', error);
       return 'Invalid Date';
@@ -181,22 +188,22 @@ export default function AdminSalesRequestScreen({ navigation }) {
       }
       
       // For React Native, we'll open the PDF in a browser with the token
-      const pdfUrl = `http://localhost:8000/api/sales/requests/${requestId}/pdf/?token=${token}`;
-      
-      Alert.alert(
-        'PDF Ready',
-        'The PDF has been generated. Would you like to open it in your browser?',
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Open PDF',
-            onPress: () => Linking.openURL(pdfUrl),
-          },
-        ]
-      );
+        const pdfUrl = `http://localhost:8000/api/sales/requests/${requestId}/pdf/?token=${token}`;
+        
+        Alert.alert(
+          'PDF Ready',
+          'The PDF has been generated. Would you like to open it in your browser?',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {
+              text: 'Open PDF',
+              onPress: () => Linking.openURL(pdfUrl),
+            },
+          ]
+        );
       
     } catch (error) {
       console.error('Error downloading PDF:', error);
@@ -332,7 +339,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
             <ScrollView style={styles.modalContent}>
               <View style={styles.detailSection}>
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.detailSectionTitle}>Request Information</Text>
+                <Text style={styles.detailSectionTitle}>Request Information</Text>
                   {selectedRequest.status?.toLowerCase() === 'approved' && (
                     <TouchableOpacity
                       style={styles.pdfButton}
