@@ -1,4 +1,3 @@
-// E:\study\techfix\techfix-app\src\screens\AdminSalesRequestScreen.js
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
@@ -13,34 +12,32 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
-import client from '../api/client';
+import client, { API_ENDPOINTS } from '../api/client';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { COLORS } from '../theme/colors';
 import { generateSalesRequestPDF } from '../utils/SalesRequestPDFGenerator';
 
-export default function AdminSalesRequestScreen({ navigation }) {
+export default function SalesHistoryScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const { state } = useContext(AuthContext);
   
   const [salesRequests, setSalesRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [processingId, setProcessingId] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
-    fetchSalesRequests();
+    fetchSalesHistory();
   }, []);
 
-  const fetchSalesRequests = async () => {
+  const fetchSalesHistory = async () => {
     try {
-      const response = await client.get('/sales/requests/');
+      const response = await client.get(API_ENDPOINTS.MY_SALES_REQUESTS);
       setSalesRequests(response.data.results || response.data || []);
     } catch (error) {
-      console.error('Error fetching sales requests:', error);
-      // Don't show mock data - show empty list instead
+      console.error('Error fetching sales history:', error);
       setSalesRequests([]);
     } finally {
       setLoading(false);
@@ -49,77 +46,8 @@ export default function AdminSalesRequestScreen({ navigation }) {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchSalesRequests();
+    await fetchSalesHistory();
     setRefreshing(false);
-  };
-
-  const handleApprove = async (requestId) => {
-    Alert.alert(
-      'Approve Request',
-      'Are you sure you want to approve this sales request? This will reduce the technician\'s stock.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Approve',
-          onPress: async () => {
-            await processRequest(requestId, 'approved');
-          },
-        },
-      ]
-    );
-  };
-
-  const handleReject = async (requestId) => {
-    Alert.alert(
-      'Reject Request',
-      'Are you sure you want to reject this sales request?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reject',
-          onPress: async () => {
-            await processRequest(requestId, 'rejected');
-          },
-        },
-      ]
-    );
-  };
-
-  const processRequest = async (requestId, status) => {
-    try {
-      setProcessingId(requestId);
-      
-      const endpoint = status === 'approved' 
-        ? `/sales/requests/${requestId}/approve/`
-        : `/sales/requests/${requestId}/reject/`;
-      
-      const response = await client.post(endpoint, {}, { timeout: 30000 }); // 30 second timeout for approval
-      
-      if (response.data.success) {
-        Alert.alert(
-          'Success',
-          `Sales request ${status} successfully!`,
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                fetchSalesRequests();
-              }
-            }
-          ]
-        );
-      } else {
-        Alert.alert('Error', response.data.error || `Failed to ${status} request`);
-      }
-    } catch (error) {
-      console.error(`Error ${status} request:`, error);
-      Alert.alert(
-        'Error',
-        error.response?.data?.error || `Failed to ${status} request. Please try again.`
-      );
-    } finally {
-      setProcessingId(null);
-    }
   };
 
   const showRequestDetails = (request) => {
@@ -154,10 +82,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
   const formatDate = (dateString) => {
     try {
       if (!dateString) return 'N/A';
-    try {
-      if (!dateString) return 'N/A';
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return 'Invalid Date';
       if (isNaN(date.getTime())) return 'Invalid Date';
       return date.toLocaleDateString('en-IN', {
         day: '2-digit',
@@ -166,10 +91,6 @@ export default function AdminSalesRequestScreen({ navigation }) {
         hour: '2-digit',
         minute: '2-digit'
       });
-    } catch (error) {
-      console.error('Date formatting error:', error);
-      return 'Invalid Date';
-    }
     } catch (error) {
       console.error('Date formatting error:', error);
       return 'Invalid Date';
@@ -185,7 +106,6 @@ export default function AdminSalesRequestScreen({ navigation }) {
       if (!result.success) {
         Alert.alert('Error', result.message || 'Failed to generate PDF. Please try again.');
       } else {
-        // PDF was successfully generated and shared
         console.log('PDF generated successfully:', result.uri);
       }
       
@@ -214,7 +134,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <MaterialIcons name="arrow-back" size={28} color={COLORS.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Sales Requests</Text>
+        <Text style={styles.headerTitle}>My Sales History</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -224,16 +144,17 @@ export default function AdminSalesRequestScreen({ navigation }) {
       >
         {salesRequests.length === 0 ? (
           <View style={styles.noDataContainer}>
-            <MaterialIcons name="receipt-long" size={64} color={COLORS.gray} />
-            <Text style={styles.noDataText}>No sales requests found</Text>
+            <MaterialIcons name="history" size={64} color={COLORS.gray} />
+            <Text style={styles.noDataText}>No sales history found</Text>
+            <Text style={styles.noDataSubtext}>Your submitted sales requests will appear here</Text>
           </View>
         ) : (
           salesRequests.map((request) => (
             <View key={request.id} style={styles.requestCard}>
               <View style={styles.requestHeader}>
                 <View style={styles.requestInfo}>
-                  <Text style={styles.technicianName}>{request.technician_name}</Text>
                   <Text style={styles.companyName}>{request.company_name}</Text>
+                  <Text style={styles.invoiceNumber}>Invoice: {request.invoice_number}</Text>
                   {request.compliant_number && (
                     <Text style={styles.compliantNumber}>
                       Compliant: {request.compliant_number}
@@ -252,7 +173,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
                 <Text style={styles.productsLabel}>
                   {request.products?.length || 0} Product(s)
                 </Text>
-                <Text style={styles.totalAmount}>Total: Rs.{parseFloat(request.total_amount || 0).toFixed(2)}</Text>
+                <Text style={styles.totalAmount}>Total: ₹{parseFloat(request.total_amount || 0).toFixed(2)}</Text>
               </View>
 
               <View style={styles.requestActions}>
@@ -264,38 +185,21 @@ export default function AdminSalesRequestScreen({ navigation }) {
                   <Text style={styles.detailButtonText}>View Details</Text>
                 </TouchableOpacity>
 
-                {request.status?.toLowerCase() === 'pending' && (
-                  <View style={styles.actionButtons}>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.approveButton]}
-                      onPress={() => handleApprove(request.id)}
-                      disabled={processingId === request.id}
-                    >
-                      {processingId === request.id ? (
-                        <ActivityIndicator size="small" color={COLORS.white} />
-                      ) : (
-                        <>
-                          <MaterialIcons name="check" size={18} color={COLORS.white} />
-                          <Text style={styles.actionButtonText}>Approve</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.rejectButton]}
-                      onPress={() => handleReject(request.id)}
-                      disabled={processingId === request.id}
-                    >
-                      {processingId === request.id ? (
-                        <ActivityIndicator size="small" color={COLORS.white} />
-                      ) : (
-                        <>
-                          <MaterialIcons name="close" size={18} color={COLORS.white} />
-                          <Text style={styles.actionButtonText}>Reject</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-                  </View>
+                {request.status?.toLowerCase() === 'approved' && (
+                  <TouchableOpacity
+                    style={styles.pdfButton}
+                    onPress={() => handleDownloadPdf(request)}
+                    disabled={downloadingPdf}
+                  >
+                    {downloadingPdf ? (
+                      <ActivityIndicator size="small" color={COLORS.white} />
+                    ) : (
+                      <>
+                        <MaterialIcons name="picture-as-pdf" size={18} color={COLORS.white} />
+                        <Text style={styles.pdfButtonText}>Download PDF</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
                 )}
               </View>
             </View>
@@ -315,7 +219,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
             <TouchableOpacity onPress={() => setShowDetailModal(false)}>
               <MaterialIcons name="close" size={28} color={COLORS.white} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Request Details</Text>
+            <Text style={styles.modalTitle}>Sales Request Details</Text>
             <View style={styles.headerSpacer} />
           </View>
 
@@ -323,10 +227,10 @@ export default function AdminSalesRequestScreen({ navigation }) {
             <ScrollView style={styles.modalContent}>
               <View style={styles.detailSection}>
                 <View style={styles.sectionHeader}>
-                <Text style={styles.detailSectionTitle}>Request Information</Text>
+                  <Text style={styles.detailSectionTitle}>Request Information</Text>
                   {selectedRequest.status?.toLowerCase() === 'approved' && (
                     <TouchableOpacity
-                      style={styles.pdfButton}
+                      style={styles.pdfButtonModal}
                       onPress={() => handleDownloadPdf(selectedRequest)}
                       disabled={downloadingPdf}
                     >
@@ -340,10 +244,6 @@ export default function AdminSalesRequestScreen({ navigation }) {
                       )}
                     </TouchableOpacity>
                   )}
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Technician:</Text>
-                  <Text style={styles.detailValue}>{selectedRequest.technician_name}</Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Company:</Text>
@@ -384,15 +284,21 @@ export default function AdminSalesRequestScreen({ navigation }) {
                   </Text>
                 </View>
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Date:</Text>
+                  <Text style={styles.detailLabel}>Date Requested:</Text>
                   <Text style={styles.detailValue}>{formatDate(selectedRequest.requested_at)}</Text>
                 </View>
+                {selectedRequest.reviewed_at && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Date Reviewed:</Text>
+                    <Text style={styles.detailValue}>{formatDate(selectedRequest.reviewed_at)}</Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.detailSection}>
                 <Text style={styles.detailSectionTitle}>Products</Text>
-                {selectedRequest.products?.map((product) => (
-                  <View key={product.id} style={styles.productDetail}>
+                {selectedRequest.products?.map((product, index) => (
+                  <View key={index} style={styles.productDetail}>
                     <View style={styles.productHeader}>
                       <View>
                         <Text style={styles.productName}>{product.product_name}</Text>
@@ -467,6 +373,13 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
     marginTop: 16,
   },
+  noDataSubtext: {
+    fontSize: 14,
+    color: COLORS.gray,
+    marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 40,
+  },
   requestCard: {
     backgroundColor: COLORS.white,
     marginHorizontal: 16,
@@ -487,12 +400,12 @@ const styles = StyleSheet.create({
   requestInfo: {
     flex: 1,
   },
-  technicianName: {
+  companyName: {
     fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.dark,
   },
-  companyName: {
+  invoiceNumber: {
     fontSize: 14,
     color: COLORS.gray,
     marginTop: 2,
@@ -550,27 +463,19 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     marginLeft: 6,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButton: {
+  pdfButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: COLORS.danger,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 6,
+    gap: 6,
   },
-  approveButton: {
-    backgroundColor: COLORS.success,
-  },
-  rejectButton: {
-    backgroundColor: COLORS.danger,
-  },
-  actionButtonText: {
+  pdfButtonText: {
     fontSize: 14,
     color: COLORS.white,
-    marginLeft: 6,
+    fontWeight: '600',
   },
   modalContainer: {
     flex: 1,
@@ -606,7 +511,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  pdfButton: {
+  pdfButtonModal: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.danger,
@@ -614,11 +519,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 6,
     gap: 6,
-  },
-  pdfButtonText: {
-    fontSize: 14,
-    color: COLORS.white,
-    fontWeight: '600',
   },
   detailSectionTitle: {
     fontSize: 18,
@@ -690,7 +590,7 @@ const styles = StyleSheet.create({
   productTotal: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#F4D03F',
+    color: COLORS.primary,
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,

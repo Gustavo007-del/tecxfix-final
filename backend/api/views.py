@@ -2022,8 +2022,41 @@ def reject_sales_request(request, request_id):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_my_sales_requests(request):
+    """Get current user's sales requests (Technician only)"""
+    try:
+        # Check if user is a technician
+        if request.user.is_staff:
+            return Response(
+                {'error': 'This endpoint is for technicians only'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Get sales requests for current technician
+        sales_requests = SalesRequest.objects.filter(
+            technician=request.user
+        ).order_by('-requested_at')
+        
+        # Serialize the data
+        serializer = SalesRequestSerializer(sales_requests, many=True)
+        
+        return Response({
+            'success': True,
+            'results': serializer.data
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching user's sales requests: {str(e)}")
+        return Response(
+            {'error': 'Failed to fetch sales requests', 'details': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
 def download_sales_request_pdf(request, request_id):
-    """Download sales request as PDF (Admin only)"""
+    """Download sales request as PDF (Admin and Technician access)"""
     try:
         # Check authentication via token parameter or session
         from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -2045,10 +2078,10 @@ def download_sales_request_pdf(request, request_id):
         if not user and hasattr(request, 'user') and request.user.is_authenticated:
             user = request.user
         
-        if not user or not user.is_staff:
+        if not user:
             return Response({
                 'success': False,
-                'error': 'Authentication required. Only admins can download sales request PDFs.'
+                'error': 'Authentication required.'
             }, status=status.HTTP_403_FORBIDDEN)
         
         try:
@@ -2058,6 +2091,13 @@ def download_sales_request_pdf(request, request_id):
                 'success': False,
                 'error': 'Sales request not found'
             }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Check permissions: Admin can access any, Technician can only access their own
+        if not user.is_staff and sales_request.technician != user:
+            return Response({
+                'success': False,
+                'error': 'You can only download your own sales requests.'
+            }, status=status.HTTP_403_FORBIDDEN)
         
         # Only allow PDF download for approved requests
         if sales_request.status != 'APPROVED':

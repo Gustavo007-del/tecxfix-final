@@ -12,19 +12,27 @@ let isPrinting = false;
 const generateSalesRequestHTML = (salesRequest) => {
   const statusColor = salesRequest.status === 'APPROVED' ? '#27AE60' : '#E74C3C';
   const productsTotal = salesRequest.products?.reduce((total, product) => {
-    return total + ((product.quantity * product.mrp) + (product.service_charge || 0));
+    const mrp = parseFloat(product.mrp) || 0;
+    const serviceCharge = parseFloat(product.service_charge) || 0;
+    const quantity = parseInt(product.quantity) || 0;
+    return total + ((quantity * mrp) + serviceCharge);
   }, 0) || 0;
 
   const productsHTML = salesRequest.products?.map((product, index) => {
-    const productTotal = (product.quantity * product.mrp) + (product.service_charge || 0);
+    // Handle mrp and service_charge as both string and number
+    const mrp = parseFloat(product.mrp) || 0;
+    const serviceCharge = parseFloat(product.service_charge) || 0;
+    const quantity = parseInt(product.quantity) || 0;
+    const productTotal = (quantity * mrp) + serviceCharge;
+    
     return `
       <tr style="${index % 2 === 0 ? 'background-color: #F8F9FA;' : ''}">
-        <td style="padding: 8px; border: 1px solid #E8E8E8; text-align: center;">${product.product_code}</td>
-        <td style="padding: 8px; border: 1px solid #E8E8E8;">${product.product_name}</td>
-        <td style="padding: 8px; border: 1px solid #E8E8E8; text-align: center;">${product.quantity}</td>
-        <td style="padding: 8px; border: 1px solid #E8E8E8; text-align: right;">¥${product.mrp.toFixed(2)}</td>
-        <td style="padding: 8px; border: 1px solid #E8E8E8; text-align: right;">¥${(product.service_charge || 0).toFixed(2)}</td>
-        <td style="padding: 8px; border: 1px solid #E8E8E8; text-align: right; font-weight: bold;">¥${productTotal.toFixed(2)}</td>
+        <td style="padding: 8px; border: 1px solid #E8E8E8; text-align: center;">${product.product_code || 'N/A'}</td>
+        <td style="padding: 8px; border: 1px solid #E8E8E8;">${product.product_name || 'N/A'}</td>
+        <td style="padding: 8px; border: 1px solid #E8E8E8; text-align: center;">${quantity}</td>
+        <td style="padding: 8px; border: 1px solid #E8E8E8; text-align: right;">Rs. ${mrp.toFixed(2)}</td>
+        <td style="padding: 8px; border: 1px solid #E8E8E8; text-align: right;">Rs. ${serviceCharge.toFixed(2)}</td>
+        <td style="padding: 8px; border: 1px solid #E8E8E8; text-align: right; font-weight: bold;">Rs. ${productTotal.toFixed(2)}</td>
       </tr>
     `;
   }).join('') || '';
@@ -123,25 +131,25 @@ const generateSalesRequestHTML = (salesRequest) => {
     <body>
       <div class="header">
         <div class="title">SALES REQUEST RECEIPT</div>
-        <div class="status-badge">Status: ${salesRequest.status}</div>
+        <div class="status-badge">Status: ${salesRequest.status || 'N/A'}</div>
       </div>
 
       <table class="info-table">
         <tr>
           <td>Request ID</td>
-          <td>SR-${String(salesRequest.id).padStart(6, '0')}</td>
+          <td>SR-${String(salesRequest.id || '000000').padStart(6, '0')}</td>
         </tr>
         <tr>
           <td>Technician</td>
-          <td>${salesRequest.technician_name}</td>
+          <td>${salesRequest.technician_name || 'N/A'}</td>
         </tr>
         <tr>
           <td>Company</td>
-          <td>${salesRequest.company_name}</td>
+          <td>${salesRequest.company_name || 'N/A'}</td>
         </tr>
         <tr>
           <td>Type</td>
-          <td>${salesRequest.type?.title() || 'N/A'}</td>
+          <td>${salesRequest.type ? (typeof salesRequest.type === 'string' ? salesRequest.type.toUpperCase() : 'N/A') : 'N/A'}</td>
         </tr>
         <tr>
           <td>Invoice Number</td>
@@ -161,13 +169,13 @@ const generateSalesRequestHTML = (salesRequest) => {
         ` : ''}
         <tr>
           <td>Date Requested</td>
-          <td>${new Date(salesRequest.requested_at).toLocaleDateString('en-IN', {
+          <td>${salesRequest.requested_at ? new Date(salesRequest.requested_at).toLocaleDateString('en-IN', {
             day: '2-digit',
             month: '2-digit', 
             year: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
-          })}</td>
+          }) : 'N/A'}</td>
         </tr>
         ${salesRequest.reviewed_at ? `
         <tr>
@@ -205,7 +213,7 @@ const generateSalesRequestHTML = (salesRequest) => {
           ${productsHTML}
           <tr class="total-row">
             <td colspan="5" style="text-align: right;">Subtotal:</td>
-            <td style="text-align: right;">¥${productsTotal.toFixed(2)}</td>
+            <td style="text-align: right;">Rs. ${productsTotal.toFixed(2)}</td>
           </tr>
         </tbody>
       </table>
@@ -213,7 +221,7 @@ const generateSalesRequestHTML = (salesRequest) => {
       <table class="products-table">
         <tr class="grand-total">
           <td colspan="4" style="text-align: right;">GRAND TOTAL:</td>
-          <td colspan="2" style="text-align: right;">¥${productsTotal.toFixed(2)}</td>
+          <td colspan="2" style="text-align: right;">Rs. ${productsTotal.toFixed(2)}</td>
         </tr>
       </table>
 
