@@ -10,13 +10,13 @@ import {
   ActivityIndicator,
   RefreshControl,
   Modal,
-  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 import client from '../api/client';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { COLORS } from '../theme/colors';
+import { generateSalesRequestPDF } from '../utils/SalesRequestPDFGenerator';
 
 export default function AdminSalesRequestScreen({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -176,38 +176,22 @@ export default function AdminSalesRequestScreen({ navigation }) {
     }
   };
 
-  const handleDownloadPdf = async (requestId) => {
+  const handleDownloadPdf = async (salesRequest) => {
     try {
       setDownloadingPdf(true);
       
-      // Get token from AuthContext state
-      const token = state.userToken;
-      if (!token) {
-        Alert.alert('Error', 'Authentication token not found');
-        return;
+      const result = await generateSalesRequestPDF(salesRequest);
+      
+      if (!result.success) {
+        Alert.alert('Error', result.message || 'Failed to generate PDF. Please try again.');
+      } else {
+        // PDF was successfully generated and shared
+        console.log('PDF generated successfully:', result.uri);
       }
       
-      // For React Native, we'll open the PDF in a browser with the token
-        const pdfUrl = `http://localhost:8000/api/sales/requests/${requestId}/pdf/?token=${token}`;
-        
-        Alert.alert(
-          'PDF Ready',
-          'The PDF has been generated. Would you like to open it in your browser?',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-            {
-              text: 'Open PDF',
-              onPress: () => Linking.openURL(pdfUrl),
-            },
-          ]
-        );
-      
     } catch (error) {
-      console.error('Error downloading PDF:', error);
-      Alert.alert('Error', error.message || 'Failed to download PDF. Please try again.');
+      console.error('Error generating PDF:', error);
+      Alert.alert('Error', 'Failed to generate PDF. Please try again.');
     } finally {
       setDownloadingPdf(false);
     }
@@ -343,7 +327,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
                   {selectedRequest.status?.toLowerCase() === 'approved' && (
                     <TouchableOpacity
                       style={styles.pdfButton}
-                      onPress={() => handleDownloadPdf(selectedRequest.id)}
+                      onPress={() => handleDownloadPdf(selectedRequest)}
                       disabled={downloadingPdf}
                     >
                       {downloadingPdf ? (
