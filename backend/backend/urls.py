@@ -16,7 +16,7 @@ from api.views import (
     get_received_history,
     delete_my_account, get_my_profile,
     process_pending_complaints, get_complaint_processing_status,
-    create_sales_request, get_sales_requests, approve_sales_request, reject_sales_request,
+    create_sales_request, get_sales_requests, approve_sales_request, reject_sales_request, download_sales_request_pdf,
     search_products,
     api_root
 )
@@ -99,6 +99,7 @@ urlpatterns = [
     path('api/sales/requests/create/', create_sales_request, name='create_sales_request'),
     path('api/sales/requests/<int:request_id>/approve/', approve_sales_request, name='approve_sales_request'),
     path('api/sales/requests/<int:request_id>/reject/', reject_sales_request, name='reject_sales_request'),
+    path('api/sales/requests/<int:request_id>/pdf/', download_sales_request_pdf, name='download_sales_request_pdf'),
 
     # Product Search
     path('api/products/search/', search_products, name='search_products'),

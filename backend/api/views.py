@@ -2023,6 +2023,54 @@ def reject_sales_request(request, request_id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def download_sales_request_pdf(request, request_id):
+    """Download sales request as PDF (Admin only)"""
+    try:
+        if not request.user.is_staff:
+            return Response({
+                'success': False,
+                'error': 'Only admins can download sales request PDFs'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            sales_request = SalesRequest.objects.get(id=request_id)
+        except SalesRequest.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Sales request not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Only allow PDF download for approved requests
+        if sales_request.status != 'APPROVED':
+            return Response({
+                'success': False,
+                'error': 'PDF download is only available for approved sales requests'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Generate PDF
+        from .sales_pdf_generator import generate_sales_request_pdf
+        pdf_bytes = generate_sales_request_pdf(sales_request)
+        
+        # Create HTTP response with PDF
+        from django.http import HttpResponse
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        filename = f"sales_request_SR{str(sales_request.id).zfill(6)}_{sales_request.company_name.replace(' ', '_')}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        logger.info(f"Sales request PDF {request_id} downloaded by admin {request.user.username}")
+        
+        return response
+        
+    except Exception as e:
+        logger.exception(f"Error generating sales request PDF {request_id}: {e}")
+        return Response({
+            'success': False,
+            'error': 'Failed to generate PDF'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def search_products(request):
     """Search products from company stock with caching"""
     try:

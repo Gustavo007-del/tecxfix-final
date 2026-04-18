@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Modal,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
@@ -27,6 +28,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
   const [processingId, setProcessingId] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
     fetchSalesRequests();
@@ -150,14 +152,65 @@ export default function AdminSalesRequestScreen({ navigation }) {
   };
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      return date.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return 'Invalid Date';
+    }
+  };
+
+  const handleDownloadPdf = async (requestId) => {
+    try {
+      setDownloadingPdf(true);
+      
+      const token = state.user?.token;
+      if (!token) {
+        Alert.alert('Error', 'Authentication token not found');
+        return;
+      }
+      
+      const response = await client.get(`/sales/requests/${requestId}/pdf/`, {
+        responseType: 'blob'
+      });
+      
+      if (response.status === 200) {
+        // For React Native, we'll open the PDF in a browser
+        const pdfUrl = `http://localhost:8000/api/sales/requests/${requestId}/pdf/?token=${token}`;
+        
+        Alert.alert(
+          'PDF Ready',
+          'The PDF has been generated. Would you like to open it in your browser?',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {
+              text: 'Open PDF',
+              onPress: () => Linking.openURL(pdfUrl),
+            },
+          ]
+        );
+      } else {
+        throw new Error('Failed to generate PDF');
+      }
+      
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      Alert.alert('Error', error.message || 'Failed to download PDF. Please try again.');
+    } finally {
+      setDownloadingPdf(false);
+    }
   };
 
   if (loading) {
@@ -207,7 +260,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
                   <Text style={[styles.status, { color: getStatusColor(request.status) }]}>
                     {getStatusText(request.status)}
                   </Text>
-                  <Text style={styles.date}>{formatDate(request.created_at)}</Text>
+                  <Text style={styles.date}>{formatDate(request.requested_at)}</Text>
                 </View>
               </View>
 
@@ -285,7 +338,25 @@ export default function AdminSalesRequestScreen({ navigation }) {
           {selectedRequest && (
             <ScrollView style={styles.modalContent}>
               <View style={styles.detailSection}>
-                <Text style={styles.detailSectionTitle}>Request Information</Text>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.detailSectionTitle}>Request Information</Text>
+                  {selectedRequest.status?.toLowerCase() === 'approved' && (
+                    <TouchableOpacity
+                      style={styles.pdfButton}
+                      onPress={() => handleDownloadPdf(selectedRequest.id)}
+                      disabled={downloadingPdf}
+                    >
+                      {downloadingPdf ? (
+                        <ActivityIndicator size="small" color={COLORS.white} />
+                      ) : (
+                        <>
+                          <MaterialIcons name="picture-as-pdf" size={18} color={COLORS.white} />
+                          <Text style={styles.pdfButtonText}>Download PDF</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  )}
+                </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Technician:</Text>
                   <Text style={styles.detailValue}>{selectedRequest.technician_name}</Text>
@@ -330,14 +401,14 @@ export default function AdminSalesRequestScreen({ navigation }) {
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Date:</Text>
-                  <Text style={styles.detailValue}>{formatDate(selectedRequest.created_at)}</Text>
+                  <Text style={styles.detailValue}>{formatDate(selectedRequest.requested_at)}</Text>
                 </View>
               </View>
 
               <View style={styles.detailSection}>
                 <Text style={styles.detailSectionTitle}>Products</Text>
-                {selectedRequest.products?.map((product, index) => (
-                  <View key={index} style={styles.productDetail}>
+                {selectedRequest.products?.map((product) => (
+                  <View key={product.id} style={styles.productDetail}>
                     <View style={styles.productHeader}>
                       <View>
                         <Text style={styles.productName}>{product.product_name}</Text>
@@ -545,6 +616,26 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  pdfButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.danger,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    gap: 6,
+  },
+  pdfButtonText: {
+    fontSize: 14,
+    color: COLORS.white,
+    fontWeight: '600',
+  },
   detailSectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -570,34 +661,56 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   productDetail: {
-    backgroundColor: COLORS.lightGray,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   productHeader: {
-    marginBottom: 8,
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   productName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.dark,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    marginBottom: 4,
   },
   productCode: {
-    fontSize: 14,
-    color: COLORS.gray,
+    fontSize: 13,
+    color: '#7F8C8D',
+    backgroundColor: '#F8F9FA',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
   },
   productDetails: {
-    gap: 4,
+    gap: 8,
+    paddingTop: 4,
   },
   productDetailText: {
     fontSize: 14,
-    color: COLORS.gray,
+    color: '#5A6C7D',
+    lineHeight: 20,
   },
   productTotal: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#F4D03F',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
   },
   totalSection: {
     backgroundColor: COLORS.white,
