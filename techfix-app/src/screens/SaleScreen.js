@@ -37,6 +37,9 @@ export default function SaleScreen({ navigation }) {
   const [saleType, setSaleType] = useState('direct');
   const [companyName, setCompanyName] = useState('');
   const [compliantNumber, setCompliantNumber] = useState('');
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [remarks, setRemarks] = useState('');
   const [productSearch, setProductSearch] = useState('');
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
@@ -140,6 +143,16 @@ export default function SaleScreen({ navigation }) {
         return;
       }
 
+      if (!invoiceNumber.trim()) {
+        Alert.alert('Error', 'Please enter invoice number');
+        return;
+      }
+
+      if (saleType === 'direct' && !customerName.trim()) {
+        Alert.alert('Error', 'Please enter customer name');
+        return;
+      }
+
       if (saleType === 'compliant' && !compliantNumber.trim()) {
         Alert.alert('Error', 'Please enter compliant number');
         return;
@@ -155,7 +168,10 @@ export default function SaleScreen({ navigation }) {
       const saleData = {
         type: saleType.toUpperCase(),
         company_name: companyName,
+        invoice_number: invoiceNumber,
         compliant_number: compliantNumber || null,
+        customer_name: saleType === 'direct' ? customerName : null,
+        remarks: saleType === 'direct' ? remarks : null,
         products: selectedProducts.map(p => ({
           product_id: p.id, // Use spare_id directly as string
           product_name: p.name,
@@ -183,6 +199,9 @@ export default function SaleScreen({ navigation }) {
                 // Reset form
                 setSaleType('direct');
                 setCompanyName('');
+                setInvoiceNumber('');
+                setCustomerName('');
+                setRemarks('');
                 setCompliantNumber('');
                 setProductSearch('');
                 setSelectedProducts([]);
@@ -279,6 +298,47 @@ export default function SaleScreen({ navigation }) {
               </View>
             )}
           </View>
+
+          {/* Invoice Number */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Invoice Number *</Text>
+            <TextInput
+              style={styles.input}
+              value={invoiceNumber}
+              onChangeText={setInvoiceNumber}
+              placeholder="Enter invoice number"
+              placeholderTextColor={COLORS.gray}
+            />
+          </View>
+
+          {/* Customer Name and Remarks (only for direct type) */}
+          {saleType === 'direct' && (
+            <>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Customer Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={customerName}
+                  onChangeText={setCustomerName}
+                  placeholder="Enter customer name"
+                  placeholderTextColor={COLORS.gray}
+                />
+              </View>
+
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Remarks</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={remarks}
+                  onChangeText={setRemarks}
+                  placeholder="Enter remarks (optional)"
+                  placeholderTextColor={COLORS.gray}
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
+            </>
+          )}
 
           {/* Compliant Number (only for compliant type) */}
           {saleType === 'compliant' && (
@@ -511,6 +571,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: COLORS.dark,
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
   },
   searchContainer: {
     flexDirection: 'row',

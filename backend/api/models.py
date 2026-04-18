@@ -214,7 +214,10 @@ class SalesRequest(models.Model):
     technician = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sales_requests')
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='DIRECT')
     company_name = models.CharField(max_length=200)
+    invoice_number = models.CharField(max_length=100)
     compliant_number = models.CharField(max_length=50, blank=True, null=True)
+    customer_name = models.CharField(max_length=200, blank=True, null=True)
+    remarks = models.TextField(blank=True, null=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     
     # Status tracking

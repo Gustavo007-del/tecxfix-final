@@ -300,10 +300,26 @@ export default function AdminSalesRequestScreen({ navigation }) {
                     {selectedRequest.type === 'direct' ? 'Direct Sale' : 'Complaint Sale'}
                   </Text>
                 </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Invoice Number:</Text>
+                  <Text style={styles.detailValue}>{selectedRequest.invoice_number}</Text>
+                </View>
                 {selectedRequest.compliant_number && (
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Compliant Number:</Text>
                     <Text style={styles.detailValue}>{selectedRequest.compliant_number}</Text>
+                  </View>
+                )}
+                {selectedRequest.customer_name && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Customer Name:</Text>
+                    <Text style={styles.detailValue}>{selectedRequest.customer_name}</Text>
+                  </View>
+                )}
+                {selectedRequest.remarks && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Remarks:</Text>
+                    <Text style={styles.detailValue}>{selectedRequest.remarks}</Text>
                   </View>
                 )}
                 <View style={styles.detailRow}>
@@ -323,8 +339,10 @@ export default function AdminSalesRequestScreen({ navigation }) {
                 {selectedRequest.products?.map((product, index) => (
                   <View key={index} style={styles.productDetail}>
                     <View style={styles.productHeader}>
-                      <Text style={styles.productName}>{product.product_name}</Text>
-                      <Text style={styles.productCode}>{product.product_code}</Text>
+                      <View>
+                        <Text style={styles.productName}>{product.product_name}</Text>
+                        <Text style={styles.productCode}>{product.product_code}</Text>
+                      </View>
                     </View>
                     <View style={styles.productDetails}>
                       <Text style={styles.productDetailText}>
@@ -558,9 +576,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   productHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 8,
   },
   productName: {
