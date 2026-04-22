@@ -17,6 +17,8 @@ import client from '../api/client';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { COLORS } from '../theme/colors';
 import { generateSalesRequestPDF } from '../utils/SalesRequestPDFGenerator';
+import { generateSalesReportPDF } from '../utils/SalesReportPDFGenerator';
+import { generateSalesReportExcel } from '../utils/SalesReportExcelGenerator';
 
 export default function AdminSalesRequestScreen({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -29,6 +31,8 @@ export default function AdminSalesRequestScreen({ navigation }) {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [downloadingReport, setDownloadingReport] = useState(false);
+  const [downloadingExcel, setDownloadingExcel] = useState(false);
 
   useEffect(() => {
     fetchSalesRequests();
@@ -197,6 +201,46 @@ export default function AdminSalesRequestScreen({ navigation }) {
     }
   };
 
+  const handleDownloadReport = async () => {
+    try {
+      setDownloadingReport(true);
+      
+      const result = await generateSalesReportPDF(salesRequests);
+      
+      if (!result.success) {
+        Alert.alert('Error', result.message || 'Failed to generate sales report. Please try again.');
+      } else {
+        console.log('Sales report generated successfully:', result.uri);
+      }
+      
+    } catch (error) {
+      console.error('Error generating sales report:', error);
+      Alert.alert('Error', 'Failed to generate sales report. Please try again.');
+    } finally {
+      setDownloadingReport(false);
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    try {
+      setDownloadingExcel(true);
+      
+      const result = await generateSalesReportExcel(salesRequests);
+      
+      if (!result.success) {
+        Alert.alert('Error', result.message || 'Failed to generate Excel report. Please try again.');
+      } else {
+        console.log('Excel report generated successfully:', result.uri);
+      }
+      
+    } catch (error) {
+      console.error('Error generating Excel report:', error);
+      Alert.alert('Error', 'Failed to generate Excel report. Please try again.');
+    } finally {
+      setDownloadingExcel(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -222,6 +266,39 @@ export default function AdminSalesRequestScreen({ navigation }) {
         style={styles.scrollView}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
+        {/* Download Buttons */}
+        <View style={styles.downloadButtonsContainer}>
+          <TouchableOpacity
+            style={[styles.downloadButton, styles.pdfButton]}
+            onPress={handleDownloadReport}
+            disabled={downloadingReport || salesRequests.length === 0}
+          >
+            {downloadingReport ? (
+              <ActivityIndicator size="small" color={COLORS.white} />
+            ) : (
+              <>
+                <MaterialIcons name="picture-as-pdf" size={20} color={COLORS.white} />
+                <Text style={styles.downloadButtonText}>Download PDF Report</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.downloadButton, styles.excelButton]}
+            onPress={handleDownloadExcel}
+            disabled={downloadingExcel || salesRequests.length === 0}
+          >
+            {downloadingExcel ? (
+              <ActivityIndicator size="small" color={COLORS.white} />
+            ) : (
+              <>
+                <MaterialIcons name="grid-on" size={20} color={COLORS.white} />
+                <Text style={styles.downloadButtonText}>Download Excel Report</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+
         {salesRequests.length === 0 ? (
           <View style={styles.noDataContainer}>
             <MaterialIcons name="receipt-long" size={64} color={COLORS.gray} />
@@ -455,6 +532,36 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 28,
+  },
+  downloadButtonsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  downloadButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  pdfButton: {
+    backgroundColor: COLORS.danger,
+  },
+  excelButton: {
+    backgroundColor: COLORS.success,
+  },
+  downloadButtonText: {
+    fontSize: 14,
+    color: COLORS.white,
+    fontWeight: '600',
   },
   noDataContainer: {
     flex: 1,

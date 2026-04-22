@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
-import client, { API_ENDPOINTS } from '../api/client';
+import client from '../api/client';
+import API_ENDPOINTS from '../api/endpoints';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { COLORS } from '../theme/colors';
 import { generateSalesRequestPDF } from '../utils/SalesRequestPDFGenerator';
