@@ -83,6 +83,12 @@ class SheetsSync:
     def __init__(self):
         # IMPORTANT: Do NOT authenticate here
         self.client = None
+        # In-memory cache of the "Technician Stocks" sheet for the lifetime of
+        # this SheetsSync instance (i.e. for one processing run/request).
+        # Without this, get_technician_stock() re-downloads the whole sheet
+        # from Google on every single call, which is what was causing the
+        # worker timeout when processing many complaints in one request.
+        self._tech_stock_cache = None
 
     # -----------------------
     # AUTHENTICATION (ENV BASED)
@@ -296,21 +302,34 @@ class SheetsSync:
     # TECHNICIAN STOCK
     # -----------------------
 
+    def _get_tech_stock_sheet_rows(self, force_refresh=False):
+        """
+        Fetch the "Technician Stocks" worksheet ONCE and cache the raw rows
+        on this instance. Every complaint used to trigger its own full-sheet
+        fetch (~1s+ round trip to Google), so 69 complaints meant 69+ sequential
+        network calls in a single request - easily blowing past gunicorn's
+        worker timeout. Now we fetch it once per run and reuse it.
+        """
+        if self._tech_stock_cache is not None and not force_refresh:
+            return self._tech_stock_cache
+
+        self.authenticate()
+        spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
+        sheet = spreadsheet.worksheet(self.TECHNICIAN_STOCK_WORKSHEET)
+
+        rows = sheet.get_all_values()
+        self._tech_stock_cache = rows[1:]
+        logger.info(f"Fetched and cached {len(self._tech_stock_cache)} rows from technician stock sheet")
+        return self._tech_stock_cache
+
     def get_technician_stock(self, technician_name):
         start_time = time.time()
         process = psutil.Process(os.getpid())
         memory_before = process.memory_info().rss / 1024 / 1024
         
         logger.info(f"Fetching technician stock for '{technician_name}' - Memory: {memory_before:.1f}MB")
-        self.authenticate()
 
-        spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
-        sheet = spreadsheet.worksheet(self.TECHNICIAN_STOCK_WORKSHEET)
-
-        rows = sheet.get_all_values()
-        data_rows = rows[1:]
-        
-        logger.info(f"Retrieved {len(data_rows)} rows from technician stock sheet")
+        data_rows = self._get_tech_stock_sheet_rows()
 
         stock = []
 
@@ -392,8 +411,9 @@ class SheetsSync:
         spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
         sheet = spreadsheet.worksheet(self.TECHNICIAN_STOCK_WORKSHEET)
 
-        rows = sheet.get_all_values()
-        data_rows = rows[1:]
+        # Reuse the cached rows if we already have them this run instead of
+        # doing yet another full-sheet fetch just to locate the row.
+        data_rows = self._get_tech_stock_sheet_rows()
 
         found_row = None
 
@@ -428,6 +448,11 @@ class SheetsSync:
                 ],
                 value_input_option="USER_ENTERED"
             )
+
+        # The sheet just changed on Google's side, so the cached snapshot is
+        # stale. Drop it - the next get_technician_stock()/update call will
+        # do one fresh fetch and re-cache.
+        self._tech_stock_cache = None
 
         return True
 
