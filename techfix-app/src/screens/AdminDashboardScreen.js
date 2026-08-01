@@ -71,7 +71,7 @@ export default function AdminDashboardScreen({ navigation }) {
               setProcessingComplaints(true);
               
               const response = await client.post(API_ENDPOINTS.PROCESS_COMPLAINTS, {
-                since_date: '2026-98-01', // Default date as specified
+                since_date: '2026-03-22', // Default date as specified
                 technician_filter: null // Process all technicians
               });
 
@@ -172,48 +172,48 @@ export default function AdminDashboardScreen({ navigation }) {
                 style={styles.actionButton}
                 onPress={() => navigation.navigate('AdminAttendanceRecordScreen')}
               >
-                <MaterialIcons name="list-alt" size={24} color={COLORS.primary} />
+                <MaterialIcons name="list-alt" size={24} color={COLORS.white} />
                 <View style={styles.actionContent}>
                   <Text style={styles.actionTitle}>Attendance Records</Text>
                   <Text style={styles.actionSubtitle}>View daily attendance by date</Text>
                 </View>
-                <MaterialIcons name="arrow-forward" size={20} color={COLORS.gray} />
+                <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => navigation.navigate('TechnicianList')}
               >
-                <MaterialIcons name="people-alt" size={24} color={COLORS.primary} />
+                <MaterialIcons name="people-alt" size={24} color={COLORS.white} />
                 <View style={styles.actionContent}>
                   <Text style={styles.actionTitle}>All Technicians</Text>
                   <Text style={styles.actionSubtitle}>Manage technician list</Text>
                 </View>
-                <MaterialIcons name="arrow-forward" size={20} color={COLORS.gray} />
+                <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => navigation.navigate('ManageTechnicians')}
               >
-                <MaterialIcons name="person-add" size={24} color={COLORS.primary} />
+                <MaterialIcons name="person-add" size={24} color={COLORS.white} />
                 <View style={styles.actionContent}>
                   <Text style={styles.actionTitle}>Manage Technicians</Text>
                   <Text style={styles.actionSubtitle}>Add, edit, or delete technicians</Text>
                 </View>
-                <MaterialIcons name="arrow-forward" size={20} color={COLORS.gray} />
+                <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => navigation.navigate('RegisterTechnicianStock')}
               >
-                <MaterialIcons name="storage" size={24} color={COLORS.primary} />
+                <MaterialIcons name="storage" size={24} color={COLORS.white} />
                 <View style={styles.actionContent}>
                   <Text style={styles.actionTitle}>Register Technician Stock</Text>
                   <Text style={styles.actionSubtitle}>Link technicians to stock sheets</Text>
                 </View>
-                <MaterialIcons name="arrow-forward" size={20} color={COLORS.gray} />
+                <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
               </TouchableOpacity>
             </>
           )}
@@ -227,36 +227,36 @@ export default function AdminDashboardScreen({ navigation }) {
               }
             }}
           >
-            <MaterialIcons name="my-location" size={24} color={COLORS.primary} />
+            <MaterialIcons name="my-location" size={24} color={COLORS.white} />
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Member Locations</Text>
               <Text style={styles.actionSubtitle}>Track member movement history</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.gray} />
+            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => navigation.navigate('AdminSpareApprovalsScreen')}
           >
-            <MaterialIcons name="check-circle" size={24} color={COLORS.primary} />
+            <MaterialIcons name="check-circle" size={24} color={COLORS.white} />
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Spare Approvals</Text>
               <Text style={styles.actionSubtitle}>Review and approve spare part requests</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.gray} />
+            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => navigation.navigate('StockStack')}
           >
-            <MaterialIcons name="inventory" size={24} color={COLORS.primary} />
+            <MaterialIcons name="inventory" size={24} color={COLORS.white} />
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Courier Stock</Text>
               <Text style={styles.actionSubtitle}>View & manage courier stock</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.gray} />
+            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -265,12 +265,12 @@ export default function AdminDashboardScreen({ navigation }) {
               screen: 'CreateCourierMain' 
             })}
           >
-            <MaterialIcons name="add-circle" size={24} color={COLORS.primary} />
+            <MaterialIcons name="add-circle" size={24} color={COLORS.white} />
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Create Courier</Text>
               <Text style={styles.actionSubtitle}>Create new courier shipment</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.gray} />
+            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
           </TouchableOpacity>
 
           {/* NEW: All Couriers Button */}
@@ -278,73 +278,65 @@ export default function AdminDashboardScreen({ navigation }) {
             style={styles.actionButton}
             onPress={() => navigation.navigate('AllCouriers')}
           >
-            <MaterialIcons name="local-shipping" size={24} color={COLORS.primary} />
+            <MaterialIcons name="local-shipping" size={24} color={COLORS.white} />
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>All Couriers</Text>
               <Text style={styles.actionSubtitle}>View all courier history</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.gray} />
+            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
           </TouchableOpacity>
 
             <TouchableOpacity
             style={styles.actionButton}
             onPress={() => navigation.navigate('StockOut')}
         >
-            <MaterialIcons name="inventory-2" size={24} color={COLORS.primary} />
+            <MaterialIcons name="inventory-2" size={24} color={COLORS.white} />
             <View style={styles.actionContent}>
                 <Text style={styles.actionTitle}>Stock Out Items</Text>
                 <Text style={styles.actionSubtitle}>Items requiring order</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.gray} />
+            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>
 
         <TouchableOpacity
             style={styles.actionButton}
             onPress={() => navigation.navigate('StockOrdered')}
         >
-            <MaterialIcons name="local-shipping" size={24} color={COLORS.primary} />
+            <MaterialIcons name="local-shipping" size={24} color={COLORS.white} />
             <View style={styles.actionContent}>
                 <Text style={styles.actionTitle}>Ordered Items</Text>
                 <Text style={styles.actionSubtitle}>Items awaiting receipt</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.gray} />
+            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>
 
         <TouchableOpacity
             style={styles.actionButton}
             onPress={() => navigation.navigate('OrderHistory')}
         >
-            <MaterialIcons name="history" size={24} color={COLORS.primary} />
+            <MaterialIcons name="history" size={24} color={COLORS.white} />
             <View style={styles.actionContent}>
                 <Text style={styles.actionTitle}>Order History</Text>
                 <Text style={styles.actionSubtitle}>View all orders</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.gray} />
+            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>
 
         <TouchableOpacity
             style={styles.actionButton}
             onPress={() => navigation.navigate('ReceivedHistory')}
         >
-            <MaterialIcons name="done-all" size={24} color={COLORS.primary} />
+            <MaterialIcons name="done-all" size={24} color={COLORS.white} />
             <View style={styles.actionContent}>
                 <Text style={styles.actionTitle}>Received History</Text>
                 <Text style={styles.actionSubtitle}>View all received items</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.gray} />
+            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>
 
         {/* NEW: Process Pending Complaints Button */}
         <TouchableOpacity
-            style={[styles.actionButton, { 
-                backgroundColor: processingComplaints ? COLORS.gray : COLORS.warning, 
-                borderWidth: 0,
-                shadowColor: processingComplaints ? COLORS.gray : COLORS.warning,
-                shadowOffset: { width: 0, height: 10 },
-                shadowOpacity: 0.25,
-                shadowRadius: 20,
-                elevation: 10,
-            }]}
+            style={[styles.actionButton, { backgroundColor: processingComplaints ? COLORS.gray : COLORS.warning }]}
             onPress={handleProcessComplaints}
             disabled={processingComplaints}
         >
@@ -354,10 +346,10 @@ export default function AdminDashboardScreen({ navigation }) {
                 <MaterialIcons name="pending-actions" size={24} color={COLORS.white} />
             )}
             <View style={styles.actionContent}>
-                <Text style={[styles.actionTitle, { color: COLORS.white, fontWeight: '700' }]}>
+                <Text style={styles.actionTitle}>
                     {processingComplaints ? 'Processing...' : 'Process Completed Complaints'}
                 </Text>
-                <Text style={[styles.actionSubtitle, { color: COLORS.white + 'CC' }]}>
+                <Text style={styles.actionSubtitle}>
                     Process completed complaints & reduce stock
                 </Text>
             </View>
@@ -366,21 +358,13 @@ export default function AdminDashboardScreen({ navigation }) {
 
         {/* NEW: Sales Requests Button */}
         <TouchableOpacity
-            style={[styles.actionButton, { 
-                backgroundColor: COLORS.primary, 
-                borderWidth: 0,
-                shadowColor: COLORS.primary,
-                shadowOffset: { width: 0, height: 10 },
-                shadowOpacity: 0.25,
-                shadowRadius: 20,
-                elevation: 10,
-            }]}
+            style={styles.actionButton}
             onPress={() => navigation.navigate('AdminSalesRequestScreen')}
         >
             <MaterialIcons name="sell" size={24} color={COLORS.white} />
             <View style={styles.actionContent}>
-                <Text style={[styles.actionTitle, { color: COLORS.white, fontWeight: '700' }]}>Sales Requests</Text>
-                <Text style={[styles.actionSubtitle, { color: COLORS.white + 'CC' }]}>Review and approve sales requests</Text>
+                <Text style={styles.actionTitle}>Sales Requests</Text>
+                <Text style={styles.actionSubtitle}>Review and approve sales requests</Text>
             </View>
             <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>
@@ -457,39 +441,35 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   actionsContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingBottom: 24,
   },
   actionButton: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.dark,
     marginVertical: 8,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 8,
     alignItems: 'center',
     flexDirection: 'row',
     shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: COLORS.gray + '15',
-    position: 'relative',
-    overflow: 'hidden',
+    shadowRadius: 4,
+    elevation: 3,
   },
   actionContent: {
     flex: 1,
     marginLeft: 16,
   },
   actionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: COLORS.dark,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.white,
   },
   actionSubtitle: {
-    fontSize: 11,
-    color: COLORS.gray,
+    fontSize: 12,
+    color: COLORS.lightGray,
     marginTop: 2,
   },
 });
