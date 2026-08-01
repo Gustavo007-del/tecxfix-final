@@ -189,7 +189,10 @@ class SalesRequestSerializer(serializers.ModelSerializer):
             'technician_name',
             'type',
             'company_name',
+            'invoice_number',
             'compliant_number',
+            'customer_name',
+            'remarks',
             'total_amount',
             'status',
             'requested_at',
@@ -217,7 +220,10 @@ class SalesRequestCreateSerializer(serializers.ModelSerializer):
         fields = [
             'type',
             'company_name',
+            'invoice_number',
             'compliant_number',
+            'customer_name',
+            'remarks',
             'total_amount',
             'products',
         ]
@@ -227,6 +233,14 @@ class SalesRequestCreateSerializer(serializers.ModelSerializer):
         """Validate and calculate total_amount from products"""
         products = data.get('products', [])
         submitted_total = data.get('total_amount', 0)
+        
+        # Validate invoice_number is required
+        if not data.get('invoice_number'):
+            raise serializers.ValidationError("Invoice number is required")
+        
+        # Validate customer_name is required for direct sales
+        if data.get('type') == 'DIRECT' and not data.get('customer_name'):
+            raise serializers.ValidationError("Customer name is required for direct sales")
         
         # Calculate actual total from products
         calculated_total = sum(

@@ -33,6 +33,9 @@ const API_ENDPOINTS = {
   
   // Product Search
   SEARCH_PRODUCTS: '/products/search/',
+  
+  // Sales Requests
+  MY_SALES_REQUESTS: '/sales/my-requests/',
 };
 
 export default API_ENDPOINTS;

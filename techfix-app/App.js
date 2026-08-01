@@ -48,6 +48,7 @@ import AdminSalesRequestScreen from './src/screens/AdminSalesRequestScreen';
 
 // Sales Screen
 import SaleScreen from './src/screens/SaleScreen';
+import SalesHistoryScreen from './src/screens/SalesHistoryScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -145,6 +146,10 @@ function AttendanceScreenStack() {
             <Stack.Screen
                 name="Sale"
                 component={SaleScreen}
+            />
+            <Stack.Screen
+                name="SalesHistory"
+                component={SalesHistoryScreen}
             />
         </Stack.Navigator>
     );

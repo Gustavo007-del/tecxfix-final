@@ -2023,6 +2023,113 @@ def reject_sales_request(request, request_id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def get_my_sales_requests(request):
+    """Get current user's sales requests (Technician only)"""
+    try:
+        # Check if user is a technician
+        if request.user.is_staff:
+            return Response(
+                {'error': 'This endpoint is for technicians only'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Get sales requests for current technician
+        sales_requests = SalesRequest.objects.filter(
+            technician=request.user
+        ).order_by('-requested_at')
+        
+        # Serialize the data
+        serializer = SalesRequestSerializer(sales_requests, many=True)
+        
+        return Response({
+            'success': True,
+            'results': serializer.data
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching user's sales requests: {str(e)}")
+        return Response(
+            {'error': 'Failed to fetch sales requests', 'details': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+def download_sales_request_pdf(request, request_id):
+    """Download sales request as PDF (Admin and Technician access)"""
+    try:
+        # Check authentication via token parameter or session
+        from rest_framework_simplejwt.authentication import JWTAuthentication
+        from rest_framework_simplejwt.exceptions import InvalidToken
+        
+        token = request.GET.get('token')
+        user = None
+        
+        if token:
+            # Try to authenticate with the provided token
+            jwt_auth = JWTAuthentication()
+            try:
+                validated_token = jwt_auth.get_validated_token(token)
+                user = jwt_auth.get_user(validated_token)
+            except InvalidToken:
+                pass
+        
+        # Fallback to session authentication
+        if not user and hasattr(request, 'user') and request.user.is_authenticated:
+            user = request.user
+        
+        if not user:
+            return Response({
+                'success': False,
+                'error': 'Authentication required.'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            sales_request = SalesRequest.objects.get(id=request_id)
+        except SalesRequest.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Sales request not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Check permissions: Admin can access any, Technician can only access their own
+        if not user.is_staff and sales_request.technician != user:
+            return Response({
+                'success': False,
+                'error': 'You can only download your own sales requests.'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Only allow PDF download for approved requests
+        if sales_request.status != 'APPROVED':
+            return Response({
+                'success': False,
+                'error': 'PDF download is only available for approved sales requests'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Generate PDF
+        from .sales_pdf_generator import generate_sales_request_pdf
+        pdf_bytes = generate_sales_request_pdf(sales_request)
+        
+        # Create HTTP response with PDF
+        from django.http import HttpResponse
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        filename = f"sales_request_SR{str(sales_request.id).zfill(6)}_{sales_request.company_name.replace(' ', '_')}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        logger.info(f"Sales request PDF {request_id} downloaded by admin {request.user.username}")
+        
+        return response
+        
+    except Exception as e:
+        logger.exception(f"Error generating sales request PDF {request_id}: {e}")
+        return Response({
+            'success': False,
+            'error': 'Failed to generate PDF'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def search_products(request):
     """Search products from company stock with caching"""
     try:
