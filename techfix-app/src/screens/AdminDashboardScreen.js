@@ -71,7 +71,7 @@ export default function AdminDashboardScreen({ navigation }) {
               setProcessingComplaints(true);
               
               const response = await client.post(API_ENDPOINTS.PROCESS_COMPLAINTS, {
-                since_date: '2026-03-22', // Default date as specified
+                since_date: '2026-98-01', // Default date as specified
                 technician_filter: null // Process all technicians
               });
 
