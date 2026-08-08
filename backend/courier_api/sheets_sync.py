@@ -279,7 +279,7 @@ class SheetsSync:
             logger.info(f"Processed {processed_count} valid items, skipped {skipped_count} invalid rows")
 
             # Cache for 24 hours (86400 seconds)
-            cache.set(cache_key, stock, 20)
+            cache.set(cache_key, stock, 86400)
             logger.info(f"Company stock cached for 24 hours")
             
             duration = time.time() - start_time
