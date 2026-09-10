@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Technician, Attendance, SpareRequest, SalesRequest, SalesRequestProduct
-from .geocoding import get_location_name
+# from .geocoding import get_location_name
 from .models import StockOutOrder, StockReceived
 
 
@@ -20,28 +20,29 @@ class TechnicianSerializer(serializers.ModelSerializer):
 class AttendanceSerializer(serializers.ModelSerializer):
     technician_name = serializers.CharField(source='user.get_full_name', read_only=True)
     technician_username = serializers.CharField(source='user.username', read_only=True)
-    check_in_location_name = serializers.SerializerMethodField()
-    check_out_location_name = serializers.SerializerMethodField()
+    # Reverse geocoding is currently disabled. Keep this code commented for future use.
+    # check_in_location_name = serializers.SerializerMethodField()
+    # check_out_location_name = serializers.SerializerMethodField()
     
     class Meta:
         model = Attendance
         fields = [
             'id', 'technician_name', 'technician_username', 'date',
-            'check_in_time', 'check_in_lat', 'check_in_lng', 'check_in_location_name',
-            'check_out_time', 'check_out_lat', 'check_out_lng', 'check_out_location_name',
+            'check_in_time', 'check_in_lat', 'check_in_lng',
+            'check_out_time', 'check_out_lat', 'check_out_lng',
             'is_completed', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'date', 'created_at', 'updated_at']
     
-    def get_check_in_location_name(self, obj):
-        if obj.check_in_lat is not None and obj.check_in_lng is not None:
-            return get_location_name(obj.check_in_lat, obj.check_in_lng)
-        return None
-    
-    def get_check_out_location_name(self, obj):
-        if obj.check_out_lat is not None and obj.check_out_lng is not None:
-            return get_location_name(obj.check_out_lat, obj.check_out_lng)
-        return None
+    # def get_check_in_location_name(self, obj):
+    #     if obj.check_in_lat is not None and obj.check_in_lng is not None:
+    #         return get_location_name(obj.check_in_lat, obj.check_in_lng)
+    #     return None
+
+    # def get_check_out_location_name(self, obj):
+    #     if obj.check_out_lat is not None and obj.check_out_lng is not None:
+    #         return get_location_name(obj.check_out_lat, obj.check_out_lng)
+    #     return None
 
 class AttendanceCheckInSerializer(serializers.Serializer):
     latitude = serializers.FloatField()

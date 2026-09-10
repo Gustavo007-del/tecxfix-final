@@ -191,23 +191,16 @@ export default function AttendanceScreen({ navigation }) {
     if (response.data.success) {
       setAttendance(response.data.data);
       
-      // START LOCATION TRACKING (TEMPORARILY DISABLED)
-      try {
-        await client.post('/tracking/check-in/');
-        // const trackingResult = await LocationTrackingService.startTracking();
-        
-        // Background tracking disabled to prevent memory issues
-        console.log('Background location tracking temporarily disabled');
-        
-        // if (!trackingResult.success) {
-        //   console.error('Tracking failed:', trackingResult.error);
-        // } else {
-        //   console.log('Tracking started successfully');
-        // }
-      } catch (trackingError) {
-        // Don't fail check-in if tracking fails
-        console.log('Tracking check-in failed (expected):', trackingError.message);
-      }
+      // Location tracking is currently disabled. Keep this for future use.
+      // try {
+      //   await client.post('/tracking/check-in/');
+      //   const trackingResult = await LocationTrackingService.startTracking();
+      //   if (!trackingResult.success) {
+      //     console.error('Tracking failed:', trackingResult.error);
+      //   }
+      // } catch (trackingError) {
+      //   console.log('Tracking check-in failed:', trackingError.message);
+      // }
       
       Alert.alert('✓ Check-in Successful');
     }
@@ -238,20 +231,16 @@ export default function AttendanceScreen({ navigation }) {
     if (response.data.success) {
       setAttendance(response.data.data);
       
-      // STOP LOCATION TRACKING (NEW)
-      try {
-        await client.post('/tracking/check-out/');
-        const trackingResult = await LocationTrackingService.stopTracking();
-        
-        if (!trackingResult.success) {
-          console.error('Tracking stop failed:', trackingResult.error);
-        } else {
-          console.log('Tracking stopped successfully');
-        }
-      } catch (trackingError) {
-        // Don't fail check-out if tracking fails
-        console.log('Tracking check-out failed:', trackingError.message);
-      }
+      // Location tracking is currently disabled. Keep this for future use.
+      // try {
+      //   await client.post('/tracking/check-out/');
+      //   const trackingResult = await LocationTrackingService.stopTracking();
+      //   if (!trackingResult.success) {
+      //     console.error('Tracking stop failed:', trackingResult.error);
+      //   }
+      // } catch (trackingError) {
+      //   console.log('Tracking check-out failed:', trackingError.message);
+      // }
       
       Alert.alert('✓ Check-out Successful');
     }
