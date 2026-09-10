@@ -17,13 +17,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import Attendance, Technician, SpareRequest, StockOutOrder, StockReceived, ProcessedComplaint, SalesRequest, SalesRequestProduct
+from .models import Attendance, Technician, TrackingComplaint, CompanyStock, SpareRequest, StockOutOrder, StockReceived, ProcessedComplaint, SalesRequest, SalesRequestProduct
 from .serializers import (
     AttendanceSerializer, AttendanceCheckInSerializer,
     AttendanceCheckOutSerializer, TechnicianSerializer, SpareRequestSerializer,
     StockOutOrderSerializer, StockReceivedSerializer, SalesRequestSerializer, SalesRequestCreateSerializer
 )
 from courier_api.sheets_sync import SheetsSync
+from .services.sheet_snapshot_sync import update_tracking_snapshot, update_company_stock_snapshot
 
 # API Root View
 @api_view(['GET'])
@@ -51,10 +52,7 @@ def api_root(request):
     }, status=status.HTTP_200_OK)
 
 # sheets
-from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-from django.http import JsonResponse
-from datetime import datetime
 
 
 def get_google_sheets_client():
@@ -63,11 +61,8 @@ def get_google_sheets_client():
     Falls back to service.json if environment variables are not set (local development)
     """
     try:
-        # Try to get credentials from environment variable (for production)
         google_credentials_json = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON')
-        
         if google_credentials_json:
-            # Parse the JSON string from environment variable
             credentials_dict = json.loads(google_credentials_json)
             creds = Credentials.from_service_account_info(
                 credentials_dict,
@@ -75,16 +70,13 @@ def get_google_sheets_client():
             )
             logger.info("Using Google credentials from environment variable")
         else:
-            # Fallback to service.json for local development
             creds = Credentials.from_service_account_file(
                 "service.json",
                 scopes=["https://www.googleapis.com/auth/spreadsheets"]
             )
             logger.info("Using Google credentials from service.json file")
-        
-        client = gspread.authorize(creds)
-        return client
-    
+
+        return gspread.authorize(creds)
     except Exception as e:
         logger.error(f"Failed to authenticate with Google Sheets: {str(e)}")
         raise Exception(f"Google Sheets authentication failed: {str(e)}")
@@ -739,55 +731,29 @@ def get_complaints(request):
         from_dt = datetime.strptime(from_date, "%d-%m-%Y")
         to_dt = datetime.strptime(to_date, "%d-%m-%Y")
 
-        # Authenticate Google Sheets
-        client = get_google_sheets_client()
-
-
-        # Open worksheet
-        sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
-
-        # Fetch sheet data
-        rows = sheet.get_all_values()
-
         results = []
+        rows = TrackingComplaint.objects.filter(technician_name__iexact=technician)
 
-        # Process rows — skip header
-        for row in rows[1:]:
-            complaint_no = row[1]
-            technician_name = row[14]
-            status = row[11]
-            customer_name = row[2]
-            customer_phone = row[3]
-            area = row[5]
-            part_name = row[9]
-            part_no = row[7]
-            quantity = row[10]
-
-
-
-            # Extract date from complaint_no → B column format: PCOTH/150725/01
-            complaint_parts = complaint_no.split("/")
-            if len(complaint_parts) >= 3:
-                date_str = complaint_parts[1]  # 150725 (DDMMYY)
-                try:
-                    date_obj = datetime.strptime(date_str, "%d%m%y")
-                except:
-                    continue
-            else:
+        for row in rows:
+            complaint_parts = row.complaint_no.split("/")
+            if len(complaint_parts) < 3:
+                continue
+            try:
+                date_obj = datetime.strptime(complaint_parts[1], "%d%m%y")
+            except ValueError:
                 continue
 
-            # Apply filters
-            if technician_name.upper() == technician.upper() and from_dt <= date_obj <= to_dt:
+            if from_dt <= date_obj <= to_dt:
                 results.append({
                     "date": date_obj.strftime("%d-%m-%Y"),
-                    "complaint_no": complaint_no,
-                    "status": status,
-                    "customer_name": customer_name,
-                    "customer_phone": customer_phone,
-                    "part_name": part_name,
-                    "part_no": part_no,
-                    "area": area,
-                    "quantity": quantity
+                    "complaint_no": row.complaint_no,
+                    "status": row.complaint_status,
+                    "customer_name": row.customer_name,
+                    "customer_phone": row.customer_phone,
+                    "part_name": row.part_name,
+                    "part_no": row.product_code,
+                    "area": row.area,
+                    "quantity": row.quantity
                 })
 
         return JsonResponse(results, safe=False)
@@ -817,6 +783,7 @@ def update_complaint_status(request):
 
         # Column L = index 11 → Sheet column 12
         sheet.update_cell(row_index, 12, new_status)
+        update_tracking_snapshot(complaint_no, complaint_status=new_status)
 
         return JsonResponse({
             "success": True,
@@ -838,38 +805,27 @@ def get_spare_pending(request):
     try:
         technician_name = request.user.first_name
 
-        client = get_google_sheets_client()
-
-        sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
-        rows = sheet.get_all_values()
-        
         results = []
-        
-        # Process rows — skip header (row 0)
-        for row in rows[1:]:
-            if len(row) < 15:  # Ensure row has enough columns
-                continue
-                
-            complaint_no = row[1]       # Index 1 = Complaint No
-            tech_name = row[14]         # Index 14 = TECHNICIAN
-            status = row[11]            # Index 11 = COMPLAINT STATUS
-            
-            # Filter: Match technician AND status = PENDING
-            if tech_name.strip().upper() == technician_name.upper() and status.strip().upper() == 'PENDING':
+        rows = TrackingComplaint.objects.filter(
+            technician_name__iexact=technician_name,
+            complaint_status__iexact='PENDING',
+        )
+
+        for row in rows:
                 results.append({
-                    "complaint_no": row[1],          # Index 1
-                    "customer_name": row[2],         # Index 2
-                    "phone": row[3],                 # Index 3
-                    "area": row[5],                  # Index 5
-                    "brand_name": row[6],            # Index 6
-                    "product_code": row[7],          # Index 7
-                    "part_name": row[9],             # Index 9
-                    "no_of_spares": row[10],         # Index 10
-                    "status": status,                # Index 11
-                    "pending_days": row[12],  # Index 12
-                    "district": row[15] if len(row) > 15 else "",  # Index 15
-                    "mrp": row[19],
-                    "technician": tech_name
+                    "complaint_no": row.complaint_no,
+                    "customer_name": row.customer_name,
+                    "phone": row.customer_phone,
+                    "area": row.area,
+                    "brand_name": row.brand_name,
+                    "product_code": row.product_code,
+                    "part_name": row.part_name,
+                    "no_of_spares": row.quantity,
+                    "status": row.complaint_status,
+                    "pending_days": row.pending_days,
+                    "district": row.district,
+                    "mrp": row.mrp,
+                    "technician": row.technician_name
                 })
         
         return JsonResponse({
@@ -901,50 +857,36 @@ def get_spare_closed(request):
         from_dt = datetime.strptime(from_date_str, "%d-%m-%Y")
         to_dt = datetime.strptime(to_date_str, "%d-%m-%Y")
         
-        client = get_google_sheets_client()
-
-        sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
-        rows = sheet.get_all_values()
-        
         results = []
-        
-        # Process rows
-        for row in rows[1:]:
-            if len(row) < 15:
-                continue
-            
-            complaint_no = row[1]       # Index 1 = Complaint No
-            tech_name = row[14]         # Index 14 = TECHNICIAN
-            status = row[11]            # Index 11 = COMPLAINT STATUS
-            
-            # Extract date from complaint_no → format: PCOTH/150725/01
-            complaint_parts = complaint_no.split("/")
+        rows = TrackingComplaint.objects.filter(
+            technician_name__iexact=technician_name,
+            complaint_status__iexact='CLOSED',
+        )
+
+        for row in rows:
+            complaint_parts = row.complaint_no.split("/")
             if len(complaint_parts) >= 3:
-                date_str = complaint_parts[1]  # 150725 (DDMMYY)
                 try:
-                    date_obj = datetime.strptime(date_str, "%d%m%y")
-                except:
+                    date_obj = datetime.strptime(complaint_parts[1], "%d%m%y")
+                except ValueError:
                     continue
             else:
                 continue
-            
-            # Filter: Match technician AND status = CLOSED AND date in range
-            if (tech_name.strip().upper() == technician_name.upper() and 
-                status.strip().upper() == 'CLOSED' and 
-                from_dt <= date_obj <= to_dt):
+
+            if from_dt <= date_obj <= to_dt:
                 
                 results.append({
-                    "complaint_no": row[1],          # Index 1
-                    "customer_name": row[2],         # Index 2
-                    "phone": row[3],                 # Index 3
-                    "area": row[5],                  # Index 5
-                    "brand_name": row[6],            # Index 6
-                    "product_code": row[7],          # Index 7
-                    "part_name": row[9],             # Index 9
-                    "no_of_spares": row[10],         # Index 10
-                    "status": status,                # Index 11
-                    "district": row[15] if len(row) > 15 else "",  # Index 15
-                    "technician": tech_name,
+                    "complaint_no": row.complaint_no,
+                    "customer_name": row.customer_name,
+                    "phone": row.customer_phone,
+                    "area": row.area,
+                    "brand_name": row.brand_name,
+                    "product_code": row.product_code,
+                    "part_name": row.part_name,
+                    "no_of_spares": row.quantity,
+                    "status": row.complaint_status,
+                    "district": row.district,
+                    "technician": row.technician_name,
                     "date": date_obj.strftime("%d-%m-%Y")
                 })
         
@@ -971,36 +913,24 @@ def get_admin_spare_approvals(request):
         if not request.user.is_staff:
             return JsonResponse({"error": "Only admin users can access this endpoint"}, status=403)
 
-        client = get_google_sheets_client()
-
-        sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
-        rows = sheet.get_all_values()
-        
         results = []
-        
-        # Process rows — skip header (row 0)
-        for row in rows[1:]:
-            if len(row) < 15:  # Ensure row has enough columns
-                continue
-                
-            status = row[11]  # Index 11 = COMPLAINT STATUS
-            
-            # Filter: Only include PENDING status
-            if status.strip().upper() == 'PENDING':
+        rows = TrackingComplaint.objects.filter(complaint_status__iexact='PENDING')
+
+        for row in rows:
                 results.append({
-                    "id": row[0],                   # Index 0 (Row ID)
-                    "complaint_no": row[1],         # Index 1
-                    "customer_name": row[2],        # Index 2
-                    "phone": row[3],                # Index 3
-                    "area": row[5],                 # Index 5
-                    "brand_name": row[6],           # Index 6
-                    "product_code": row[7],         # Index 7
-                    "part_name": row[9],            # Index 9
-                    "no_of_spares": row[10],        # Index 10
-                    "status": status,               # Index 11
-                     "pending_days": row[12], 
-                    "district": row[15] if len(row) > 15 else "",  # Index 15
-                    "technician": row[14] if len(row) > 14 else ""  # Index 14
+                    "id": row.sheet_row_id or row.sheet_row_number,
+                    "complaint_no": row.complaint_no,
+                    "customer_name": row.customer_name,
+                    "phone": row.customer_phone,
+                    "area": row.area,
+                    "brand_name": row.brand_name,
+                    "product_code": row.product_code,
+                    "part_name": row.part_name,
+                    "no_of_spares": row.quantity,
+                    "status": row.complaint_status,
+                    "pending_days": row.pending_days,
+                    "district": row.district,
+                    "technician": row.technician_name
                 })
         
         return JsonResponse({
@@ -1056,7 +986,15 @@ def update_spare_status(request):
             
             # If this is an admin approval, update the updated_by field (assuming it's in column M = 13)
             if request.user.is_staff and len(row) >= 13:
-                sheet.update_cell(row_index, 13, f"{updated_by} ({datetime.now().strftime('%d-%m-%Y %H:%M')})")
+                updated_by_value = f"{updated_by} ({datetime.now().strftime('%d-%m-%Y %H:%M')})"
+                sheet.update_cell(row_index, 13, updated_by_value)
+            else:
+                updated_by_value = None
+
+            update_values = {'complaint_status': new_status}
+            if updated_by_value:
+                update_values['updated_by'] = updated_by_value
+            update_tracking_snapshot(complaint_no, **update_values)
             
             return JsonResponse({
                 "success": True,
@@ -1247,6 +1185,7 @@ def approve_spare_request(request):
             
             # Update status to CLOSED (column L = 12)
             sheet.update_cell(row_index, 12, 'CLOSED')
+            update_tracking_snapshot(spare_request.complaint_no, complaint_status='CLOSED')
             
         except Exception as sheet_error:
             return Response(
@@ -1342,31 +1281,19 @@ def get_stock_out_items(request):
                 "error": "Only admin users can access this endpoint"
             }, status=403)
 
-        client = get_google_sheets_client()
-
-        sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
-        rows = sheet.get_all_values()
-        
         results = []
-        
-        # Process rows — skip header (row 0)
-        for row in rows[1:]:
-            if len(row) < 24:  # Ensure row has enough columns (column X = index 23)
-                continue
-            
-            cc_remarks = row[23].strip().upper() if len(row) > 23 else ""  # Column X = index 23
-            
-            # Filter: Only include items with CC REMARKS = "STOCK OUT"
-            if cc_remarks == 'STOCK OUT':
+        rows = TrackingComplaint.objects.filter(cc_remarks__iexact='STOCK OUT')
+
+        for row in rows:
                 results.append({
-                    "complaint_no": row[1],          # Index 1 = B
-                    "area": row[5],                  # Index 5 = F
-                    "brand_name": row[6],            # Index 6 = G
-                    "product_code": row[7],          # Index 7 = H
-                    "part_name": row[9],             # Index 9 = J
-                    "district": row[15] if len(row) > 15 else "",  # Index 15 = P
-                    "mrp": row[19] if len(row) > 19 else "",       # Index 19 = T
-                    "cc_remarks": row[23],           # Index 23 = X
+                    "complaint_no": row.complaint_no,
+                    "area": row.area,
+                    "brand_name": row.brand_name,
+                    "product_code": row.product_code,
+                    "part_name": row.part_name,
+                    "district": row.district,
+                    "mrp": row.mrp,
+                    "cc_remarks": row.cc_remarks,
                 })
         
         return JsonResponse({
@@ -1449,6 +1376,7 @@ def mark_stock_as_ordered(request):
                     # Then update Google Sheet
                     logger.info("Updating Google Sheet...")
                     sheet.update_cell(row_index, 24, 'ORDERED')
+                    update_tracking_snapshot(complaint_no, cc_remarks='ORDERED')
                     logger.info("Successfully updated Google Sheet")
                     
                 except Exception as e:
@@ -1493,31 +1421,19 @@ def get_ordered_items(request):
                 "error": "Only admin users can access this endpoint"
             }, status=403)
 
-        client = get_google_sheets_client()
-
-        sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
-        rows = sheet.get_all_values()
-        
         results = []
-        
-        # Process rows — skip header (row 0)
-        for row in rows[1:]:
-            if len(row) < 24:  # Ensure row has enough columns
-                continue
-            
-            cc_remarks = row[23].strip().upper() if len(row) > 23 else ""  # Column X = index 23
-            
-            # Filter: Only include items with CC REMARKS = "ORDERED"
-            if cc_remarks == 'ORDERED':
+        rows = TrackingComplaint.objects.filter(cc_remarks__iexact='ORDERED')
+
+        for row in rows:
                 results.append({
-                    "complaint_no": row[1],          # Index 1 = B
-                    "area": row[5],                  # Index 5 = F
-                    "brand_name": row[6],            # Index 6 = G
-                    "product_code": row[7],          # Index 7 = H
-                    "part_name": row[9],             # Index 9 = J
-                    "district": row[15] if len(row) > 15 else "",  # Index 15 = P
-                    "mrp": row[19] if len(row) > 19 else "",       # Index 19 = T
-                    "cc_remarks": row[23],           # Index 23 = X
+                    "complaint_no": row.complaint_no,
+                    "area": row.area,
+                    "brand_name": row.brand_name,
+                    "product_code": row.product_code,
+                    "part_name": row.part_name,
+                    "district": row.district,
+                    "mrp": row.mrp,
+                    "cc_remarks": row.cc_remarks,
                 })
         
         return JsonResponse({
@@ -1584,6 +1500,7 @@ def mark_stock_as_received(request):
             
             # Update CC REMARKS to "RECEIVED" (column X = 24)
             sheet.update_cell(row_index, 24, 'RECEIVED')
+            update_tracking_snapshot(complaint_no, cc_remarks='RECEIVED')
             
         except gspread.exceptions.CellNotFound:
             return Response({
@@ -2137,15 +2054,18 @@ def search_products(request):
         
         logger.info(f"Product search by {request.user.username}: query='{search_query}'")
         
-        # Get cached company stock data
-        sheets_sync = SheetsSync()
-        try:
-            all_products = sheets_sync.get_company_stock()
-            logger.info(f"Retrieved {len(all_products)} products from cache/sheets")
-        except Exception as e:
-            logger.error(f"Error fetching company stock: {e}")
-            # Fallback to demo products when Sheets API is unavailable
-            logger.info("Using fallback demo products due to Sheets API error")
+        all_products = [
+            {
+                'spare_id': item.spare_id,
+                'name': item.name,
+                'mrp': float(item.mrp),
+                'brand': item.brand,
+                'hsn': item.hsn,
+                'qty': item.quantity,
+            }
+            for item in CompanyStock.objects.all()
+        ]
+        if not all_products:
             all_products = [
                 {
                     'spare_id': '45547000',
@@ -2171,7 +2091,7 @@ def search_products(request):
                     'hsn': '7308',
                     'qty': 30
                 }
-            ]
+                ]
         
         # Filter products based on search criteria
         filtered_products = []

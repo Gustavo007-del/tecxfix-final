@@ -25,6 +25,7 @@ from .serializers import (
 from .sheets_sync import SheetsSync
 from .pdf_generator import generate_courier_pdf
 from api.db_retry import database_retry
+from api.models import CompanyStock
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +52,17 @@ def company_stock(request):
         )
     
     try:
-        # Get stock from Google Sheets
-        logger.info("Fetching company stock from Google Sheets...")
-        stock_data = sheets_sync.get_company_stock()
+        stock_data = [
+            {
+                'spare_id': item.spare_id,
+                'name': item.name,
+                'mrp': float(item.mrp),
+                'hsn': item.hsn,
+                'brand': item.brand,
+                'qty': item.quantity,
+            }
+            for item in CompanyStock.objects.all()
+        ]
         
         # Apply filters if provided
         search = request.query_params.get('search', '').lower()
@@ -118,7 +127,14 @@ def create_courier(request):
             )
         
         # Validate stock availability
-        company_stock = sheets_sync.get_company_stock()
+        company_stock = [
+            {
+                'spare_id': item.spare_id,
+                'name': item.name,
+                'qty': item.quantity,
+            }
+            for item in CompanyStock.objects.all()
+        ]
         
         # Calculate total qty needed (for all technicians)
         total_qty_needed = {}
@@ -435,6 +451,10 @@ def mark_received(request, courier_id):
                 
                 # Reduce company stock
                 sheets_sync.update_company_stock(spare_id, qty)
+                stock_item = CompanyStock.objects.filter(spare_id=spare_id).first()
+                if stock_item:
+                    stock_item.quantity -= qty
+                    stock_item.save(update_fields=['quantity', 'synced_at'])
                 logger.info(f"Reduced company stock: {spare_id} by {qty}")
                 
                 # Add to technician stock

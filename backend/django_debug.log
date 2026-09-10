@@ -3871,3 +3871,205 @@ INFO 2026-04-07 16:57:55,159 wsgi <module> 58 24780 19360 === DJANGO WSGI STARTU
 INFO 2026-04-07 16:57:55,159 wsgi <module> 58 24780 19360 === DJANGO WSGI STARTUP COMPLETED ===
 INFO 2026-04-07 16:57:55,159 wsgi <module> 94 24780 19360 WSGI middleware applied successfully
 INFO 2026-04-07 16:57:55,159 wsgi <module> 94 24780 19360 WSGI middleware applied successfully
+INFO 2026-09-10 14:47:24,677 manage main 111 15656 2116 [TIMING] Django command completed in: 15.976s
+INFO 2026-09-10 14:47:24,677 manage main 111 15656 2116 [TIMING] Django command completed in: 15.976s
+INFO 2026-09-10 14:47:24,678 manage main 112 15656 2116 Django command completed successfully
+INFO 2026-09-10 14:47:24,678 manage main 112 15656 2116 Django command completed successfully
+INFO 2026-09-10 14:47:24,679 manage main 121 15656 2116 [TIMING] Total Django process time: 17.965s
+INFO 2026-09-10 14:47:24,679 manage main 121 15656 2116 [TIMING] Total Django process time: 17.965s
+INFO 2026-09-10 14:47:24,679 manage main 122 15656 2116 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:47:24,679 manage main 122 15656 2116 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:48:41,650 manage main 111 2916 4088 [TIMING] Django command completed in: 2.302s
+INFO 2026-09-10 14:48:41,650 manage main 111 2916 4088 [TIMING] Django command completed in: 2.302s
+INFO 2026-09-10 14:48:41,651 manage main 112 2916 4088 Django command completed successfully
+INFO 2026-09-10 14:48:41,651 manage main 112 2916 4088 Django command completed successfully
+INFO 2026-09-10 14:48:41,653 manage main 121 2916 4088 [TIMING] Total Django process time: 2.901s
+INFO 2026-09-10 14:48:41,653 manage main 121 2916 4088 [TIMING] Total Django process time: 2.901s
+INFO 2026-09-10 14:48:41,655 manage main 122 2916 4088 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:48:41,655 manage main 122 2916 4088 === DJANGO PROCESS ENDING ===
+ERROR 2026-09-10 14:51:17,189 manage main 115 6584 11524 Django command failed after: 2.444s
+ERROR 2026-09-10 14:51:17,189 manage main 115 6584 11524 Django command failed after: 2.444s
+ERROR 2026-09-10 14:51:17,194 manage main 116 6584 11524 Django command failed: '{' was never closed (views.py, line 37)
+ERROR 2026-09-10 14:51:17,194 manage main 116 6584 11524 Django command failed: '{' was never closed (views.py, line 37)
+ERROR 2026-09-10 14:51:17,480 manage main 117 6584 11524 Traceback: Traceback (most recent call last):
+  File "C:\Users\shiji\Desktop\tecxfix-final\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\management\base.py", line 422, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\management\base.py", line 466, in execute
+    output = self.handle(*args, **options)
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\management\commands\check.py", line 81, in handle
+    self.check(
+    ~~~~~~~~~~^
+        app_configs=app_configs,
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        databases=options["databases"],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\management\base.py", line 498, in check
+    all_issues = checks.run_checks(
+        app_configs=app_configs,
+    ...<2 lines>...
+        databases=databases,
+    )
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\checks\registry.py", line 99, in run_checks
+    new_errors = check(app_configs=app_configs, databases=databases)
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\checks\urls.py", line 136, in check_custom_error_handlers
+    handler = resolver.resolve_error_handler(status_code)
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\urls\resolvers.py", line 743, in resolve_error_handler
+    callback = getattr(self.urlconf_module, "handler%s" % view_type, None)
+                       ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\urls\resolvers.py", line 722, in urlconf_module
+    return import_module(self.urlconf_name)
+  File "C:\Python314\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1406, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1371, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1342, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 938, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 759, in exec_module
+  File "<frozen importlib._bootstrap>", line 491, in _call_with_frames_removed
+  File "C:\Users\shiji\Desktop\tecxfix-final\backend\backend\urls.py", line 4, in <module>
+    from api.views import (
+    ...<17 lines>...
+    )
+  File "C:\Users\shiji\Desktop\tecxfix-final\backend\api\views.py", line 37
+    'endpoints': {
+                 ^
+SyntaxError: '{' was never closed
+
+ERROR 2026-09-10 14:51:17,480 manage main 117 6584 11524 Traceback: Traceback (most recent call last):
+  File "C:\Users\shiji\Desktop\tecxfix-final\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\management\base.py", line 422, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\management\base.py", line 466, in execute
+    output = self.handle(*args, **options)
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\management\commands\check.py", line 81, in handle
+    self.check(
+    ~~~~~~~~~~^
+        app_configs=app_configs,
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        databases=options["databases"],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\management\base.py", line 498, in check
+    all_issues = checks.run_checks(
+        app_configs=app_configs,
+    ...<2 lines>...
+        databases=databases,
+    )
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\checks\registry.py", line 99, in run_checks
+    new_errors = check(app_configs=app_configs, databases=databases)
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\core\checks\urls.py", line 136, in check_custom_error_handlers
+    handler = resolver.resolve_error_handler(status_code)
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\urls\resolvers.py", line 743, in resolve_error_handler
+    callback = getattr(self.urlconf_module, "handler%s" % view_type, None)
+                       ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\shiji\AppData\Roaming\Python\Python314\site-packages\django\urls\resolvers.py", line 722, in urlconf_module
+    return import_module(self.urlconf_name)
+  File "C:\Python314\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1406, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1371, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1342, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 938, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 759, in exec_module
+  File "<frozen importlib._bootstrap>", line 491, in _call_with_frames_removed
+  File "C:\Users\shiji\Desktop\tecxfix-final\backend\backend\urls.py", line 4, in <module>
+    from api.views import (
+    ...<17 lines>...
+    )
+  File "C:\Users\shiji\Desktop\tecxfix-final\backend\api\views.py", line 37
+    'endpoints': {
+                 ^
+SyntaxError: '{' was never closed
+
+INFO 2026-09-10 14:51:17,482 manage main 121 6584 11524 [TIMING] Total Django process time: 4.004s
+INFO 2026-09-10 14:51:17,482 manage main 121 6584 11524 [TIMING] Total Django process time: 4.004s
+INFO 2026-09-10 14:51:17,483 manage main 122 6584 11524 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:51:17,483 manage main 122 6584 11524 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:56:21,281 manage main 111 6408 3064 [TIMING] Django command completed in: 2.516s
+INFO 2026-09-10 14:56:21,281 manage main 111 6408 3064 [TIMING] Django command completed in: 2.516s
+INFO 2026-09-10 14:56:21,281 manage main 112 6408 3064 Django command completed successfully
+INFO 2026-09-10 14:56:21,281 manage main 112 6408 3064 Django command completed successfully
+INFO 2026-09-10 14:56:21,282 manage main 121 6408 3064 [TIMING] Total Django process time: 3.167s
+INFO 2026-09-10 14:56:21,282 manage main 121 6408 3064 [TIMING] Total Django process time: 3.167s
+INFO 2026-09-10 14:56:21,282 manage main 122 6408 3064 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:56:21,282 manage main 122 6408 3064 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:58:25,366 manage main 111 2912 152 [TIMING] Django command completed in: 2.175s
+INFO 2026-09-10 14:58:25,366 manage main 111 2912 152 [TIMING] Django command completed in: 2.175s
+INFO 2026-09-10 14:58:25,367 manage main 112 2912 152 Django command completed successfully
+INFO 2026-09-10 14:58:25,367 manage main 112 2912 152 Django command completed successfully
+INFO 2026-09-10 14:58:25,367 manage main 121 2912 152 [TIMING] Total Django process time: 2.809s
+INFO 2026-09-10 14:58:25,367 manage main 121 2912 152 [TIMING] Total Django process time: 2.809s
+INFO 2026-09-10 14:58:25,368 manage main 122 2912 152 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:58:25,368 manage main 122 2912 152 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:58:29,471 manage main 111 4200 4060 [TIMING] Django command completed in: 2.215s
+INFO 2026-09-10 14:58:29,471 manage main 111 4200 4060 [TIMING] Django command completed in: 2.215s
+INFO 2026-09-10 14:58:29,472 manage main 112 4200 4060 Django command completed successfully
+INFO 2026-09-10 14:58:29,472 manage main 112 4200 4060 Django command completed successfully
+INFO 2026-09-10 14:58:29,472 manage main 121 4200 4060 [TIMING] Total Django process time: 3.498s
+INFO 2026-09-10 14:58:29,472 manage main 121 4200 4060 [TIMING] Total Django process time: 3.498s
+INFO 2026-09-10 14:58:29,472 manage main 122 4200 4060 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:58:29,472 manage main 122 4200 4060 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:59:18,453 manage main 111 8352 15416 [TIMING] Django command completed in: 2.487s
+INFO 2026-09-10 14:59:18,453 manage main 111 8352 15416 [TIMING] Django command completed in: 2.487s
+INFO 2026-09-10 14:59:18,454 manage main 112 8352 15416 Django command completed successfully
+INFO 2026-09-10 14:59:18,454 manage main 112 8352 15416 Django command completed successfully
+INFO 2026-09-10 14:59:18,454 manage main 121 8352 15416 [TIMING] Total Django process time: 3.178s
+INFO 2026-09-10 14:59:18,454 manage main 121 8352 15416 [TIMING] Total Django process time: 3.178s
+INFO 2026-09-10 14:59:18,455 manage main 122 8352 15416 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:59:18,455 manage main 122 8352 15416 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:59:21,544 manage main 111 812 3172 [TIMING] Django command completed in: 1.968s
+INFO 2026-09-10 14:59:21,544 manage main 111 812 3172 [TIMING] Django command completed in: 1.968s
+INFO 2026-09-10 14:59:21,544 manage main 112 812 3172 Django command completed successfully
+INFO 2026-09-10 14:59:21,544 manage main 112 812 3172 Django command completed successfully
+INFO 2026-09-10 14:59:21,545 manage main 121 812 3172 [TIMING] Total Django process time: 2.586s
+INFO 2026-09-10 14:59:21,545 manage main 121 812 3172 [TIMING] Total Django process time: 2.586s
+INFO 2026-09-10 14:59:21,545 manage main 122 812 3172 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 14:59:21,545 manage main 122 812 3172 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 15:01:07,612 manage main 111 10300 13192 [TIMING] Django command completed in: 2.307s
+INFO 2026-09-10 15:01:07,612 manage main 111 10300 13192 [TIMING] Django command completed in: 2.307s
+INFO 2026-09-10 15:01:07,613 manage main 112 10300 13192 Django command completed successfully
+INFO 2026-09-10 15:01:07,613 manage main 112 10300 13192 Django command completed successfully
+INFO 2026-09-10 15:01:07,614 manage main 121 10300 13192 [TIMING] Total Django process time: 2.964s
+INFO 2026-09-10 15:01:07,614 manage main 121 10300 13192 [TIMING] Total Django process time: 2.964s
+INFO 2026-09-10 15:01:07,614 manage main 122 10300 13192 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 15:01:07,614 manage main 122 10300 13192 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 15:01:10,630 manage main 111 2068 13268 [TIMING] Django command completed in: 1.886s
+INFO 2026-09-10 15:01:10,630 manage main 111 2068 13268 [TIMING] Django command completed in: 1.886s
+INFO 2026-09-10 15:01:10,631 manage main 112 2068 13268 Django command completed successfully
+INFO 2026-09-10 15:01:10,631 manage main 112 2068 13268 Django command completed successfully
+INFO 2026-09-10 15:01:10,631 manage main 121 2068 13268 [TIMING] Total Django process time: 2.515s
+INFO 2026-09-10 15:01:10,631 manage main 121 2068 13268 [TIMING] Total Django process time: 2.515s
+INFO 2026-09-10 15:01:10,632 manage main 122 2068 13268 === DJANGO PROCESS ENDING ===
+INFO 2026-09-10 15:01:10,632 manage main 122 2068 13268 === DJANGO PROCESS ENDING ===

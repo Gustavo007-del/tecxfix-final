@@ -39,6 +39,58 @@ class Attendance(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.date}"
+
+
+class TrackingComplaint(models.Model):
+    """Local read model for rows from the Google Sheets Tracking worksheet."""
+
+    sheet_row_number = models.PositiveIntegerField(unique=True)
+    sheet_row_id = models.CharField(max_length=100, blank=True)
+    complaint_no = models.CharField(max_length=100, db_index=True)
+    customer_name = models.CharField(max_length=200, blank=True)
+    customer_phone = models.CharField(max_length=50, blank=True)
+    area = models.CharField(max_length=200, blank=True)
+    brand_name = models.CharField(max_length=200, blank=True)
+    product_code = models.CharField(max_length=100, blank=True)
+    part_name = models.CharField(max_length=200, blank=True)
+    quantity = models.CharField(max_length=50, blank=True)
+    complaint_status = models.CharField(max_length=50, blank=True)
+    pending_days = models.CharField(max_length=50, blank=True)
+    updated_by = models.CharField(max_length=255, blank=True)
+    technician_name = models.CharField(max_length=255, blank=True, db_index=True)
+    district = models.CharField(max_length=100, blank=True)
+    sheet_column_p = models.CharField(max_length=100, blank=True)
+    mrp = models.CharField(max_length=50, blank=True)
+    cc_remarks = models.CharField(max_length=100, blank=True, db_index=True)
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['sheet_row_number']
+        indexes = [
+            models.Index(fields=['complaint_status', 'technician_name'], name='tracking_status_tech_idx'),
+            models.Index(fields=['cc_remarks'], name='tracking_remarks_idx'),
+        ]
+
+    def __str__(self):
+        return f"{self.complaint_no} row {self.sheet_row_number}"
+
+
+class CompanyStock(models.Model):
+    """Local read model for the Google Sheets Mrp List worksheet."""
+
+    spare_id = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=255, blank=True)
+    mrp = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    hsn = models.CharField(max_length=100, blank=True)
+    brand = models.CharField(max_length=255, blank=True)
+    quantity = models.IntegerField(default=0)
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name', 'spare_id']
+
+    def __str__(self):
+        return f"{self.spare_id} - {self.name}"
         
 class SpareRequest(models.Model):
     """Track spare part status change requests from technicians"""

@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.db import transaction, models
-from ..models import ProcessedComplaint
+from ..models import ProcessedComplaint, TrackingComplaint
 from ..views import get_google_sheets_client
 from courier_api.sheets_sync import SheetsSync
 
@@ -41,12 +41,9 @@ class ComplaintProcessor:
             return None
     
     def get_new_pending_complaints(self, since_date=None):
-        """Get new pending complaints from Tracking sheet"""
+        """Get new closed complaints from the local Tracking snapshot."""
         try:
-            logger.info(f"Fetching complaints from Google Sheets since {since_date}")
-            client = get_google_sheets_client()
-            sheet = client.open_by_key("1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ").worksheet("Tracking")
-            rows = sheet.get_all_values()
+            logger.info(f"Fetching complaints from local snapshot since {since_date}")
             
             # Get already processed complaints
             processed_complaints = set(
@@ -57,25 +54,19 @@ class ComplaintProcessor:
             new_complaints = []
             skipped_count = 0
             
-            for row in rows[1:]:  # Skip header
-                if len(row) < 16:  # Need column P (index 15)
-                    continue
-                
-                complaint_no = row[1].strip()
-                technician_name = row[14].strip()
-                status = row[11].strip().upper()
-                product_code = row[7].strip()
-                part_name = row[9].strip()
-                quantity_str = row[10].strip()
-                column_p_date = row[15].strip() if len(row) > 15 else ""  # Column P
+            rows = TrackingComplaint.objects.filter(complaint_status__iexact='CLOSED')
+
+            for row in rows:
+                complaint_no = row.complaint_no.strip()
+                technician_name = row.technician_name.strip()
+                product_code = row.product_code.strip()
+                part_name = row.part_name.strip()
+                quantity_str = row.quantity.strip()
+                column_p_date = row.sheet_column_p.strip()
                 
                 # Skip if already processed
                 if complaint_no in processed_complaints:
                     skipped_count += 1
-                    continue
-                
-                # Check if status is CLOSED
-                if status != 'CLOSED':
                     continue
                 
                 # Parse date from complaint number
