@@ -193,8 +193,10 @@ class SheetSnapshotSync:
                 synced_at=synced_at,
             )
 
+        total_valid_rows = sum(1 for row in rows[1:] if _value(row, 1))
         objects = list(objects_by_spare_id.values())
         seen_ids = list(objects_by_spare_id.keys())
+        duplicate_count = total_valid_rows - len(objects)
 
         update_fields = ["name", "mrp", "hsn", "brand", "quantity", "synced_at"]
 
@@ -219,10 +221,12 @@ class SheetSnapshotSync:
                 ).delete()[0]
 
         logger.info(
-            "Synchronized %s company stock rows (removed %s stale rows)",
+            "Synchronized %s unique company stock rows "
+            "(%s duplicate rows removed, %s stale rows deleted)",
             len(seen_ids),
+            duplicate_count,
             stale_count,
-        )
+)
         return len(seen_ids)
 
     def sync_all(self):
