@@ -171,26 +171,30 @@ class SheetSnapshotSync:
         rows = sheet.get_all_values()
 
         synced_at = timezone.now()
-        seen_ids = []
-        objects = []
+
+        # Use a dictionary so duplicate spare_ids in the MRP sheet
+        # don't cause PostgreSQL "ON CONFLICT ... affect row a second time".
+        # If the same spare_id appears more than once, the LAST row wins.
+        objects_by_spare_id = {}
 
         for row in rows[1:]:
             spare_id = _value(row, 1)
+
             if not spare_id:
                 continue
 
-            seen_ids.append(spare_id)
-            objects.append(
-                CompanyStock(
-                    spare_id=spare_id,
-                    name=_value(row, 2),
-                    mrp=_decimal(_value(row, 3)),
-                    hsn=_value(row, 4),
-                    brand=_value(row, 5),
-                    quantity=_integer(_value(row, 6)),
-                    synced_at=synced_at,
-                )
+            objects_by_spare_id[spare_id] = CompanyStock(
+                spare_id=spare_id,
+                name=_value(row, 2),
+                mrp=_decimal(_value(row, 3)),
+                hsn=_value(row, 4),
+                brand=_value(row, 5),
+                quantity=_integer(_value(row, 6)),
+                synced_at=synced_at,
             )
+
+        objects = list(objects_by_spare_id.values())
+        seen_ids = list(objects_by_spare_id.keys())
 
         update_fields = ["name", "mrp", "hsn", "brand", "quantity", "synced_at"]
 
