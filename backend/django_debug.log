@@ -4073,3 +4073,153 @@ INFO 2026-09-10 15:01:10,631 manage main 121 2068 13268 [TIMING] Total Django pr
 INFO 2026-09-10 15:01:10,631 manage main 121 2068 13268 [TIMING] Total Django process time: 2.515s
 INFO 2026-09-10 15:01:10,632 manage main 122 2068 13268 === DJANGO PROCESS ENDING ===
 INFO 2026-09-10 15:01:10,632 manage main 122 2068 13268 === DJANGO PROCESS ENDING ===
+ERROR 2026-09-11 00:41:49,348 manage main 115 24524 1644 Django command failed after: 22.677s
+ERROR 2026-09-11 00:41:49,348 manage main 115 24524 1644 Django command failed after: 22.677s
+ERROR 2026-09-11 00:41:49,598 manage main 116 24524 1644 Django command failed: Connection() got an unexpected keyword argument 'connect_timeout'
+ERROR 2026-09-11 00:41:49,598 manage main 116 24524 1644 Django command failed: Connection() got an unexpected keyword argument 'connect_timeout'
+ERROR 2026-09-11 00:41:49,761 manage main 117 24524 1644 Traceback: Traceback (most recent call last):
+  File "C:\Users\shiji\Desktop\tecxfix-final\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\core\management\base.py", line 416, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\core\management\base.py", line 460, in execute
+    output = self.handle(*args, **options)
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\core\management\base.py", line 107, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\core\management\commands\makemigrations.py", line 160, in handle
+    loader.check_consistent_history(connection)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\migrations\loader.py", line 350, in check_consistent_history
+    applied = recorder.applied_migrations()
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\migrations\recorder.py", line 89, in applied_migrations
+    if self.has_table():
+       ~~~~~~~~~~~~~~^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\migrations\recorder.py", line 63, in has_table
+    with self.connection.cursor() as cursor:
+         ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\backends\base\base.py", line 320, in cursor
+    return self._cursor()
+           ~~~~~~~~~~~~^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\backends\base\base.py", line 296, in _cursor
+    self.ensure_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 205, in get_new_connection
+    conn = Database.connect(**conn_params)
+TypeError: Connection() got an unexpected keyword argument 'connect_timeout'
+
+ERROR 2026-09-11 00:41:49,761 manage main 117 24524 1644 Traceback: Traceback (most recent call last):
+  File "C:\Users\shiji\Desktop\tecxfix-final\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\core\management\base.py", line 416, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\core\management\base.py", line 460, in execute
+    output = self.handle(*args, **options)
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\core\management\base.py", line 107, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\core\management\commands\makemigrations.py", line 160, in handle
+    loader.check_consistent_history(connection)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\migrations\loader.py", line 350, in check_consistent_history
+    applied = recorder.applied_migrations()
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\migrations\recorder.py", line 89, in applied_migrations
+    if self.has_table():
+       ~~~~~~~~~~~~~~^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\migrations\recorder.py", line 63, in has_table
+    with self.connection.cursor() as cursor:
+         ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\backends\base\base.py", line 320, in cursor
+    return self._cursor()
+           ~~~~~~~~~~~~^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\backends\base\base.py", line 296, in _cursor
+    self.ensure_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\shiji\Desktop\tecxfix-final\.venv\Lib\site-packages\django\db\backends\sqlite3\base.py", line 205, in get_new_connection
+    conn = Database.connect(**conn_params)
+TypeError: Connection() got an unexpected keyword argument 'connect_timeout'
+
+INFO 2026-09-11 00:41:49,827 manage main 121 24524 1644 [TIMING] Total Django process time: 27.317s
+INFO 2026-09-11 00:41:49,827 manage main 121 24524 1644 [TIMING] Total Django process time: 27.317s
+INFO 2026-09-11 00:41:49,894 manage main 122 24524 1644 === DJANGO PROCESS ENDING ===
+INFO 2026-09-11 00:41:49,894 manage main 122 24524 1644 === DJANGO PROCESS ENDING ===
+INFO 2026-09-11 00:44:29,013 manage main 111 29532 9236 [TIMING] Django command completed in: 5.040s
+INFO 2026-09-11 00:44:29,013 manage main 111 29532 9236 [TIMING] Django command completed in: 5.040s
+INFO 2026-09-11 00:44:29,015 manage main 112 29532 9236 Django command completed successfully
+INFO 2026-09-11 00:44:29,015 manage main 112 29532 9236 Django command completed successfully
+INFO 2026-09-11 00:44:29,040 manage main 121 29532 9236 [TIMING] Total Django process time: 6.081s
+INFO 2026-09-11 00:44:29,040 manage main 121 29532 9236 [TIMING] Total Django process time: 6.081s
+INFO 2026-09-11 00:44:29,043 manage main 122 29532 9236 === DJANGO PROCESS ENDING ===
+INFO 2026-09-11 00:44:29,043 manage main 122 29532 9236 === DJANGO PROCESS ENDING ===
+DEBUG 2026-09-11 00:44:54,356 schema execute 192 26916 10136 ALTER TABLE "api_salesrequest" ADD COLUMN "invoice_number" varchar(100) NULL; (params None)
+DEBUG 2026-09-11 00:44:54,400 schema execute 192 26916 10136 ALTER TABLE "api_salesrequest" ADD COLUMN "customer_name" varchar(200) NULL; (params None)
+DEBUG 2026-09-11 00:44:54,438 schema execute 192 26916 10136 ALTER TABLE "api_salesrequest" ADD COLUMN "remarks" text NULL; (params None)
+DEBUG 2026-09-11 00:44:54,473 schema execute 192 26916 10136 CREATE TABLE "api_companystock" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "spare_id" varchar(100) NOT NULL UNIQUE, "name" varchar(255) NOT NULL, "mrp" decimal NOT NULL, "hsn" varchar(100) NOT NULL, "brand" varchar(255) NOT NULL, "quantity" integer NOT NULL, "synced_at" datetime NOT NULL); (params None)
+DEBUG 2026-09-11 00:44:54,485 schema execute 192 26916 10136 CREATE TABLE "api_trackingcomplaint" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "sheet_row_number" integer unsigned NOT NULL UNIQUE CHECK ("sheet_row_number" >= 0), "sheet_row_id" varchar(100) NOT NULL, "complaint_no" varchar(100) NOT NULL, "customer_name" varchar(200) NOT NULL, "customer_phone" varchar(50) NOT NULL, "area" varchar(200) NOT NULL, "brand_name" varchar(200) NOT NULL, "product_code" varchar(100) NOT NULL, "part_name" varchar(200) NOT NULL, "quantity" varchar(50) NOT NULL, "complaint_status" varchar(50) NOT NULL, "pending_days" varchar(50) NOT NULL, "updated_by" varchar(255) NOT NULL, "technician_name" varchar(255) NOT NULL, "district" varchar(100) NOT NULL, "mrp" varchar(50) NOT NULL, "cc_remarks" varchar(100) NOT NULL, "synced_at" datetime NOT NULL); (params None)
+DEBUG 2026-09-11 00:44:54,486 schema execute 192 26916 10136 CREATE INDEX "api_trackingcomplaint_complaint_no_841c3d09" ON "api_trackingcomplaint" ("complaint_no"); (params None)
+DEBUG 2026-09-11 00:44:54,487 schema execute 192 26916 10136 CREATE INDEX "api_trackingcomplaint_technician_name_e509314e" ON "api_trackingcomplaint" ("technician_name"); (params None)
+DEBUG 2026-09-11 00:44:54,487 schema execute 192 26916 10136 CREATE INDEX "api_trackingcomplaint_cc_remarks_aeb70a26" ON "api_trackingcomplaint" ("cc_remarks"); (params None)
+DEBUG 2026-09-11 00:44:54,488 schema execute 192 26916 10136 CREATE INDEX "tracking_status_tech_idx" ON "api_trackingcomplaint" ("complaint_status", "technician_name"); (params None)
+DEBUG 2026-09-11 00:44:54,489 schema execute 192 26916 10136 CREATE INDEX "tracking_remarks_idx" ON "api_trackingcomplaint" ("cc_remarks"); (params None)
+DEBUG 2026-09-11 00:44:54,527 schema execute 192 26916 10136 CREATE TABLE "new__api_trackingcomplaint" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "sheet_row_number" integer unsigned NOT NULL UNIQUE CHECK ("sheet_row_number" >= 0), "sheet_row_id" varchar(100) NOT NULL, "complaint_no" varchar(100) NOT NULL, "customer_name" varchar(200) NOT NULL, "customer_phone" varchar(50) NOT NULL, "area" varchar(200) NOT NULL, "brand_name" varchar(200) NOT NULL, "product_code" varchar(100) NOT NULL, "part_name" varchar(200) NOT NULL, "quantity" varchar(50) NOT NULL, "complaint_status" varchar(50) NOT NULL, "pending_days" varchar(50) NOT NULL, "updated_by" varchar(255) NOT NULL, "technician_name" varchar(255) NOT NULL, "district" varchar(100) NOT NULL, "mrp" varchar(50) NOT NULL, "cc_remarks" varchar(100) NOT NULL, "synced_at" datetime NOT NULL, "sheet_column_p" varchar(100) NOT NULL); (params None)
+DEBUG 2026-09-11 00:44:54,531 schema execute 192 26916 10136 INSERT INTO "new__api_trackingcomplaint" ("id", "sheet_row_number", "sheet_row_id", "complaint_no", "customer_name", "customer_phone", "area", "brand_name", "product_code", "part_name", "quantity", "complaint_status", "pending_days", "updated_by", "technician_name", "district", "mrp", "cc_remarks", "synced_at", "sheet_column_p") SELECT "id", "sheet_row_number", "sheet_row_id", "complaint_no", "customer_name", "customer_phone", "area", "brand_name", "product_code", "part_name", "quantity", "complaint_status", "pending_days", "updated_by", "technician_name", "district", "mrp", "cc_remarks", "synced_at", '' FROM "api_trackingcomplaint"; (params ())
+DEBUG 2026-09-11 00:44:54,532 schema execute 192 26916 10136 DROP TABLE "api_trackingcomplaint"; (params ())
+DEBUG 2026-09-11 00:44:54,538 schema execute 192 26916 10136 ALTER TABLE "new__api_trackingcomplaint" RENAME TO "api_trackingcomplaint"; (params ())
+DEBUG 2026-09-11 00:44:54,543 schema execute 192 26916 10136 CREATE INDEX "api_trackingcomplaint_complaint_no_841c3d09" ON "api_trackingcomplaint" ("complaint_no"); (params ())
+DEBUG 2026-09-11 00:44:54,544 schema execute 192 26916 10136 CREATE INDEX "api_trackingcomplaint_technician_name_e509314e" ON "api_trackingcomplaint" ("technician_name"); (params ())
+DEBUG 2026-09-11 00:44:54,544 schema execute 192 26916 10136 CREATE INDEX "api_trackingcomplaint_cc_remarks_aeb70a26" ON "api_trackingcomplaint" ("cc_remarks"); (params ())
+DEBUG 2026-09-11 00:44:54,545 schema execute 192 26916 10136 CREATE INDEX "tracking_status_tech_idx" ON "api_trackingcomplaint" ("complaint_status", "technician_name"); (params ())
+DEBUG 2026-09-11 00:44:54,546 schema execute 192 26916 10136 CREATE INDEX "tracking_remarks_idx" ON "api_trackingcomplaint" ("cc_remarks"); (params ())
+DEBUG 2026-09-11 00:44:54,563 schema execute 192 26916 10136 CREATE TABLE "api_technicianstocksnapshot" ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, "technician_name" varchar(255) NOT NULL, "spare_id" varchar(100) NOT NULL, "name" varchar(255) NOT NULL, "quantity" integer NOT NULL, "synced_at" datetime NOT NULL); (params None)
+DEBUG 2026-09-11 00:44:54,567 schema execute 192 26916 10136 CREATE UNIQUE INDEX "api_technicianstocksnapshot_technician_name_spare_id_80ee3a18_uniq" ON "api_technicianstocksnapshot" ("technician_name", "spare_id"); (params None)
+DEBUG 2026-09-11 00:44:54,570 schema execute 192 26916 10136 CREATE INDEX "api_technicianstocksnapshot_technician_name_15f8050b" ON "api_technicianstocksnapshot" ("technician_name"); (params None)
+INFO 2026-09-11 00:44:54,666 manage main 111 26916 10136 [TIMING] Django command completed in: 3.041s
+INFO 2026-09-11 00:44:54,666 manage main 111 26916 10136 [TIMING] Django command completed in: 3.041s
+INFO 2026-09-11 00:44:54,666 manage main 112 26916 10136 Django command completed successfully
+INFO 2026-09-11 00:44:54,666 manage main 112 26916 10136 Django command completed successfully
+INFO 2026-09-11 00:44:54,667 manage main 121 26916 10136 [TIMING] Total Django process time: 3.868s
+INFO 2026-09-11 00:44:54,667 manage main 121 26916 10136 [TIMING] Total Django process time: 3.868s
+INFO 2026-09-11 00:44:54,667 manage main 122 26916 10136 === DJANGO PROCESS ENDING ===
+INFO 2026-09-11 00:44:54,667 manage main 122 26916 10136 === DJANGO PROCESS ENDING ===
