@@ -1,5 +1,5 @@
 // E:\study\techfix\techfix-app\src\screens\SaleScreen.js
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import {
   View,
   Text,
@@ -58,17 +58,26 @@ export default function SaleScreen({ navigation }) {
     setTotalAmount(total);
   }, [selectedProducts]);
 
-  // Search products from API
+  // Search products from API (debounced so we don't fire a request on every keystroke)
   useEffect(() => {
-    if (productSearch.trim()) {
-      searchProducts();
-    } else {
+    if (!productSearch.trim()) {
       setFilteredProducts([]);
       setShowProductDropdown(false);
+      return;
     }
+
+    const timer = setTimeout(() => {
+      searchProducts();
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [productSearch, companyName]);
 
+  // Guards against out-of-order responses overwriting newer search results
+  const searchSeqRef = useRef(0);
+
   const searchProducts = async () => {
+    const seq = ++searchSeqRef.current;
     try {
       setLoading(true);
       const response = await client.get(API_ENDPOINTS.SEARCH_PRODUCTS, {
@@ -77,6 +86,9 @@ export default function SaleScreen({ navigation }) {
           company: companyName
         }
       });
+
+      // Ignore stale responses (a newer search superseded this one)
+      if (seq !== searchSeqRef.current) return;
 
       if (response.data.success) {
         setFilteredProducts(response.data.products);
@@ -87,11 +99,14 @@ export default function SaleScreen({ navigation }) {
         setShowProductDropdown(false);
       }
     } catch (error) {
+      if (seq !== searchSeqRef.current) return;
       console.error('Error searching products:', error);
       setFilteredProducts([]);
       setShowProductDropdown(false);
     } finally {
-      setLoading(false);
+      if (seq === searchSeqRef.current) {
+        setLoading(false);
+      }
     }
   };
 

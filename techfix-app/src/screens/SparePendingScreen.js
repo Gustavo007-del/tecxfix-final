@@ -47,6 +47,7 @@ export default function SparePendingScreen() {
 
   useEffect(() => {
     fetchComplaints();
+    loadTechnicianStock();
   }, []);
 
   // Update filtered complaints when search query or complaints change
@@ -158,6 +159,7 @@ export default function SparePendingScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchComplaints();
+    await loadTechnicianStock();
     setRefreshing(false);
   };
 
@@ -184,11 +186,33 @@ export default function SparePendingScreen() {
     return Object.values(grouped);
   };
 
-  // Cache for stock check results
+  // Technician stock is fetched ONCE per screen load (and on pull-to-refresh)
+  // and kept in memory; availability checks below never hit the network.
+  const [stockLoaded, setStockLoaded] = useState(false);
+  const stockLoadedRef = useRef(false);
+  const technicianStockRef = useRef([]);
+
+  // Cache for stock check results (in-memory only - no network calls)
   const stockCache = useRef(new Map());
 
-  // Function to check if stock is available for a part
-  const isStockAvailable = useCallback(async (part) => {
+  const loadTechnicianStock = useCallback(async () => {
+    try {
+      const response = await client.get(API_ENDPOINTS.MY_STOCK);
+      const data = response.data?.data || response.data || [];
+      technicianStockRef.current = Array.isArray(data) ? data : [];
+    } catch (error) {
+      // Mirrors the old per-part behavior: failed stock check = unavailable.
+      technicianStockRef.current = [];
+    } finally {
+      // Quantities may have changed - drop previously cached availability results.
+      stockCache.current.clear();
+      stockLoadedRef.current = true;
+      setStockLoaded(true);
+    }
+  }, []);
+
+  // Function to check if stock is available for a part (synchronous, in-memory)
+  const isStockAvailable = useCallback((part) => {
     if (!part?.product_code) return false;
     
     const cacheKey = `${part.product_code.toLowerCase()}-${part.no_of_spares || '0'}`;
@@ -198,63 +222,27 @@ export default function SparePendingScreen() {
       return stockCache.current.get(cacheKey);
     }
     
-    // Return a promise that will be resolved when stock is checked
-    const stockPromise = (async () => {
-      try {
-        // Get the technician's stock from the API
-        const response = await client.get(API_ENDPOINTS.MY_STOCK);
-        const technicianStock = response.data.data || response.data || [];
-        
-        // Find the matching stock item by product code (case-insensitive)
-        const stockItem = technicianStock.find(item => 
-          item.spare_id?.toLowerCase() === part.product_code?.toLowerCase()
-        );
-        
-        // If stock item not found, cache and return false
-        if (!stockItem) {
-          stockCache.current.set(cacheKey, false);
-          return false;
-        }
-        
-        // Check if available quantity is sufficient
-        const hasStock = stockItem.qty >= parseInt(part.no_of_spares || '0', 10);
-        stockCache.current.set(cacheKey, hasStock);
-        return hasStock;
-      } catch (error) {
-        // Don't cache errors in case it's a temporary issue
-        return false;
-      }
-    })();
+    // Find the matching stock item by product code (case-insensitive)
+    const stockItem = technicianStockRef.current.find(item => 
+      item.spare_id?.toLowerCase() === part.product_code?.toLowerCase()
+    );
     
-    // Store the promise in cache so we don't make duplicate requests
-    stockCache.current.set(cacheKey, stockPromise);
-    return stockPromise;
+    // If stock item not found, cache and return false
+    if (!stockItem) {
+      stockCache.current.set(cacheKey, false);
+      return false;
+    }
+    
+    // Check if available quantity is sufficient
+    const hasStock = stockItem.qty >= parseInt(part.no_of_spares || '0', 10);
+    stockCache.current.set(cacheKey, hasStock);
+    return hasStock;
   }, []);
 
-  // Component to handle async stock check for each part
+  // Component to render each part row; stock availability is computed
+  // synchronously from the in-memory stock list (no network call per part).
   const StockAwarePartRow = React.memo(({ part, index, totalParts, isVisible }) => {
-    const [hasStock, setHasStock] = useState(null);
-    const hasCheckedRef = useRef(false);
-
-    useEffect(() => {
-      if (isVisible && !hasCheckedRef.current) {
-        hasCheckedRef.current = true;
-        const checkStock = async () => {
-          const available = await isStockAvailable(part);
-          // Only update if the component is still mounted
-          if (hasCheckedRef.current) {
-            setHasStock(available);
-          }
-        };
-        
-        checkStock();
-      }
-      
-      return () => {
-        // Cleanup function to handle unmounting
-        hasCheckedRef.current = false;
-      };
-    }, [part, isVisible, isStockAvailable]);
+    const hasStock = (isVisible && stockLoadedRef.current) ? isStockAvailable(part) : null;
 
     if (hasStock === null) {
       return (

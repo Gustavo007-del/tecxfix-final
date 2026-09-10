@@ -6,16 +6,18 @@ from decimal import Decimal, InvalidOperation
 import gspread
 import django
 from django.db import transaction
+from django.db.models import F, Q
 from django.utils import timezone
 from google.oauth2.service_account import Credentials
 
-from ..models import CompanyStock, TrackingComplaint
+from ..models import CompanyStock, TechnicianStockSnapshot, TrackingComplaint
 
 logger = logging.getLogger(__name__)
 
 SHEET_ID = "1H54mqxD9P2RXX3u8JDwtCg5Wokf2CHPPEjQ7mkqDZnQ"
 TRACKING_WORKSHEET = "Tracking"
 COMPANY_STOCK_WORKSHEET = "Mrp List"
+TECHNICIAN_STOCK_WORKSHEET = "Technician Stocks"
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 # Number of rows sent to the DB per INSERT ... ON CONFLICT statement.
@@ -229,13 +231,86 @@ class SheetSnapshotSync:
 )
         return len(seen_ids)
 
+    def sync_technician_stock(self):
+        """Mirror the Technician Stocks worksheet into TechnicianStockSnapshot.
+
+        Duplicate (technician, spare) rows are collapsed with the LAST row
+        winning, matching how sync_company_stock handles duplicate spare_ids.
+        """
+        sheet = self._client().open_by_key(SHEET_ID).worksheet(TECHNICIAN_STOCK_WORKSHEET)
+        rows = sheet.get_all_values()
+
+        synced_at = timezone.now()
+
+        objects_by_key = {}
+
+        for row in rows[1:]:
+            spare_id = _value(row, 1)
+            technician_name = _value(row, 3)
+
+            if not spare_id:
+                continue
+
+            key = (technician_name, spare_id)
+            objects_by_key[key] = TechnicianStockSnapshot(
+                technician_name=technician_name,
+                spare_id=spare_id,
+                name=_value(row, 0),
+                quantity=_integer(_value(row, 2)),
+                synced_at=synced_at,
+            )
+
+        objects = list(objects_by_key.values())
+        seen_pairs = list(objects_by_key.keys())
+
+        update_fields = ["technician_name", "spare_id", "name", "quantity", "synced_at"]
+
+        with transaction.atomic():
+            if objects:
+                TechnicianStockSnapshot.objects.bulk_create(
+                    objects,
+                    batch_size=BULK_BATCH_SIZE,
+                    update_conflicts=True,
+                    unique_fields=["technician_name", "spare_id"],
+                    update_fields=update_fields,
+                )
+
+            if seen_pairs:
+                stale_filter = Q()
+                for technician_name, spare_id in seen_pairs:
+                    stale_filter |= Q(
+                        technician_name=technician_name,
+                        spare_id=spare_id,
+                    )
+                stale_ids = list(
+                    TechnicianStockSnapshot.objects.exclude(stale_filter)
+                    .values_list("id", flat=True)
+                )
+                stale_count = 0
+                if stale_ids:
+                    stale_count = TechnicianStockSnapshot.objects.filter(
+                        id__in=stale_ids
+                    ).delete()[0]
+            else:
+                # Sheet is empty - clear the snapshot table.
+                stale_count = TechnicianStockSnapshot.objects.all().delete()[0]
+
+        logger.info(
+            "Synchronized %s technician stock rows (removed %s stale rows)",
+            len(seen_pairs),
+            stale_count,
+        )
+        return len(seen_pairs)
+
     def sync_all(self):
         started_at = timezone.now()
         tracking_count = self.sync_tracking()
         stock_count = self.sync_company_stock()
+        tech_stock_count = self.sync_technician_stock()
         return {
             "tracking_rows": tracking_count,
             "company_stock_rows": stock_count,
+            "technician_stock_rows": tech_stock_count,
             "synced_at": started_at.isoformat(),
         }
 
@@ -250,3 +325,31 @@ def update_tracking_snapshot(complaint_no, **values):
 def update_company_stock_snapshot(spare_id, quantity):
     """Apply an application-owned stock quantity change locally."""
     return CompanyStock.objects.filter(spare_id=spare_id).update(quantity=quantity)
+
+
+def update_technician_stock_snapshot(technician_name, spare_id, delta, name=""):
+    """Apply an application-owned Technician Stock change locally (write-through).
+
+    `delta` is signed (+qty received via courier, -qty reduced by complaint
+    processing or sales approval). If the snapshot has no row for this
+    (technician, spare) pair yet (e.g. the part was just appended to the
+    sheet), a row is created. The Google sheet remains the source of truth;
+    the next full sync reconciles any drift.
+    """
+    if not delta:
+        return 0
+
+    updated = TechnicianStockSnapshot.objects.filter(
+        technician_name__iexact=technician_name,
+        spare_id=spare_id,
+    ).update(quantity=F("quantity") + delta)
+
+    if updated == 0:
+        TechnicianStockSnapshot.objects.create(
+            technician_name=technician_name,
+            spare_id=spare_id,
+            name=name,
+            quantity=delta,
+        )
+
+    return updated

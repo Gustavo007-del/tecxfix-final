@@ -426,7 +426,10 @@ class SheetsSync:
                 found_row = idx + 2
                 break
 
+        part_name = ""
+
         if found_row:
+            part_name = data_rows[found_row - 2][0].strip() if data_rows[found_row - 2] else ""
             current_qty = safe_int(sheet.cell(found_row, 3).value)
             sheet.update_cell(found_row, 3, current_qty + qty_to_add)
         else:
@@ -438,6 +441,8 @@ class SheetsSync:
 
             if not item:
                 raise Exception(f"Spare {spare_id} not found in company stock")
+
+            part_name = item["name"]
 
             sheet.append_row(
                 [
@@ -453,6 +458,26 @@ class SheetsSync:
         # stale. Drop it - the next get_technician_stock()/update call will
         # do one fresh fetch and re-cache.
         self._tech_stock_cache = None
+
+        # Write-through to the local DB snapshot so /my-stock/ reflects the
+        # change immediately instead of waiting for the next full sync.
+        # Best-effort: the Google sheet stays the source of truth and the
+        # periodic sync reconciles any drift.
+        try:
+            from api.services.sheet_snapshot_sync import update_technician_stock_snapshot
+            update_technician_stock_snapshot(
+                technician_name=technician_name,
+                spare_id=spare_id,
+                delta=qty_to_add,
+                name=part_name,
+            )
+        except Exception:
+            logger.exception(
+                "Failed to update TechnicianStockSnapshot for %s / %s "
+                "- will be reconciled on next sync",
+                technician_name,
+                spare_id,
+            )
 
         return True
 

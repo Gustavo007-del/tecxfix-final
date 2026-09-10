@@ -16,43 +16,56 @@ export default function CourierStockScreen({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('name');
+    const [page, setPage] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
     
     useEffect(() => {
-        fetchStock();
-    }, []);
+        const timeout = setTimeout(() => fetchStock(1, false), 300);
+        return () => clearTimeout(timeout);
+    }, [searchQuery, sortBy]);
     
-    const fetchStock = async () => {
+    const fetchStock = async (pageNumber = 1, append = false) => {
+        if (append) {
+            setLoadingMore(true);
+        } else if (!refreshing) {
+            setLoading(true);
+        }
+
         try {
-            const response = await client.get(API_ENDPOINTS.COMPANY_STOCK);
+            const response = await client.get(API_ENDPOINTS.COMPANY_STOCK, {
+                params: {
+                    search: searchQuery.trim(),
+                    sort_by: sortBy,
+                    order: sortBy === 'name' ? 'asc' : 'desc',
+                    page: pageNumber,
+                    page_size: 50,
+                },
+            });
             
-            // Handle nested response structure
-            const stockData = response.data.data || response.data;
-            setStock(Array.isArray(stockData) ? stockData : []);
+            const stockData = Array.isArray(response.data.data) ? response.data.data : [];
+            setStock((currentStock) => append ? [...currentStock, ...stockData] : stockData);
+            setPage(pageNumber);
+            setHasNextPage(Boolean(response.data.has_next));
         } catch (error) {
-            setStock([]);
+            if (!append) setStock([]);
         } finally {
             setLoading(false);
             setRefreshing(false);
+            setLoadingMore(false);
         }
     };
     
     const onRefresh = async () => {
         setRefreshing(true);
-        await fetchStock();
+        await fetchStock(1, false);
     };
-    
-    // Filter and sort stock
-    const processedStock = stock
-        .filter(item =>
-            item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.spare_id?.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        .sort((a, b) => {
-            if (sortBy === 'name') return a.name.localeCompare(b.name);
-            if (sortBy === 'qty') return b.qty - a.qty;
-            if (sortBy === 'mrp') return b.mrp - a.mrp;
-            return 0;
-        });
+
+    const loadNextPage = () => {
+        if (!loadingMore && hasNextPage) {
+            fetchStock(page + 1, true);
+        }
+    };
     
     const renderItem = ({ item }) => (
         <View style={styles.card}>
@@ -100,7 +113,7 @@ export default function CourierStockScreen({ navigation }) {
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Company Stock</Text>
                 <Text style={styles.headerSubtitle}>
-                    {processedStock.length} items available
+                    {stock.length} items loaded
                 </Text>
             </View>
             
@@ -140,8 +153,10 @@ export default function CourierStockScreen({ navigation }) {
             </View>
             
             <FlatList
-                data={processedStock}
+                data={stock}
                 keyExtractor={item => item.spare_id}
+                onEndReached={loadNextPage}
+                onEndReachedThreshold={0.5}
                 contentContainerStyle={styles.listContainer}
                 refreshControl={
                     <RefreshControl
@@ -156,6 +171,9 @@ export default function CourierStockScreen({ navigation }) {
                         <Text style={styles.emptyText}>No items found</Text>
                     </View>
                 }
+                ListFooterComponent={loadingMore ? (
+                    <ActivityIndicator size="small" color={COLORS.primary} />
+                ) : null}
                 renderItem={renderItem}
             />
         </View>

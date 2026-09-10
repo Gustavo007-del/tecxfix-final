@@ -26,11 +26,46 @@ export default function CreateCourierScreen({ navigation }) {
     const [showTechModal, setShowTechModal] = useState(false);
     const [showItemModal, setShowItemModal] = useState(false);
     const [notes, setNotes] = useState('');
+    const [stockPage, setStockPage] = useState(1);
+    const [stockHasNextPage, setStockHasNextPage] = useState(false);
+    const [stockLoading, setStockLoading] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [quantity, setQuantity] = useState('1');
     
     // Fetch data on mount
     useEffect(() => {
         fetchData();
     }, []);
+
+    useEffect(() => {
+        if (!showItemModal || selectedItem) return undefined;
+
+        const timeout = setTimeout(() => fetchCompanyStock(1, false), 300);
+        return () => clearTimeout(timeout);
+    }, [showItemModal, selectedItem, searchQuery]);
+
+    const fetchCompanyStock = async (pageNumber = 1, append = false) => {
+        setStockLoading(true);
+        try {
+            const response = await client.get(API_ENDPOINTS.COMPANY_STOCK, {
+                params: {
+                    search: searchQuery.trim(),
+                    sort_by: 'name',
+                    order: 'asc',
+                    page: pageNumber,
+                    page_size: 50,
+                },
+            });
+            const stockData = Array.isArray(response.data.data) ? response.data.data : [];
+            setAvailableStock((currentStock) => append ? [...currentStock, ...stockData] : stockData);
+            setStockPage(pageNumber);
+            setStockHasNextPage(Boolean(response.data.has_next));
+        } catch (error) {
+            if (!append) setAvailableStock([]);
+        } finally {
+            setStockLoading(false);
+        }
+    };
     
     const fetchData = async () => {
     setLoading(true);
@@ -52,15 +87,6 @@ export default function CreateCourierScreen({ navigation }) {
             setAvailableTechs([]);
         }
         
-        // Fetch company stock
-        try {
-            const stockResponse = await client.get(API_ENDPOINTS.COMPANY_STOCK);
-            const stockData = stockResponse.data.data || stockResponse.data;
-            setAvailableStock(Array.isArray(stockData) ? stockData : []);
-        } catch (stockError) {
-            Alert.alert('Error', 'Failed to load stock items');
-            setAvailableStock([]);
-        }
     } catch (error) {
         Alert.alert('Error', 'Failed to load initial data');
     } finally {
@@ -77,10 +103,12 @@ export default function CreateCourierScreen({ navigation }) {
                 : [...prev, techId]
         );
     };
-    
-    // State for quantity input
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [quantity, setQuantity] = useState('1');
+
+    const loadMoreStock = () => {
+        if (!stockLoading && stockHasNextPage && !selectedItem) {
+            fetchCompanyStock(stockPage + 1, true);
+        }
+    };
     
     // Add item to selection with quantity
     const addItem = (item) => {
@@ -244,7 +272,10 @@ export default function CreateCourierScreen({ navigation }) {
             
             <TouchableOpacity
                 style={styles.selectButton}
-                onPress={() => setShowItemModal(true)}
+                onPress={() => {
+                    setSearchQuery('');
+                    setShowItemModal(true);
+                }}
             >
                 <MaterialIcons name="add-box" size={20} color={COLORS.white} />
                 <Text style={styles.selectButtonText}>Add Item</Text>
@@ -474,11 +505,18 @@ export default function CreateCourierScreen({ navigation }) {
                             />
                             
                             <FlatList
-                                data={availableStock.filter(s =>
-                                    s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                    s.spare_id?.toLowerCase().includes(searchQuery.toLowerCase())
-                                )}
+                                data={availableStock}
                                 keyExtractor={item => item.spare_id}
+                                onEndReached={loadMoreStock}
+                                onEndReachedThreshold={0.5}
+                                ListFooterComponent={stockLoading ? (
+                                    <ActivityIndicator size="small" color={COLORS.primary} />
+                                ) : null}
+                                ListEmptyComponent={!stockLoading ? (
+                                    <View style={styles.emptyContainer}>
+                                        <Text style={styles.emptyText}>No items found</Text>
+                                    </View>
+                                ) : null}
                                 renderItem={({ item }) => {
                                     const alreadyAdded = selectedItems.some(i => i.spare_id === item.spare_id);
                                     return (

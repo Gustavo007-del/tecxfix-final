@@ -91,7 +91,33 @@ class CompanyStock(models.Model):
 
     def __str__(self):
         return f"{self.spare_id} - {self.name}"
-        
+
+
+class TechnicianStockSnapshot(models.Model):
+    """Local read model for rows from the Google Sheets Technician Stocks worksheet.
+
+    Stock quantities live in Google Sheets; this table mirrors them so
+    /my-stock/ can be served from the database instead of making a synchronous
+    Google Sheets fetch inside the request. Kept in sync by
+    SheetSnapshotSync.sync_technician_stock() (periodic full sync) and
+    update_technician_stock_snapshot() (write-through on app-owned changes).
+    """
+
+    technician_name = models.CharField(max_length=255, blank=True, db_index=True)
+    spare_id = models.CharField(max_length=100)
+    name = models.CharField(max_length=255, blank=True)
+    quantity = models.IntegerField(default=0)
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name', 'spare_id']
+        unique_together = ('technician_name', 'spare_id')
+        verbose_name = 'Technician Stock Snapshot'
+        verbose_name_plural = 'Technician Stock Snapshots'
+
+    def __str__(self):
+        return f"{self.technician_name} - {self.spare_id} (x{self.quantity})"
+
 class SpareRequest(models.Model):
     """Track spare part status change requests from technicians"""
     

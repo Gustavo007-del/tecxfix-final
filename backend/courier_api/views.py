@@ -6,6 +6,7 @@ import uuid
 import logging
 import traceback
 from django.conf import settings
+from django.db.models import Q
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -25,7 +26,7 @@ from .serializers import (
 from .sheets_sync import SheetsSync
 from .pdf_generator import generate_courier_pdf
 from api.db_retry import database_retry
-from api.models import CompanyStock
+from api.models import CompanyStock, TechnicianStockSnapshot
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +40,8 @@ sheets_sync = SheetsSync()
 @database_retry(max_attempts=2, delay=1)
 def company_stock(request):
     """
-    Admin endpoint: Fetch all company stock from Google Sheets "Mrp List".
-    Supports search, sort, filter (no DB storage)
+    Admin endpoint: Fetch paginated company stock from the local snapshot.
+    Search and sorting are performed by the database before pagination.
     """
     logger.info(f"Company stock requested by user: {request.user.username} (is_staff: {request.user.is_staff})")
     
@@ -52,41 +53,59 @@ def company_stock(request):
         )
     
     try:
+        search = request.query_params.get('search', '').strip()
+        sort_by = request.query_params.get('sort_by', 'name')
+        order = request.query_params.get('order', 'asc')
+        sort_fields = {
+            'name': 'name',
+            'qty': 'quantity',
+            'mrp': 'mrp',
+            'spare_id': 'spare_id',
+        }
+        sort_field = sort_fields.get(sort_by, 'name')
+        if order == 'desc':
+            sort_field = f'-{sort_field}'
+
+        try:
+            page = max(1, int(request.query_params.get('page', 1)))
+            page_size = min(100, max(1, int(request.query_params.get('page_size', 50))))
+        except (TypeError, ValueError):
+            page = 1
+            page_size = 50
+
+        queryset = CompanyStock.objects.all()
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) | Q(spare_id__icontains=search)
+            )
+
+        queryset = queryset.order_by(sort_field, 'spare_id')
+        total_count = queryset.count()
+        offset = (page - 1) * page_size
         stock_data = [
             {
-                'spare_id': item.spare_id,
-                'name': item.name,
-                'mrp': float(item.mrp),
-                'hsn': item.hsn,
-                'brand': item.brand,
-                'qty': item.quantity,
+                'spare_id': item['spare_id'],
+                'name': item['name'],
+                'mrp': float(item['mrp']),
+                'hsn': item['hsn'],
+                'brand': item['brand'],
+                'qty': item['quantity'],
             }
-            for item in CompanyStock.objects.all()
+            for item in queryset.values(
+                'spare_id', 'name', 'mrp', 'hsn', 'brand', 'quantity'
+            )[offset:offset + page_size]
         ]
-        
-        # Apply filters if provided
-        search = request.query_params.get('search', '').lower()
-        sort_by = request.query_params.get('sort_by', 'name')
-        
-        if search:
-            original_count = len(stock_data)
-            stock_data = [
-                s for s in stock_data
-                if search in s['name'].lower() or search in s['spare_id'].lower()
-            ]
-            logger.info(f"Search filter '{search}' reduced results from {original_count} to {len(stock_data)} items")
-        
-        # Sort
-        reverse = request.query_params.get('order') == 'desc'
-        if sort_by in ['name', 'qty', 'mrp', 'spare_id']:
-            stock_data = sorted(stock_data, key=lambda x: x.get(sort_by, ''), reverse=reverse)
-            logger.info(f"Sorted by {sort_by} ({'desc' if reverse else 'asc'})")
-        
-        logger.info(f"Company stock request completed successfully - {len(stock_data)} items returned")
+        logger.info(
+            f"Company stock request completed successfully - "
+            f"{len(stock_data)} of {total_count} items returned"
+        )
         return Response({
             'success': True,
-            'count': len(stock_data),
-            'data': stock_data
+            'count': total_count,
+            'page': page,
+            'page_size': page_size,
+            'has_next': offset + len(stock_data) < total_count,
+            'data': stock_data,
         }, status=status.HTTP_200_OK)
     
     except Exception as e:
@@ -306,8 +325,31 @@ def my_stock(request):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Fetch from Google Sheets "Technician Stocks" tab
-        stock_data = sheets_sync.get_technician_stock(tech_stock.sheet_technician_name)
+        # Read from the local DB snapshot (synced from the "Technician Stocks"
+        # worksheet) instead of making a synchronous Google Sheets fetch.
+        snapshot_rows = list(
+            TechnicianStockSnapshot.objects.filter(
+                technician_name__iexact=tech_stock.sheet_technician_name
+            )
+        )
+        
+        if snapshot_rows:
+            stock_data = [
+                {
+                    'spare_id': row.spare_id,
+                    'name': row.name,
+                    'qty': row.quantity,
+                }
+                for row in snapshot_rows
+            ]
+        else:
+            # Snapshot not populated yet (sync hasn't run) - fall back to the
+            # live Google fetch so existing deployments keep working.
+            logger.warning(
+                "Technician stock snapshot empty for '%s' - falling back to Google Sheets",
+                tech_stock.sheet_technician_name,
+            )
+            stock_data = sheets_sync.get_technician_stock(tech_stock.sheet_technician_name)
         
         # Apply filters
         search = request.query_params.get('search', '').lower()
