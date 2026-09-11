@@ -157,15 +157,19 @@ export default function AdminDashboardScreen({ navigation }) {
         {!isSpareAdmin && (
           <View style={styles.statsContainer}>
             <View style={styles.statCard}>
-              <MaterialIcons name="people" size={32} color={COLORS.primary} />
+              <View style={[styles.statIcon, { backgroundColor: '#FFF4BF' }]}>
+                <MaterialIcons name="people" size={26} color={COLORS.primary} />
+              </View>
               <View style={styles.statContent}>
                 <Text style={styles.statNumber}>{stats?.total_technicians || 0}</Text>
-                <Text style={styles.statLabel}>Total Technicians</Text>
+                <Text style={styles.statLabel}>Technicians</Text>
               </View>
             </View>
 
             <View style={[styles.statCard, { borderLeftColor: COLORS.success }]}>
-              <MaterialIcons name="check-circle" size={32} color={COLORS.success} />
+              <View style={[styles.statIcon, { backgroundColor: '#DDF7E8' }]}>
+                <MaterialIcons name="check-circle" size={26} color={COLORS.success} />
+              </View>
               <View style={styles.statContent}>
                 <Text style={[styles.statNumber, { color: COLORS.success }]}>
                   {stats?.checked_in_today || 0}
@@ -174,17 +178,26 @@ export default function AdminDashboardScreen({ navigation }) {
               </View>
             </View>
 
-            <View style={[styles.statCard, { borderLeftColor: COLORS.primary }]}>
-              <MaterialIcons name="task-alt" size={32} color={COLORS.primary} />
-              <View style={styles.statContent}>
-                <Text style={[styles.statNumber, { color: COLORS.primary }]}>
-                  {stats?.completed_today || 0}
-                </Text>
-                <Text style={styles.statLabel}>Completed Today</Text>
+            <View style={styles.centerStatRow}>
+              <View style={[styles.statCard, { borderLeftColor: COLORS.primary }]}>
+                <View style={[styles.statIcon, { backgroundColor: '#FFF4BF' }]}>
+                  <MaterialIcons name="task-alt" size={26} color={COLORS.primary} />
+                </View>
+                <View style={styles.statContent}>
+                  <Text style={[styles.statNumber, { color: COLORS.primary }]}>
+                    {stats?.completed_today || 0}
+                  </Text>
+                  <Text style={styles.statLabel}>Completed Today</Text>
+                </View>
               </View>
             </View>
           </View>
         )}
+
+        <View style={styles.sectionHeading}>
+          <Text style={styles.sectionHeadingTitle}>Admin Tools</Text>
+          <Text style={styles.sectionHeadingSubtitle}>Manage daily operations and stock</Text>
+        </View>
 
         <View style={styles.actionsContainer}>
           {!isSpareAdmin && (
@@ -198,7 +211,6 @@ export default function AdminDashboardScreen({ navigation }) {
                   <Text style={styles.actionTitle}>Attendance Records</Text>
                   <Text style={styles.actionSubtitle}>View daily attendance by date</Text>
                 </View>
-                <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -210,7 +222,6 @@ export default function AdminDashboardScreen({ navigation }) {
                   <Text style={styles.actionTitle}>All Technicians</Text>
                   <Text style={styles.actionSubtitle}>Manage technician list</Text>
                 </View>
-                <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -222,7 +233,6 @@ export default function AdminDashboardScreen({ navigation }) {
                   <Text style={styles.actionTitle}>Manage Technicians</Text>
                   <Text style={styles.actionSubtitle}>Add, edit, or delete technicians</Text>
                 </View>
-                <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -234,7 +244,6 @@ export default function AdminDashboardScreen({ navigation }) {
                   <Text style={styles.actionTitle}>Register Technician Stock</Text>
                   <Text style={styles.actionSubtitle}>Link technicians to stock sheets</Text>
                 </View>
-                <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
               </TouchableOpacity>
             </>
           )}
@@ -253,7 +262,6 @@ export default function AdminDashboardScreen({ navigation }) {
               <Text style={styles.actionTitle}>Member Locations</Text>
               <Text style={styles.actionSubtitle}>Track member movement history</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -265,7 +273,6 @@ export default function AdminDashboardScreen({ navigation }) {
               <Text style={styles.actionTitle}>Spare Approvals</Text>
               <Text style={styles.actionSubtitle}>Review and approve spare part requests</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -277,7 +284,6 @@ export default function AdminDashboardScreen({ navigation }) {
               <Text style={styles.actionTitle}>Courier Stock</Text>
               <Text style={styles.actionSubtitle}>View & manage courier stock</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -291,7 +297,6 @@ export default function AdminDashboardScreen({ navigation }) {
               <Text style={styles.actionTitle}>Create Courier</Text>
               <Text style={styles.actionSubtitle}>Create new courier shipment</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
           </TouchableOpacity>
 
           {/* NEW: All Couriers Button */}
@@ -304,7 +309,6 @@ export default function AdminDashboardScreen({ navigation }) {
               <Text style={styles.actionTitle}>All Couriers</Text>
               <Text style={styles.actionSubtitle}>View all courier history</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
           </TouchableOpacity>
 
             <TouchableOpacity
@@ -316,7 +320,6 @@ export default function AdminDashboardScreen({ navigation }) {
                 <Text style={styles.actionTitle}>Stock Out Items</Text>
                 <Text style={styles.actionSubtitle}>Items requiring order</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -328,7 +331,6 @@ export default function AdminDashboardScreen({ navigation }) {
                 <Text style={styles.actionTitle}>Ordered Items</Text>
                 <Text style={styles.actionSubtitle}>Items awaiting receipt</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -340,7 +342,6 @@ export default function AdminDashboardScreen({ navigation }) {
                 <Text style={styles.actionTitle}>Order History</Text>
                 <Text style={styles.actionSubtitle}>View all orders</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -352,7 +353,6 @@ export default function AdminDashboardScreen({ navigation }) {
                 <Text style={styles.actionTitle}>Received History</Text>
                 <Text style={styles.actionSubtitle}>View all received items</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>
 
         {/* NEW: Process Pending Complaints Button */}
@@ -374,7 +374,6 @@ export default function AdminDashboardScreen({ navigation }) {
                     Process completed complaints & reduce stock
                 </Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>
 
         {/* NEW: Sales Requests Button */}
@@ -387,7 +386,6 @@ export default function AdminDashboardScreen({ navigation }) {
                 <Text style={styles.actionTitle}>Sales Requests</Text>
                 <Text style={styles.actionSubtitle}>Review and approve sales requests</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -406,7 +404,6 @@ export default function AdminDashboardScreen({ navigation }) {
                 </Text>
                 <Text style={styles.actionSubtitle}>Sync monthly MRP changes from Google Sheets</Text>
             </View>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>
 
         </View>
@@ -448,14 +445,20 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingTop: 18,
+    paddingBottom: 10,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   statCard: {
     backgroundColor: COLORS.white,
     borderLeftWidth: 4,
     borderLeftColor: COLORS.primary,
     borderRadius: 12,
-    padding: 16,
+    width: '48%',
+    minHeight: 92,
+    padding: 12,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -466,11 +469,22 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   statContent: {
-    marginLeft: 16,
+    marginLeft: 10,
     flex: 1,
   },
+  centerStatRow: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  statIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   statNumber: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.primary,
   },
@@ -480,15 +494,34 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontWeight: '500',
   },
+  sectionHeading: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  sectionHeadingTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.dark,
+  },
+  sectionHeadingSubtitle: {
+    fontSize: 12,
+    color: COLORS.gray,
+    marginTop: 3,
+  },
   actionsContainer: {
     paddingHorizontal: 16,
     paddingBottom: 24,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   actionButton: {
     backgroundColor: COLORS.dark,
-    marginVertical: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    width: '48%',
+    marginVertical: 6,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     borderRadius: 8,
     alignItems: 'center',
     flexDirection: 'row',
@@ -500,15 +533,15 @@ const styles = StyleSheet.create({
   },
   actionContent: {
     flex: 1,
-    marginLeft: 16,
+    marginLeft: 10,
   },
   actionTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: COLORS.white,
   },
   actionSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.lightGray,
     marginTop: 2,
   },

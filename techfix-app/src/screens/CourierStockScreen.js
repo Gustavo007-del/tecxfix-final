@@ -7,7 +7,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 import client, { API_ENDPOINTS } from '../api/client';
-import { syncTrackingSnapshot } from '../api/snapshotSync';
+import {
+    syncCompanyStockSnapshot,
+    syncTrackingSnapshot,
+} from '../api/snapshotSync';
 import { COLORS } from '../theme/colors';
 
 export default function CourierStockScreen({ navigation }) {
@@ -60,6 +63,7 @@ export default function CourierStockScreen({ navigation }) {
     const onRefresh = async () => {
         setRefreshing(true);
         await syncTrackingSnapshot();
+        await syncCompanyStockSnapshot();
         await fetchStock(1, false);
     };
 

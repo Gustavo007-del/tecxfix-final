@@ -849,6 +849,9 @@ def get_spare_pending(request):
     Returns: All items where TECHNICIAN = logged-in user AND COMPLAINT STATUS = PENDING
     """
     try:
+        if request.query_params.get('refresh') == 'true':
+            SheetSnapshotSync().sync_tracking()
+
         technician_name = request.user.first_name
 
         results = []
@@ -892,6 +895,9 @@ def get_spare_closed(request):
     Query params: from_date (DD-MM-YYYY), to_date (DD-MM-YYYY)
     """
     try:
+        if request.query_params.get('refresh') == 'true':
+            SheetSnapshotSync().sync_tracking()
+
         technician_name = request.user.first_name
         from_date_str = request.query_params.get('from_date')
         to_date_str = request.query_params.get('to_date')

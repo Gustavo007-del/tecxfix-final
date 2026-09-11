@@ -20,7 +20,6 @@ import { AuthContext } from '../context/AuthContext';
 import SHEETS_API from '../api/sheetsClient';
 import { COLORS } from '../theme/colors';
 import client, { API_ENDPOINTS } from '../api/client';
-import { syncTrackingSnapshot } from '../api/snapshotSync';
 
 export default function SparePendingScreen() {
   const insets = useSafeAreaInsets();
@@ -70,17 +69,17 @@ export default function SparePendingScreen() {
     return `${day}-${month}-${year}`;
   };
 
-  const fetchComplaints = async (status = filterStatus) => {
+  const fetchComplaints = async (status = filterStatus, refreshSnapshot = false) => {
     try {
       setLoading(true);
       
       let response;
       if (status === 'PENDING') {
-        response = await SHEETS_API.getSparePending();
+        response = await SHEETS_API.getSparePending(refreshSnapshot);
       } else {
         const fromStr = formatDate(fromDate);
         const toStr = formatDate(toDate);
-        response = await SHEETS_API.getSpareClosed(fromStr, toStr);
+        response = await SHEETS_API.getSpareClosed(fromStr, toStr, refreshSnapshot);
       }
 
       const data = response?.data || [];
@@ -159,8 +158,7 @@ export default function SparePendingScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await syncTrackingSnapshot();
-    await fetchComplaints();
+    await fetchComplaints(filterStatus, true);
     await loadTechnicianStock();
     setRefreshing(false);
   };

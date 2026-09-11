@@ -35,8 +35,6 @@ const C = {
   ...COLORS,
 };
 
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
-const AnimatedG = Animated.createAnimatedComponent(G);
 
 const { width } = Dimensions.get('window');
 const ORBIT_SIZE = Math.min(width * 0.85, 350);

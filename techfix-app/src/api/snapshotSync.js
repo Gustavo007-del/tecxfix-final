@@ -14,3 +14,17 @@ export async function syncTrackingSnapshot() {
     return false;
   }
 }
+
+export async function syncCompanyStockSnapshot() {
+  try {
+    const response = await client.post('/admin/sync-mrp-list/');
+    return response.data.company_stock_rows;
+  } catch (error) {
+    console.error('Company stock snapshot sync failed:', error);
+    Alert.alert(
+      'Company Stock Refresh Failed',
+      'The MRP List could not be updated. The latest available stock data will be shown.'
+    );
+    return null;
+  }
+}

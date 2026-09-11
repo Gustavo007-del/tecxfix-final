@@ -32,9 +32,11 @@ const SHEETS_API = {
   },
 
   // Get spare pending items (technician view)
-  getSparePending: async () => {
+  getSparePending: async (refresh = false) => {
     try {
-      const response = await client.get('/spare/pending/');
+      const response = await client.get('/spare/pending/', {
+        params: refresh ? { refresh: 'true' } : {},
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -42,12 +44,13 @@ const SHEETS_API = {
   },
 
   // Get spare closed items with date range
-  getSpareClosed: async (fromDate, toDate) => {
+  getSpareClosed: async (fromDate, toDate, refresh = false) => {
     try {
       const response = await client.get('/spare/closed/', {
         params: {
           from_date: fromDate,
           to_date: toDate,
+          ...(refresh ? { refresh: 'true' } : {}),
         },
       });
       return response.data;
