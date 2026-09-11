@@ -11,7 +11,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop, ClipPath, Rect, G } from 'react-native-svg';
+import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../theme/colors';
@@ -41,6 +41,9 @@ const AnimatedG = Animated.createAnimatedComponent(G);
 const { width } = Dimensions.get('window');
 const ORBIT_SIZE = Math.min(width * 0.85, 350);
 const CORE_SIZE = ORBIT_SIZE * 0.6;
+// Add fixed bolt dimensions (keeps the 100x120 viewBox aspect ratio correct)
+const BOLT_W = CORE_SIZE * 0.5;
+const BOLT_H = BOLT_W * 1.2;
 
 const ORBIT_ICONS = [
   'account-group',
@@ -113,43 +116,30 @@ function AnimatedButton({ style, onPress, children }) {
 // reveal it), flickers a couple of times like a real strike, holds, then
 // fades and strikes again on a loop. No rings, no static glow halo.
 function LightningBolt({ boltReveal, boltFlicker }) {
-  const clipHeight = boltReveal.interpolate({ inputRange: [0, 1], outputRange: [0, 130] });
+  const maskTranslateY = boltReveal.interpolate({ inputRange: [0, 1], outputRange: [0, BOLT_H + 6] });
 
   return (
-    <View style={styles.boltShadowWrap}>
-      <Svg width={CORE_SIZE * 0.56} height={CORE_SIZE * 0.56} viewBox="0 0 100 120">
-        <Defs>
-          <SvgLinearGradient id="boltGrad" x1="0.1" y1="0" x2="0.6" y2="1">
-            <Stop offset="0" stopColor={C.boltCoreLight} />
-            <Stop offset="0.45" stopColor={C.boltCoreMid} />
-            <Stop offset="1" stopColor={C.boltCoreDeep} />
-          </SvgLinearGradient>
-          <ClipPath id="strikeClip">
-            <AnimatedRect x="-10" y="0" width="120" height={clipHeight} />
-          </ClipPath>
-        </Defs>
-
-        <AnimatedG clipPath="url(#strikeClip)" opacity={boltFlicker}>
-          {/* Drop-shadow silhouette, offset down-right, for real depth */}
-          <Path
-            d="M68,6 L18,64 H44 L30,114 L96,44 H58 L68,6 Z"
-            fill={C.boltShadow}
-            opacity={0.45}
-            transform="translate(4,6)"
-          />
-          {/* Main gradient body */}
-          <Path
-            d="M68,6 L18,64 H44 L30,114 L96,44 H58 L68,6 Z"
-            fill="url(#boltGrad)"
-            stroke={C.boltCoreLight}
-            strokeWidth={1.4}
-            strokeOpacity={0.9}
-            strokeLinejoin="round"
-          />
-          {/* Gloss highlight sliver along the top-left facet */}
+    <View style={[styles.boltShadowWrap, { width: BOLT_W, height: BOLT_H }]}>
+      <Animated.View style={{ opacity: boltFlicker }}>
+        <Svg width={BOLT_W} height={BOLT_H} viewBox="0 0 100 120">
+          <Defs>
+            <SvgLinearGradient id="boltGrad" x1="0.1" y1="0" x2="0.6" y2="1">
+              <Stop offset="0" stopColor={C.boltCoreLight} />
+              <Stop offset="0.45" stopColor={C.boltCoreMid} />
+              <Stop offset="1" stopColor={C.boltCoreDeep} />
+            </SvgLinearGradient>
+          </Defs>
+          <Path d="M68,6 L18,64 H44 L30,114 L96,44 H58 L68,6 Z" fill={C.boltShadow} opacity={0.45} transform="translate(4,6)" />
+          <Path d="M68,6 L18,64 H44 L30,114 L96,44 H58 L68,6 Z" fill="url(#boltGrad)" stroke={C.boltCoreLight} strokeWidth={1.4} strokeOpacity={0.9} strokeLinejoin="round" />
           <Path d="M62,14 L30,58 H40 L62,14 Z" fill={C.white} opacity={0.32} />
-        </AnimatedG>
-      </Svg>
+        </Svg>
+      </Animated.View>
+
+      {/* Slides down and off, revealing the bolt top-to-bottom as it moves */}
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.boltMask, { width: BOLT_W, height: BOLT_H, transform: [{ translateY: maskTranslateY }] }]}
+      />
     </View>
   );
 }
@@ -189,12 +179,7 @@ export default function LoginChoiceScreen({ navigation }) {
     // Lightning strike cycle: strike down from the tip, flicker, hold, fade, repeat.
     const strikeCycle = Animated.loop(
       Animated.sequence([
-        Animated.timing(boltReveal, {
-          toValue: 1,
-          duration: 320,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: false, // animating an SVG rect height, not a transform
-        }),
+        Animated.timing(boltReveal, { toValue: 1, duration: 320, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
         Animated.sequence([
           Animated.timing(boltFlicker, { toValue: 0.25, duration: 50, useNativeDriver: true }),
           Animated.timing(boltFlicker, { toValue: 1, duration: 60, useNativeDriver: true }),
@@ -202,7 +187,7 @@ export default function LoginChoiceScreen({ navigation }) {
           Animated.timing(boltFlicker, { toValue: 1, duration: 90, useNativeDriver: true }),
         ]),
         Animated.delay(2600),
-        Animated.timing(boltReveal, { toValue: 0, duration: 220, easing: Easing.in(Easing.cubic), useNativeDriver: false }),
+        Animated.timing(boltReveal, { toValue: 0, duration: 220, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
         Animated.delay(700),
       ])
     );
@@ -302,12 +287,13 @@ const styles = StyleSheet.create({
   },
   core: { justifyContent: 'center', alignItems: 'center' },
   boltShadowWrap: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 6,
-  },
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 6 },
+  shadowOpacity: 0.35,
+  shadowRadius: 8,
+  elevation: 6,
+},
+boltMask: { position: 'absolute', top: 0, left: 0, backgroundColor: C.background },
 
   iconTile: { position: 'absolute', width: 56, height: 56 },
   iconTileGradient: {
