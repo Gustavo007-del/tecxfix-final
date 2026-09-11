@@ -20,6 +20,7 @@ import { AuthContext } from '../context/AuthContext';
 import SHEETS_API from '../api/sheetsClient';
 import { COLORS } from '../theme/colors';
 import client, { API_ENDPOINTS } from '../api/client';
+import { syncTechnicianStockSnapshot } from '../api/snapshotSync';
 
 export default function SparePendingScreen() {
   const insets = useSafeAreaInsets();
@@ -158,6 +159,7 @@ export default function SparePendingScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    await syncTechnicianStockSnapshot();
     await fetchComplaints(filterStatus, true);
     await loadTechnicianStock();
     setRefreshing(false);

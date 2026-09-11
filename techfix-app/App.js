@@ -79,12 +79,18 @@ function TechnicianNavigator() {
                     }
                     return <MaterialIcons name={iconName} size={size} color={color} />;
                 },
-                tabBarActiveTintColor: COLORS.primary,
-                tabBarInactiveTintColor: COLORS.gray,
+                tabBarActiveTintColor: COLORS.dark,
+                tabBarInactiveTintColor: COLORS.dark,
+                tabBarActiveBackgroundColor: COLORS.primary,
                 tabBarStyle: {
                     backgroundColor: COLORS.white,
                     borderTopColor: COLORS.lightGray,
-                    paddingBottom: 5,
+                  height: 60,
+                  paddingBottom: 0,
+                },
+                tabBarItemStyle: {
+                  marginVertical: 4,
+                  borderRadius: 8,
                 },
             })}
         >
@@ -225,12 +231,18 @@ function AdminNavigator() {
                     }
                     return <MaterialIcons name={iconName} size={size} color={color} />;
                 },
-                tabBarActiveTintColor: COLORS.primary,
-                tabBarInactiveTintColor: COLORS.gray,
+                tabBarActiveTintColor: COLORS.dark,
+                tabBarInactiveTintColor: COLORS.dark,
+                tabBarActiveBackgroundColor: COLORS.primary,
                 tabBarStyle: {
                     backgroundColor: COLORS.white,
                     borderTopColor: COLORS.lightGray,
-                    paddingBottom: 5,
+                  height: 60,
+                  paddingBottom: 0,
+                },
+                tabBarItemStyle: {
+                  marginVertical: 4,
+                  borderRadius: 8,
                 },
             })}
         >

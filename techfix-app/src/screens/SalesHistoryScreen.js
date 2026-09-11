@@ -255,7 +255,7 @@ export default function SalesHistoryScreen({ navigation }) {
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Type:</Text>
                   <Text style={styles.detailValue}>
-                    {selectedRequest.type === 'direct' ? 'Direct Sale' : 'Complaint Sale'}
+                    {selectedRequest.type?.toUpperCase() === 'DIRECT' ? 'Direct Sale' : 'Complaint Sale'}
                   </Text>
                 </View>
                 <View style={styles.detailRow}>

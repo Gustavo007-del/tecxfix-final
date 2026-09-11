@@ -15,7 +15,10 @@ import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 import client from '../api/client';
-import { syncTrackingSnapshot } from '../api/snapshotSync';
+import {
+  syncTechnicianStockSnapshot,
+  syncTrackingSnapshot,
+} from '../api/snapshotSync';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { COLORS } from '../theme/colors';
 import { useNavigation } from '@react-navigation/native';
@@ -259,6 +262,7 @@ export default function AttendanceScreen({ navigation }) {
   const onRefresh = async () => {
     setRefreshing(true);
     await syncTrackingSnapshot();
+    await syncTechnicianStockSnapshot();
     await fetchAttendanceStatus();
     setRefreshing(false);
   };
@@ -308,6 +312,10 @@ export default function AttendanceScreen({ navigation }) {
             <MaterialIcons name="logout" size={28} color={COLORS.primary} />
           </TouchableOpacity>
         </View>
+
+        <Text style={styles.refreshReminderTop}>
+          Swipe down to refresh and get the latest data.
+        </Text>
 
         {/* Status Card */}
         <View style={styles.statusCard}>
@@ -399,6 +407,9 @@ export default function AttendanceScreen({ navigation }) {
             <MaterialIcons name="sell" size={24} color={COLORS.white} />
             <Text style={[styles.buttonText, { color: COLORS.white, marginLeft: 8 }]}>New Sale</Text>
           </TouchableOpacity>
+          <Text style={styles.refreshReminderBottom}>
+            Pull down anytime to sync the latest attendance, tracking, and stock information.
+          </Text>
         </View>
       </ScrollView>
     </View>
@@ -449,6 +460,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  refreshReminderTop: {
+    fontSize: 12,
+    color: COLORS.gray,
+    textAlign: 'center',
+    marginTop: 14,
+    marginBottom: 2,
+    paddingHorizontal: 16,
   },
   statusTitle: {
     fontSize: 18,
@@ -538,5 +557,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  refreshReminderBottom: {
+    fontSize: 15,
+    color: COLORS.dark,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginTop: 22,
+    paddingHorizontal: 16,
   },
 });

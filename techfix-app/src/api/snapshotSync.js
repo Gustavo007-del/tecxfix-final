@@ -28,3 +28,17 @@ export async function syncCompanyStockSnapshot() {
     return null;
   }
 }
+
+export async function syncTechnicianStockSnapshot() {
+  try {
+    const response = await client.post('/technician-stock/sync/');
+    return response.data.technician_stock_rows;
+  } catch (error) {
+    console.error('Technician stock snapshot sync failed:', error);
+    Alert.alert(
+      'Technician Stock Refresh Failed',
+      'Technician stock could not be updated. The latest available stock data will be shown.'
+    );
+    return null;
+  }
+}

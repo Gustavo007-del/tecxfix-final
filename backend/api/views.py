@@ -422,6 +422,24 @@ def sync_tracking_snapshot(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def sync_technician_stock_snapshot(request):
+    """Synchronize the Google Sheets Technician Stocks worksheet."""
+    try:
+        count = SheetSnapshotSync().sync_technician_stock()
+        return Response(
+            {'success': True, 'technician_stock_rows': count},
+            status=status.HTTP_200_OK,
+        )
+    except Exception:
+        logger.exception('Technician stock synchronization failed')
+        return Response(
+            {'success': False, 'error': 'Technician stock synchronization failed.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def technician_list(request):
@@ -937,7 +955,9 @@ def get_spare_closed(request):
                     "part_name": row.part_name,
                     "no_of_spares": row.quantity,
                     "status": row.complaint_status,
+                    "pending_days": row.pending_days,
                     "district": row.district,
+                    "mrp": row.mrp,
                     "technician": row.technician_name,
                     "date": date_obj.strftime("%d-%m-%Y")
                 })
