@@ -18,7 +18,7 @@ from api.views import (
     process_pending_complaints, get_complaint_processing_status,
     create_sales_request, get_sales_requests, get_my_sales_requests, approve_sales_request, reject_sales_request, download_sales_request_pdf,
     search_products,
-    api_root
+    api_root, sync_mrp_list, sync_tracking_snapshot
 )
 from api.privacy_views import privacy_policy, terms_of_service, user_agreement, account_deletion_policy
 
@@ -51,6 +51,8 @@ urlpatterns = [
     # Admin
     path('api/attendance/list/', attendance_list, name='attendance_list'),
     path('api/admin/dashboard/', admin_dashboard_stats, name='dashboard_stats'),
+    path('api/admin/sync-mrp-list/', sync_mrp_list, name='sync_mrp_list'),
+    path('api/tracking/sync/', sync_tracking_snapshot, name='sync_tracking_snapshot'),
     path('api/technicians/', technician_list, name='technician_list'),
 
     # Technician Management

@@ -24,7 +24,11 @@ from .serializers import (
     StockOutOrderSerializer, StockReceivedSerializer, SalesRequestSerializer, SalesRequestCreateSerializer
 )
 from courier_api.sheets_sync import SheetsSync
-from .services.sheet_snapshot_sync import update_tracking_snapshot, update_company_stock_snapshot
+from .services.sheet_snapshot_sync import (
+    SheetSnapshotSync,
+    update_tracking_snapshot,
+    update_company_stock_snapshot,
+)
 
 # API Root View
 @api_view(['GET'])
@@ -375,6 +379,48 @@ def admin_dashboard_stats(request):
         'checked_in_today': checked_in_today,
         'completed_today': completed_today,
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def sync_mrp_list(request):
+    """Synchronize the Google Sheets MRP List into the local stock snapshot."""
+    if not request.user.is_staff:
+        return Response(
+            {'error': 'Admin access required'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    try:
+        count = SheetSnapshotSync().sync_company_stock()
+        return Response(
+            {'success': True, 'company_stock_rows': count},
+            status=status.HTTP_200_OK,
+        )
+    except Exception:
+        logger.exception('MRP List synchronization failed')
+        return Response(
+            {'success': False, 'error': 'MRP List synchronization failed.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def sync_tracking_snapshot(request):
+    """Synchronize the Google Sheets Tracking worksheet into the local snapshot."""
+    try:
+        count = SheetSnapshotSync().sync_tracking()
+        return Response(
+            {'success': True, 'tracking_rows': count},
+            status=status.HTTP_200_OK,
+        )
+    except Exception:
+        logger.exception('Tracking synchronization failed')
+        return Response(
+            {'success': False, 'error': 'Tracking synchronization failed.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
