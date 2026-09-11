@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 import SHEETS_API from '../api/sheetsClient';
 import { COLORS } from '../theme/colors';
 
@@ -58,6 +59,7 @@ export default function AdminSpareApprovalsScreen({ navigation }) {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    await syncTrackingSnapshot();
     await fetchApprovals();
   };
 

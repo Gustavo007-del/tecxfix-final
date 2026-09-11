@@ -7,6 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 import client, { API_ENDPOINTS } from '../api/client';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 import { COLORS } from '../theme/colors';
 
 export default function CourierStockScreen({ navigation }) {
@@ -21,14 +22,14 @@ export default function CourierStockScreen({ navigation }) {
     const [loadingMore, setLoadingMore] = useState(false);
     
     useEffect(() => {
-        const timeout = setTimeout(() => fetchStock(1, false), 300);
+        const timeout = setTimeout(() => fetchStock(1, false), 500);
         return () => clearTimeout(timeout);
     }, [searchQuery, sortBy]);
     
     const fetchStock = async (pageNumber = 1, append = false) => {
         if (append) {
             setLoadingMore(true);
-        } else if (!refreshing) {
+        } else if (!refreshing && stock.length === 0) {
             setLoading(true);
         }
 
@@ -58,6 +59,7 @@ export default function CourierStockScreen({ navigation }) {
     
     const onRefresh = async () => {
         setRefreshing(true);
+        await syncTrackingSnapshot();
         await fetchStock(1, false);
     };
 

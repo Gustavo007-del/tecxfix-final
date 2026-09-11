@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import client from '../api/client';
 import API_ENDPOINTS from '../api/endpoints';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 import { AuthContext } from '../context/AuthContext';
 import { COLORS } from '../theme/colors';
 
@@ -23,6 +24,7 @@ export default function AdminDashboardScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [processingComplaints, setProcessingComplaints] = useState(false);
+  const [syncingMrpList, setSyncingMrpList] = useState(false);
   const { signOut, state } = useContext(AuthContext);
   const isSpareAdmin = state?.user?.username === 'SpareAdmin';
 
@@ -42,8 +44,27 @@ export default function AdminDashboardScreen({ navigation }) {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    await syncTrackingSnapshot();
     await fetchDashboardStats();
     setRefreshing(false);
+  };
+
+  const handleSyncMrpList = async () => {
+    try {
+      setSyncingMrpList(true);
+      const response = await client.post('/admin/sync-mrp-list/');
+      Alert.alert(
+        'MRP List Updated',
+        `${response.data.company_stock_rows} stock items synchronized successfully.`
+      );
+    } catch (error) {
+      Alert.alert(
+        'Sync Failed',
+        error.response?.data?.error || 'Could not synchronize the MRP List.'
+      );
+    } finally {
+      setSyncingMrpList(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -365,6 +386,25 @@ export default function AdminDashboardScreen({ navigation }) {
             <View style={styles.actionContent}>
                 <Text style={styles.actionTitle}>Sales Requests</Text>
                 <Text style={styles.actionSubtitle}>Review and approve sales requests</Text>
+            </View>
+            <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: syncingMrpList ? COLORS.gray : COLORS.secondary }]}
+            onPress={handleSyncMrpList}
+            disabled={syncingMrpList}
+        >
+            {syncingMrpList ? (
+              <ActivityIndicator size={24} color={COLORS.white} />
+            ) : (
+              <MaterialIcons name="sync" size={24} color={COLORS.white} />
+            )}
+            <View style={styles.actionContent}>
+                <Text style={styles.actionTitle}>
+                  {syncingMrpList ? 'Updating MRP List...' : 'Update MRP List'}
+                </Text>
+                <Text style={styles.actionSubtitle}>Sync monthly MRP changes from Google Sheets</Text>
             </View>
             <MaterialIcons name="arrow-forward" size={20} color={COLORS.white} />
         </TouchableOpacity>

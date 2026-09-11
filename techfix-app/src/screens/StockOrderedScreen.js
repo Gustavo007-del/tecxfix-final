@@ -8,6 +8,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import client from '../api/client';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 
 export default function StockOrderedScreen({ navigation }) {
     const insets = useSafeAreaInsets();
@@ -36,6 +37,7 @@ export default function StockOrderedScreen({ navigation }) {
 
     const onRefresh = async () => {
         setRefreshing(true);
+        await syncTrackingSnapshot();
         await fetchOrderedItems();
         setRefreshing(false);
     };

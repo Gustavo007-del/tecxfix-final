@@ -14,6 +14,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 import { COLORS } from '../theme/colors';
 import client from '../api/client';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 
 const API_BASE_URL = 'https://tecxfix-final.onrender.com';
 
@@ -39,8 +40,9 @@ const TechnicianProfileScreen = ({ navigation }) => {
     fetchProfile();
   }, []);
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
+    await syncTrackingSnapshot();
     fetchProfile();
   };
 

@@ -15,6 +15,7 @@ import { AuthContext } from '../context/AuthContext';
 import SHEETS_API from '../api/sheetsClient';
 import { COLORS } from '../theme/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 
 
 export default function MyRequestsScreen({ navigation }) {
@@ -51,6 +52,7 @@ export default function MyRequestsScreen({ navigation }) {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    await syncTrackingSnapshot();
     await fetchMyRequests();
   };
 

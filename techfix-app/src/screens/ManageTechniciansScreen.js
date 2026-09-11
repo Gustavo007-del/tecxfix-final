@@ -16,6 +16,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import client from '../api/client';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 import { AuthContext } from '../context/AuthContext';
 import { COLORS } from '../theme/colors';
 
@@ -52,6 +53,7 @@ export default function ManageTechniciansScreen({ navigation }) {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    await syncTrackingSnapshot();
     await fetchTechnicians();
     setRefreshing(false);
   };

@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import client from '../api/client';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 import { COLORS } from '../theme/colors';
 
 export default function TechnicianListScreen({ navigation }) {
@@ -36,6 +37,7 @@ export default function TechnicianListScreen({ navigation }) {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    await syncTrackingSnapshot();
     await fetchTechnicians();
     setRefreshing(false);
   };

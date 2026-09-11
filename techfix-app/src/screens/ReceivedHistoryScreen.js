@@ -8,6 +8,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import client from '../api/client';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 
 export default function ReceivedHistoryScreen({ navigation }) {
     const insets = useSafeAreaInsets();
@@ -35,6 +36,7 @@ export default function ReceivedHistoryScreen({ navigation }) {
 
     const onRefresh = async () => {
         setRefreshing(true);
+        await syncTrackingSnapshot();
         await fetchReceivedHistory();
         setRefreshing(false);
     };

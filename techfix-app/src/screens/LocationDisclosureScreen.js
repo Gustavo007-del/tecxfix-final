@@ -214,7 +214,7 @@ export default function LocationDisclosureScreen({ onAccept, onDecline }) {
               <View style={styles.exampleBox}>
                 <Text style={styles.exampleTitle}>Example:</Text>
                 <Text style={styles.exampleText}>
-                  "TECHFIX collects location data to track technician work sessions even when the app is closed."
+                  &quot;TECHFIX collects location data to track technician work sessions even when the app is closed.&quot;
                 </Text>
               </View>
             </View>

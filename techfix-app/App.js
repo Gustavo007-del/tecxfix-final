@@ -7,6 +7,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
 import { COLORS } from './src/theme/colors';
 import ErrorBoundary from './src/utils/ErrorBoundary';
@@ -52,6 +53,7 @@ import SalesHistoryScreen from './src/screens/SalesHistoryScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+const LOCATION_DISCLOSURE_SEEN_KEY = 'location_disclosure_seen';
 
 // ============================================
 // TECHNICIAN NAVIGATION
@@ -405,15 +407,24 @@ function LocationPermissionScreen({ onRetry }) {
 export default function App() {
   const [locationPermission, setLocationPermission] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showDisclosure, setShowDisclosure] = useState(true);
+  const [showDisclosure, setShowDisclosure] = useState(false);
+  const [disclosureLoading, setDisclosureLoading] = useState(true);
 
   const handleDisclosureAccept = async () => {
     setShowDisclosure(false);
+    try {
+      await AsyncStorage.setItem(LOCATION_DISCLOSURE_SEEN_KEY, 'true');
+    } catch {
+    }
     await checkPermissions();
   };
 
-  const handleDisclosureDecline = () => {
+  const handleDisclosureDecline = async () => {
     setShowDisclosure(false);
+    try {
+      await AsyncStorage.setItem(LOCATION_DISCLOSURE_SEEN_KEY, 'true');
+    } catch {
+    }
     checkPermissions(); // Still check permissions but user was informed
   };
 
@@ -438,8 +449,34 @@ export default function App() {
   };
 
   useEffect(() => {
-    // Remove automatic permission check - let user see disclosure first
+    const loadDisclosureState = async () => {
+      try {
+        const disclosureSeen = await AsyncStorage.getItem(LOCATION_DISCLOSURE_SEEN_KEY);
+        setShowDisclosure(disclosureSeen !== 'true');
+        if (disclosureSeen === 'true') {
+          await checkPermissions();
+        }
+      } catch (error) {
+        setShowDisclosure(true);
+      } finally {
+        setDisclosureLoading(false);
+      }
+    };
+
+    loadDisclosureState();
   }, []);
+
+  if (disclosureLoading) {
+    return (
+      <ErrorBoundary>
+        <SafeAreaProvider>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+          </View>
+        </SafeAreaProvider>
+      </ErrorBoundary>
+    );
+  }
 
   // Show disclosure screen first
   if (showDisclosure) {

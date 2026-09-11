@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import client from '../api/client';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 import { COLORS } from '../theme/colors';
 
 // Convert UTC time string to Local IST time
@@ -87,6 +88,7 @@ export default function AttendanceListScreen({ navigation }) {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    await syncTrackingSnapshot();
     await fetchAttendance();
     setRefreshing(false);
   };

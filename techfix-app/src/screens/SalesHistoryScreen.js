@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 import client from '../api/client';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 import API_ENDPOINTS from '../api/endpoints';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { COLORS } from '../theme/colors';
@@ -47,6 +48,7 @@ export default function SalesHistoryScreen({ navigation }) {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    await syncTrackingSnapshot();
     await fetchSalesHistory();
     setRefreshing(false);
   };

@@ -15,6 +15,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import client, { API_ENDPOINTS } from '../api/client';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 import { generateAdminCourierPDF, printAdminCourierPDF } from '../utils/AdminCourierPDFGenerator';
 
 export default function AllCouriersScreen({ navigation }) {
@@ -74,6 +75,7 @@ export default function AllCouriersScreen({ navigation }) {
 
     const onRefresh = async () => {
         setRefreshing(true);
+        await syncTrackingSnapshot();
         await fetchCouriers();
         setRefreshing(false);
     };

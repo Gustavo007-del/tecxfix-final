@@ -15,6 +15,7 @@ import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 import client from '../api/client';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { COLORS } from '../theme/colors';
 import { useNavigation } from '@react-navigation/native';
@@ -257,6 +258,7 @@ export default function AttendanceScreen({ navigation }) {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    await syncTrackingSnapshot();
     await fetchAttendanceStatus();
     setRefreshing(false);
   };

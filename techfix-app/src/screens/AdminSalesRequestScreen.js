@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../context/AuthContext';
 import client from '../api/client';
+import { syncTrackingSnapshot } from '../api/snapshotSync';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { COLORS } from '../theme/colors';
 import { generateSalesRequestPDF } from '../utils/SalesRequestPDFGenerator';
@@ -53,6 +54,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    await syncTrackingSnapshot();
     await fetchSalesRequests();
     setRefreshing(false);
   };
@@ -403,7 +405,7 @@ export default function AdminSalesRequestScreen({ navigation }) {
                 <Text style={styles.detailSectionTitle}>Request Information</Text>
                   {selectedRequest.status?.toLowerCase() === 'approved' && (
                     <TouchableOpacity
-                      style={styles.pdfButton}
+                      style={styles.modalPdfButton}
                       onPress={() => handleDownloadPdf(selectedRequest)}
                       disabled={downloadingPdf}
                     >
@@ -713,7 +715,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  pdfButton: {
+  modalPdfButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.danger,
