@@ -50,6 +50,11 @@ def _value(row, index):
     return row[index].strip() if len(row) > index and row[index] else ""
 
 
+def _technician_key(value):
+    """Normalize sheet technician names so spacing/case differences do not split stock rows."""
+    return " ".join((value or "").split()).casefold()
+
+
 def _decimal(value):
     try:
         return Decimal(value.replace(",", "")) if value else Decimal("0")
@@ -234,8 +239,8 @@ class SheetSnapshotSync:
     def sync_technician_stock(self):
         """Mirror the Technician Stocks worksheet into TechnicianStockSnapshot.
 
-        Duplicate (technician, spare) rows are collapsed with the LAST row
-        winning, matching how sync_company_stock handles duplicate spare_ids.
+        Duplicate (technician, spare) rows are collapsed into one stock row
+        with their quantities summed.
         """
         sheet = self._client().open_by_key(SHEET_ID).worksheet(TECHNICIAN_STOCK_WORKSHEET)
         rows = sheet.get_all_values()
@@ -246,22 +251,29 @@ class SheetSnapshotSync:
 
         for row in rows[1:]:
             spare_id = _value(row, 1)
-            technician_name = _value(row, 3)
+            technician_name = " ".join(_value(row, 3).split())
 
-            if not spare_id:
+            if not spare_id or not technician_name:
                 continue
 
-            key = (technician_name, spare_id)
-            objects_by_key[key] = TechnicianStockSnapshot(
-                technician_name=technician_name,
-                spare_id=spare_id,
-                name=_value(row, 0),
-                quantity=_integer(_value(row, 2)),
-                synced_at=synced_at,
-            )
+            key = (_technician_key(technician_name), spare_id)
+            quantity = _integer(_value(row, 2))
+            existing = objects_by_key.get(key)
+            if existing:
+                existing.quantity += quantity
+                existing.name = _value(row, 0) or existing.name
+                existing.synced_at = synced_at
+            else:
+                objects_by_key[key] = TechnicianStockSnapshot(
+                    technician_name=technician_name,
+                    spare_id=spare_id,
+                    name=_value(row, 0),
+                    quantity=quantity,
+                    synced_at=synced_at,
+                )
 
         objects = list(objects_by_key.values())
-        seen_pairs = list(objects_by_key.keys())
+        seen_pairs = [(item.technician_name, item.spare_id) for item in objects]
 
         update_fields = ["technician_name", "spare_id", "name", "quantity", "synced_at"]
 

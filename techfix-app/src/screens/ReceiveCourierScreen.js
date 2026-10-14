@@ -9,6 +9,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import client, { API_ENDPOINTS } from '../api/client';
 
+const formatCourierDate = (value) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric'
+    });
+};
+
 export default function ReceiveCourierScreen({ route, navigation }) {
     const insets = useSafeAreaInsets();
     const { courierId, fromTab } = route.params || {};
@@ -17,6 +25,7 @@ export default function ReceiveCourierScreen({ route, navigation }) {
     const [submitting, setSubmitting] = useState(false);
     const [courier, setCourier] = useState(null);
     const [couriers, setCouriers] = useState([]);
+    const [statusFilter, setStatusFilter] = useState('all');
     const [error, setError] = useState(null);
     const [selectedItems, setSelectedItems] = useState({});
     // selectedItems format: { "spare_id": { selected: true, qty: 2 } }
@@ -36,8 +45,11 @@ export default function ReceiveCourierScreen({ route, navigation }) {
         try {
             setLoading(true);
             setError(null);
-            const response = await client.get(API_ENDPOINTS.PENDING_COURIERS);
-            if (response.data && Array.isArray(response.data)) {
+            // The courier tab is a history view: include both pending and received couriers.
+            const response = await client.get(API_ENDPOINTS.MY_COURIER_HISTORY);
+            if (response.data?.success && Array.isArray(response.data.data)) {
+                setCouriers(response.data.data);
+            } else if (response.data && Array.isArray(response.data)) {
                 setCouriers(response.data || []);
             } else if (response.data && response.data.data) {
                 // Handle case where data is nested under data property
@@ -92,7 +104,7 @@ export default function ReceiveCourierScreen({ route, navigation }) {
                 ...prev,
                 [spareId]: {
                     selected: newSelectedState,
-                    qty: newSelectedState ? Math.min(1, maxQty) : 0
+                    qty: newSelectedState ? Math.max(0, Number(maxQty) || 0) : 0
                 }
             };
         });
@@ -193,30 +205,62 @@ export default function ReceiveCourierScreen({ route, navigation }) {
 
     // Show list of couriers when in tab view
     if (fromTab && !courierId) {
+        const visibleCouriers = statusFilter === 'all'
+            ? couriers
+            : couriers.filter(courier => courier.status === statusFilter);
+        const filterOptions = [
+            { key: 'all', label: 'All' },
+            { key: 'in_transit', label: 'Not received' },
+            { key: 'received', label: 'Received' },
+        ];
+
         return (
             <View style={[styles.container, { paddingTop: insets.top }]}>
-                <Text style={styles.title}>Available Couriers</Text>
-                {couriers.length > 0 ? (
+                <Text style={styles.title}>My Couriers</Text>
+                <View style={styles.filterRow}>
+                    {filterOptions.map(option => {
+                        const active = statusFilter === option.key;
+                        return (
+                            <TouchableOpacity
+                                key={option.key}
+                                onPress={() => setStatusFilter(option.key)}
+                                style={[styles.filterButton, active && styles.filterButtonActive]}
+                            >
+                                <Text style={[styles.filterButtonText, active && styles.filterButtonTextActive]}>
+                                    {option.label}{' '}
+                                    {option.key === 'all' ? couriers.length : couriers.filter(c => c.status === option.key).length}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+                {visibleCouriers.length > 0 ? (
                     <FlatList
-                        data={couriers}
+                        data={visibleCouriers}
                         renderItem={({ item }) => (
                             <TouchableOpacity 
-                                style={styles.courierItem}
+                                style={[styles.courierItem, item.status === 'received' ? styles.courierItemReceived : styles.courierItemPending]}
                                 onPress={() => navigation.navigate('ReceiveCourierDetails', { 
                                     courierId: item.id,
                                     fromTab: false
                                 })}
                             >
-                                <Text style={styles.courierId}>Courier ID: {item.courier_id || 'N/A'}</Text>
-                                <Text>Status: {item.status || 'N/A'}</Text>
-                                <Text>Items: {item.items?.length || 0}</Text>
+                                <View style={styles.courierCardTop}>
+                                    <Text style={styles.courierId}>Courier ID: {item.courier_id || 'N/A'}</Text>
+                                    <View style={[styles.statusBadge, item.status === 'received' ? styles.statusReceived : styles.statusPending]}>
+                                        <Text style={styles.statusBadgeText}>{item.status === 'received' ? 'Received' : 'Not received'}</Text>
+                                    </View>
+                                </View>
+                                <Text style={styles.courierMeta}>Sent: {formatCourierDate(item.sent_time)}</Text>
+                                {item.received_time ? <Text style={styles.courierMeta}>Received: {formatCourierDate(item.received_time)}</Text> : null}
+                                <Text style={styles.courierMeta}>Items: {item.items?.length || 0}</Text>
                             </TouchableOpacity>
                         )}
                         keyExtractor={item => item.id.toString()}
                         contentContainerStyle={styles.listContainer}
                     />
                 ) : (
-                    <Text style={styles.noCouriers}>No couriers available to receive</Text>
+                    <Text style={styles.noCouriers}>No couriers match this filter</Text>
                 )}
             </View>
         );
@@ -234,6 +278,7 @@ export default function ReceiveCourierScreen({ route, navigation }) {
     const totalSelectedQty = Object.values(selectedItems).reduce((sum, item) => 
         sum + (item.selected ? item.qty : 0), 0
     );
+    const canReceive = courier.status !== 'received';
 
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -254,7 +299,7 @@ export default function ReceiveCourierScreen({ route, navigation }) {
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 <Text style={styles.sectionTitle}>
-                    Select Items to Receive ({selectedCount} selected)
+                    {canReceive ? `Select Items to Receive (${selectedCount} selected)` : 'Received Items'}
                 </Text>
 
                 {courier.items.map((item, index) => {
@@ -266,7 +311,7 @@ export default function ReceiveCourierScreen({ route, navigation }) {
                             styles.itemCard,
                             isSelected && styles.itemCardSelected
                         ]}>
-                            <TouchableOpacity
+                            {canReceive && <TouchableOpacity
                                 style={styles.itemHeader}
                                 onPress={() => toggleItemSelection(item.spare_id, item.qty)}
                                 activeOpacity={0.7}
@@ -288,7 +333,14 @@ export default function ReceiveCourierScreen({ route, navigation }) {
                                         <Text style={styles.itemBrand}>Brand: {item.brand}</Text>
                                     )}
                                 </View>
-                            </TouchableOpacity>
+                            </TouchableOpacity>}
+                            {!canReceive && <View style={styles.itemHeader}>
+                                <View style={styles.itemInfo}>
+                                    <Text style={styles.itemName}>{item.name}</Text>
+                                    <Text style={styles.itemDetails}>Code: {item.spare_id} | Sent: {item.qty} | Received: {item.received_qty ?? 0}</Text>
+                                    {item.brand ? <Text style={styles.itemBrand}>Brand: {item.brand}</Text> : null}
+                                </View>
+                            </View>}
 
                             {isSelected && (
                                 <View style={styles.qtySelector}>
@@ -307,6 +359,7 @@ export default function ReceiveCourierScreen({ route, navigation }) {
 
                                         <TextInput
                                             style={styles.qtyInput}
+                                            keyboardAppearance="light"
                                             value={itemSelection.qty.toString()}
                                             onChangeText={(text) => updateItemQty(
                                                 item.spare_id,
@@ -335,7 +388,7 @@ export default function ReceiveCourierScreen({ route, navigation }) {
                 })}
             </ScrollView>
 
-            <View style={styles.footer}>
+            {canReceive && <View style={styles.footer}>
                 <View style={styles.summaryContainer}>
                     <Text style={styles.summaryText}>
                         {selectedCount} items | Total Qty: {totalSelectedQty}
@@ -358,7 +411,7 @@ export default function ReceiveCourierScreen({ route, navigation }) {
                         </>
                     )}
                 </TouchableOpacity>
-            </View>
+            </View>}
         </View>
     );
 }
@@ -400,6 +453,71 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 2,
+    },
+    courierItemPending: {
+        borderWidth: 2,
+        borderColor: '#D97706',
+    },
+    courierItemReceived: {
+        borderWidth: 2,
+        borderColor: '#16A34A',
+    },
+    courierCardTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 8,
+        marginBottom: 6,
+    },
+    statusBadge: {
+        borderRadius: 12,
+        paddingHorizontal: 9,
+        paddingVertical: 4,
+    },
+    statusPending: {
+        backgroundColor: '#FEF3C7',
+    },
+    statusReceived: {
+        backgroundColor: '#DCFCE7',
+    },
+    statusBadgeText: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: COLORS.dark,
+    },
+    courierMeta: {
+        color: '#475569',
+        fontSize: 13,
+        fontWeight: '500',
+        marginTop: 3,
+    },
+    filterRow: {
+        flexDirection: 'row',
+        gap: 8,
+        marginBottom: 14,
+    },
+    filterButton: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 6,
+        borderRadius: 20,
+        backgroundColor: COLORS.white,
+        borderWidth: 1,
+        borderColor: COLORS.lightGray,
+    },
+    filterButtonActive: {
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
+    },
+    filterButtonText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: COLORS.dark,
+    },
+    filterButtonTextActive: {
+        color: COLORS.white,
     },
     courierId: {
         fontWeight: 'bold',
@@ -540,15 +658,20 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     qtyInput: {
-        width: 60,
-        height: 36,
+        width: 72,
+        height: 44,
         borderWidth: 1,
-        borderColor: COLORS.lightGray,
+        borderColor: COLORS.primary,
         borderRadius: 6,
         textAlign: 'center',
-        fontSize: 14,
+        textAlignVertical: 'center',
+        includeFontPadding: false,
+        paddingHorizontal: 4,
+        paddingVertical: 0,
+        fontSize: 16,
         fontWeight: '600',
         color: COLORS.dark,
+        backgroundColor: COLORS.white,
     },
     footer: {
         backgroundColor: COLORS.white,

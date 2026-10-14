@@ -4,7 +4,7 @@ import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, Linking } 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -60,6 +60,7 @@ const LOCATION_DISCLOSURE_SEEN_KEY = 'location_disclosure_seen';
 // ============================================
 
 function TechnicianNavigator() {
+    const insets = useSafeAreaInsets();
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
@@ -85,8 +86,8 @@ function TechnicianNavigator() {
                 tabBarStyle: {
                     backgroundColor: COLORS.white,
                     borderTopColor: COLORS.lightGray,
-                  height: 60,
-                  paddingBottom: 0,
+                    height: 60 + insets.bottom,
+                    paddingBottom: insets.bottom,
                 },
                 tabBarItemStyle: {
                   marginVertical: 4,
@@ -212,6 +213,7 @@ function RequestsScreenStack() {
 
 function AdminNavigator() {
     const { state } = useContext(AuthContext);
+    const insets = useSafeAreaInsets();
     const isSpareAdmin = state?.user?.username === 'SpareAdmin';
 
     return (
@@ -237,8 +239,8 @@ function AdminNavigator() {
                 tabBarStyle: {
                     backgroundColor: COLORS.white,
                     borderTopColor: COLORS.lightGray,
-                  height: 60,
-                  paddingBottom: 0,
+                    height: 60 + insets.bottom,
+                    paddingBottom: insets.bottom,
                 },
                 tabBarItemStyle: {
                   marginVertical: 4,

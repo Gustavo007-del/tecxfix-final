@@ -324,12 +324,14 @@ def my_stock(request):
                 {'error': 'No stock data found for this technician'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+        technician_name = " ".join(tech_stock.sheet_technician_name.split())
         
         # Read from the local DB snapshot (synced from the "Technician Stocks"
         # worksheet) instead of making a synchronous Google Sheets fetch.
         snapshot_rows = list(
             TechnicianStockSnapshot.objects.filter(
-                technician_name__iexact=tech_stock.sheet_technician_name
+                technician_name__iexact=technician_name
             )
         )
         
@@ -347,9 +349,9 @@ def my_stock(request):
             # live Google fetch so existing deployments keep working.
             logger.warning(
                 "Technician stock snapshot empty for '%s' - falling back to Google Sheets",
-                tech_stock.sheet_technician_name,
+                technician_name,
             )
-            stock_data = sheets_sync.get_technician_stock(tech_stock.sheet_technician_name)
+            stock_data = sheets_sync.get_technician_stock(technician_name)
         
         # Apply filters
         search = request.query_params.get('search', '').lower()

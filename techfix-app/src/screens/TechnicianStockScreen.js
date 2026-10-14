@@ -1,31 +1,28 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View, Text, FlatList, TouchableOpacity, StyleSheet,
     ActivityIndicator, RefreshControl, Alert, TextInput  
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AuthContext } from '../context/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
 import client, { API_ENDPOINTS } from '../api/client';
 import { syncTechnicianStockSnapshot } from '../api/snapshotSync';
 import { COLORS } from '../theme/colors';
 
 export default function TechnicianStockScreen({ navigation }) {
     const insets = useSafeAreaInsets();
-    const { userToken } = useContext(AuthContext);
     const [stock, setStock] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     
-    useEffect(() => {
-        fetchMyStock();
-    }, []);
-    
-    const fetchMyStock = async () => {
+    const refreshMyStock = useCallback(async () => {
+        setRefreshing(true);
         try {
+            // Refresh the server snapshot first, then read the refreshed stock rows.
+            await syncTechnicianStockSnapshot();
             const response = await client.get(API_ENDPOINTS.MY_STOCK);
-            
             // Handle response format
             const stockData = response.data.data || response.data;
             setStock(Array.isArray(stockData) ? stockData : []);
@@ -35,13 +32,13 @@ export default function TechnicianStockScreen({ navigation }) {
             setLoading(false);
             setRefreshing(false);
         }
-    };
-    
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await syncTechnicianStockSnapshot();
-        await fetchMyStock();
-    };
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            refreshMyStock();
+        }, [refreshMyStock])
+    );
     
     // Filter stock based on search
     const filteredStock = stock.filter(item =>
@@ -99,7 +96,7 @@ export default function TechnicianStockScreen({ navigation }) {
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
-                        onRefresh={onRefresh}
+                        onRefresh={refreshMyStock}
                         tintColor={COLORS.primary}
                     />
                 }

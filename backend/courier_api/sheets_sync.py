@@ -331,20 +331,31 @@ class SheetsSync:
 
         data_rows = self._get_tech_stock_sheet_rows()
 
-        stock = []
+        stock_by_spare_id = {}
 
         for r in data_rows:
             if len(r) < 4 or not r[1]:
                 continue
 
-            if r[3].strip().lower() != technician_name.strip().lower():
+            sheet_technician_name = " ".join(r[3].split())
+            mapped_technician_name = " ".join(technician_name.split())
+            if sheet_technician_name.casefold() != mapped_technician_name.casefold():
                 continue
 
-            stock.append({
-                "spare_id": r[1].strip(),
-                "name": r[0].strip(),
-                "qty": safe_int(r[2]),
-            })
+            spare_id = r[1].strip()
+            key = spare_id.casefold()
+            if key in stock_by_spare_id:
+                stock_by_spare_id[key]["qty"] += safe_int(r[2])
+                if r[0].strip():
+                    stock_by_spare_id[key]["name"] = r[0].strip()
+            else:
+                stock_by_spare_id[key] = {
+                    "spare_id": spare_id,
+                    "name": r[0].strip(),
+                    "qty": safe_int(r[2]),
+                }
+
+        stock = list(stock_by_spare_id.values())
 
         duration = time.time() - start_time
         memory_after = process.memory_info().rss / 1024 / 1024

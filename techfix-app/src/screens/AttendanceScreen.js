@@ -297,119 +297,111 @@ export default function AttendanceScreen({ navigation }) {
 
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>Attendance</Text>
-            <Text style={styles.headerSubtitle}>{state.user?.first_name || 'Tech'}</Text>
+          <View style={styles.greetingBlock}>
+            <Text style={styles.headerEyebrow}>TECHFIX FIELD APP</Text>
+            <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">
+              Welcome back, {state.user?.first_name || state.user?.username || 'Technician'}
+            </Text>
           </View>
-          <TouchableOpacity onPress={handleLogout}>
-            <MaterialIcons name="logout" size={28} color={COLORS.primary} />
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton} accessibilityLabel="Log out">
+            <MaterialIcons name="logout" size={21} color={COLORS.dark} />
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.refreshReminderTop}>
-          Swipe down to refresh and get the latest data.
-        </Text>
-
-        {/* Status Card */}
         <View style={styles.statusCard}>
-          <Text style={styles.statusTitle}>Today's Status</Text>
-
-          {isCheckedIn ? (
-            <View style={styles.statusRow}>
-              <MaterialIcons name="check-circle" size={24} color={COLORS.success} />
-              <View style={styles.statusInfo}>
-                <Text style={styles.statusLabel}>Check-In Time (IST)</Text>
-                <Text style={styles.statusValue}>
-                  {formatUtcTimeToLocalIST(isCheckedIn)}
-                </Text>
-              </View>
+          <View style={styles.statusCardTop}>
+            <View style={styles.statusIconWrap}>
+              <MaterialIcons name={isCheckedIn ? 'verified' : 'schedule'} size={23} color={COLORS.primary} />
             </View>
-          ) : (
-            <Text style={styles.noDataText}>Not checked in yet</Text>
-          )}
-
-          {isCheckedOut && (
-            <View style={styles.statusRow}>
-              <MaterialIcons name="check-circle" size={24} color={COLORS.danger} />
-              <View style={styles.statusInfo}>
-                <Text style={styles.statusLabel}>Check-Out Time (IST)</Text>
-                <Text style={styles.statusValue}>
-                  {formatUtcTimeToLocalIST(isCheckedOut)}
-                </Text>
-              </View>
+            <View style={[styles.statusPill, isCheckedOut ? styles.statusPillComplete : isCheckedIn ? styles.statusPillActive : styles.statusPillPending]}>
+              <View style={[styles.statusDot, isCheckedOut ? styles.statusDotComplete : isCheckedIn ? styles.statusDotActive : styles.statusDotPending]} />
+              <Text style={styles.statusPillText}>{isCheckedOut ? 'COMPLETED' : isCheckedIn ? 'ON SHIFT' : 'NOT STARTED'}</Text>
             </View>
-          )}
+          </View>
+          <Text style={styles.statusTitle}>{isCheckedOut ? 'Day complete' : isCheckedIn ? "You're on the clock" : 'Ready to start?'}</Text>
+          <Text style={styles.statusDescription}>Your attendance for today</Text>
+
+          <View style={styles.timeRows}>
+            <TouchableOpacity
+              style={[styles.timeAction, isCheckedIn && styles.timeActionDone]}
+              onPress={handleCheckIn}
+              disabled={Boolean(isCheckedIn) || checkingIn || checkingOut}
+              activeOpacity={0.78}
+              accessibilityRole="button"
+              accessibilityLabel={isCheckedIn ? `Checked in at ${formatUtcTimeToLocalIST(isCheckedIn)}` : 'Check in'}
+            >
+              <View style={[styles.timeActionIcon, isCheckedIn && styles.timeActionIconDone]}>
+                {checkingIn ? <ActivityIndicator size="small" color={COLORS.primary} /> : <MaterialIcons name="login" size={18} color={isCheckedIn ? '#66D39A' : COLORS.primary} />}
+              </View>
+              <View style={styles.timeActionCopy}>
+                <Text style={styles.timeLabel}>Check in</Text>
+                <Text style={styles.timeValue}>{isCheckedIn ? formatUtcTimeToLocalIST(isCheckedIn) : 'Tap to start your day'}</Text>
+              </View>
+              {!isCheckedIn && <MaterialIcons name="arrow-forward" size={19} color={COLORS.primary} />}
+              {Boolean(isCheckedIn) && <MaterialIcons name="check-circle" size={19} color="#66D39A" />}
+            </TouchableOpacity>
+            <View style={styles.timeDivider} />
+            <TouchableOpacity
+              style={[styles.timeAction, (!isCheckedIn || isCheckedOut) && styles.timeActionDisabled]}
+              onPress={handleCheckOut}
+              disabled={!isCheckedIn || Boolean(isCheckedOut) || checkingIn || checkingOut}
+              activeOpacity={0.78}
+              accessibilityRole="button"
+              accessibilityLabel={isCheckedOut ? `Checked out at ${formatUtcTimeToLocalIST(isCheckedOut)}` : 'Check out'}
+            >
+              <View style={[styles.timeActionIcon, isCheckedOut && styles.timeActionIconDone]}>
+                {checkingOut ? <ActivityIndicator size="small" color={COLORS.primary} /> : <MaterialIcons name="logout" size={18} color={isCheckedOut ? '#66D39A' : isCheckedIn ? COLORS.primary : '#8993A0'} />}
+              </View>
+              <View style={styles.timeActionCopy}>
+                <Text style={styles.timeLabel}>Check out</Text>
+                <Text style={styles.timeValue}>{isCheckedOut ? formatUtcTimeToLocalIST(isCheckedOut) : isCheckedIn ? 'Tap to end your day' : 'Available after check-in'}</Text>
+              </View>
+              {isCheckedIn && !isCheckedOut && <MaterialIcons name="arrow-forward" size={19} color={COLORS.primary} />}
+              {Boolean(isCheckedOut) && <MaterialIcons name="check-circle" size={19} color="#66D39A" />}
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Action Buttons */}
         <View style={styles.buttonContainer}>
-          {!isCheckedIn ? (
-            <TouchableOpacity
-              style={[styles.button, styles.checkInButton, checkingIn && styles.disabledButton]}
-              onPress={handleCheckIn}
-              disabled={checkingIn}
-            >
-              {checkingIn ? (
-                <ActivityIndicator color={COLORS.dark} />
-              ) : (
-                <>
-                  <MaterialIcons name="check-circle" size={24} color={COLORS.dark} />
-                  <Text style={styles.buttonText}>Check In</Text>
-                </>
-              )}
+          <Text style={styles.sectionEyebrow}>YOUR DAY</Text>
+          <Text style={styles.sectionTitle}>Quick actions</Text>
+          <View style={styles.actionGrid}>
+            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('ReceiveCourierStack')}>
+              <View style={[styles.actionIcon, styles.iconYellow]}><MaterialIcons name="local-shipping" size={21} color="#7A5A00" /></View>
+              <View style={styles.actionCopy}>
+                <Text style={styles.actionTitle}>Couriers</Text>
+                <Text style={styles.actionSubtitle}>Accept incoming couriers</Text>
+              </View>
             </TouchableOpacity>
-          ) : !isCheckedOut ? (
-            <TouchableOpacity
-              style={[styles.button, styles.checkOutButton, checkingOut && styles.disabledButton]}
-              onPress={handleCheckOut}
-              disabled={checkingOut}
-            >
-              {checkingOut ? (
-                <ActivityIndicator color={COLORS.white} />
-              ) : (
-                <>
-                  <MaterialIcons name="check-circle" size={24} color={COLORS.white} />
-                  <Text style={[styles.buttonText, { color: COLORS.white }]}>Check Out</Text>
-                </>
-              )}
+            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('Profile')}>
+              <View style={[styles.actionIcon, styles.iconGreen]}><MaterialIcons name="person-outline" size={21} color="#26724F" /></View>
+              <View style={styles.actionCopy}>
+                <Text style={styles.actionTitle}>My profile</Text>
+                <Text style={styles.actionSubtitle}>Personal details</Text>
+              </View>
             </TouchableOpacity>
-          ) : (
-            <View style={[styles.button, styles.completedButton]}>
-              <MaterialIcons name="task-alt" size={24} color={COLORS.white} />
-              <Text style={[styles.buttonText, { color: COLORS.white }]}>Day Completed</Text>
-            </View>
-          )}
-          <TouchableOpacity
-            style={[styles.button, styles.courierButton]}
-            onPress={() => navigation.navigate('CourierHistory')}
-          >
-            <MaterialIcons name="local-shipping" size={24} color={COLORS.white} />
-            <Text style={[styles.buttonText, { color: COLORS.white, marginLeft: 8 }]}>View My Couriers</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, styles.profileButton]}
-            onPress={() => navigation.navigate('Profile')}
-          >
-            <MaterialIcons name="person" size={24} color={COLORS.white} />
-            <Text style={[styles.buttonText, { color: COLORS.white, marginLeft: 8 }]}>My Profile</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, styles.saleButton]}
-            onPress={() => navigation.navigate('Sale')}
-          >
-            <MaterialIcons name="sell" size={24} color={COLORS.white} />
-            <Text style={[styles.buttonText, { color: COLORS.white, marginLeft: 8 }]}>New Sale</Text>
-          </TouchableOpacity>
-          <Text style={styles.refreshReminderBottom}>
-            Pull down anytime to sync the latest attendance, tracking, and stock information.
-          </Text>
+            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('Sale')}>
+              <View style={[styles.actionIcon, styles.iconLavender]}><MaterialIcons name="point-of-sale" size={21} color="#6850A2" /></View>
+              <View style={styles.actionCopy}>
+                <Text style={styles.actionTitle}>New sale</Text>
+                <Text style={styles.actionSubtitle}>Create a sale</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('CourierHistory')}>
+              <View style={[styles.actionIcon, styles.iconBlue]}><MaterialIcons name="receipt-long" size={21} color="#315F91" /></View>
+              <View style={styles.actionCopy}>
+                <Text style={styles.actionTitle}>Courier history</Text>
+                <Text style={styles.actionSubtitle}>Records and PDFs</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.refreshHint}>Pull down to refresh attendance and stock</Text>
         </View>
       </ScrollView>
     </View>
@@ -420,11 +412,11 @@ export default function AttendanceScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.light,
+    backgroundColor: '#F4F6F8',
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 80,
+    paddingBottom: 36,
   },
   centerContent: {
     flex: 1,
@@ -432,70 +424,148 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    backgroundColor: COLORS.dark,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 20,
+    paddingHorizontal: 22,
+    paddingTop: 8,
+    paddingBottom: 20,
+  },
+  greetingBlock: { flex: 1, minWidth: 0, marginRight: 12 },
+  headerEyebrow: {
+    fontSize: 10,
+    letterSpacing: 1.8,
+    fontWeight: '800',
+    color: '#8A929D',
+    marginBottom: 4,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: COLORS.primary,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#202630',
+    letterSpacing: -0.3,
   },
-  headerSubtitle: {
-    fontSize: 14,
-    color: COLORS.light,
-    marginTop: 4,
+  logoutButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: '#E8EBEF',
   },
   statusCard: {
-    backgroundColor: COLORS.white,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: '#202630',
+    marginHorizontal: 18,
+    marginTop: 5,
+    borderRadius: 20,
+    padding: 18,
+    shadowColor: '#202630',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 6,
   },
-  refreshReminderTop: {
-    fontSize: 12,
-    color: COLORS.gray,
-    textAlign: 'center',
-    marginTop: 14,
-    marginBottom: 2,
-    paddingHorizontal: 16,
-  },
-  statusTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-    marginBottom: 16,
-  },
-  statusRow: {
+  statusCardTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
+    justifyContent: 'space-between',
+    marginBottom: 15,
   },
-  statusInfo: {
-    marginLeft: 12,
+  statusIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: 'rgba(244,208,63,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 20,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    gap: 7,
+  },
+  statusPillPending: { backgroundColor: 'rgba(255,255,255,0.10)' },
+  statusPillActive: { backgroundColor: 'rgba(67,190,129,0.16)' },
+  statusPillComplete: { backgroundColor: 'rgba(244,208,63,0.16)' },
+  statusDot: { width: 7, height: 7, borderRadius: 4 },
+  statusDotPending: { backgroundColor: '#AAB2BC' },
+  statusDotActive: { backgroundColor: '#54D397' },
+  statusDotComplete: { backgroundColor: COLORS.primary },
+  statusPillText: {
+    color: '#E9EDF2',
+    fontSize: 10,
+    letterSpacing: 1,
+    fontWeight: '800',
+  },
+  statusTitle: {
+    fontSize: 21,
+    fontWeight: '800',
+    color: COLORS.white,
+    letterSpacing: -0.4,
+  },
+  statusDescription: {
+    fontSize: 13,
+    color: '#B4BDC8',
+    marginTop: 3,
+    marginBottom: 14,
+  },
+  timeRows: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 15,
+    paddingHorizontal: 10,
+  },
+  timeAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 9,
+    gap: 10,
+  },
+  timeActionDone: { opacity: 0.92 },
+  timeActionDisabled: { opacity: 0.62 },
+  timeActionIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: 'rgba(244,208,63,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timeActionIconDone: { backgroundColor: 'rgba(84,211,151,0.12)' },
+  timeActionCopy: { flex: 1 },
+  timeLabel: {
     flex: 1,
-  },
-  statusLabel: {
-    fontSize: 12,
-    color: COLORS.gray,
+    fontSize: 13,
     fontWeight: '500',
+    color: '#B4BDC8',
   },
-  statusValue: {
-    fontSize: 14,
-    color: COLORS.dark,
-    fontWeight: '600',
-    marginTop: 4,
+  timeValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.white,
+    fontVariant: ['tabular-nums'],
+  },
+  timeDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+  },
+  sectionEyebrow: {
+    fontSize: 10,
+    letterSpacing: 1.7,
+    color: '#929BA7',
+    fontWeight: '800',
+    marginBottom: 5,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    color: '#202630',
+    fontWeight: '800',
+    letterSpacing: -0.3,
+    marginBottom: 13,
   },
   noDataText: {
     fontSize: 14,
@@ -504,67 +574,59 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   buttonContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 24,
+    paddingHorizontal: 18,
+    paddingTop: 22,
   },
-  button: {
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
+  actionGrid: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
-  disabledButton: {
-    opacity: 0.6,
-  },
-  checkInButton: {
-    backgroundColor: COLORS.primary,
-  },
-  checkOutButton: {
-    backgroundColor: COLORS.danger,
-  },
-  completedButton: {
-    backgroundColor: COLORS.success,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.dark,
-    marginLeft: 12,
-  },
-  courierButton: {
-    backgroundColor: COLORS.secondary,
-    marginTop: 12,
+  actionCard: {
+    width: '48.2%',
+    height: 104,
+    backgroundColor: COLORS.white,
+    borderRadius: 18,
+    padding: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E9EDF1',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 9,
   },
-  profileButton: {
-    backgroundColor: COLORS.info || '#2196F3',
-    marginTop: 12,
-    flexDirection: 'row',
+  actionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 0,
   },
-  saleButton: {
-    backgroundColor: COLORS.warning || '#FF9800',
-    marginTop: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  refreshReminderBottom: {
+  iconYellow: { backgroundColor: '#FFF4C2' },
+  iconBlue: { backgroundColor: '#E8F1FC' },
+  iconGreen: { backgroundColor: '#E6F5EC' },
+  iconLavender: { backgroundColor: '#F0EBFA' },
+  actionCopy: { flex: 1, minWidth: 0 },
+  actionTitle: {
     fontSize: 15,
-    color: COLORS.dark,
-    fontWeight: '600',
+    lineHeight: 18,
+    color: '#202630',
+    fontWeight: '800',
+    marginBottom: 3,
+  },
+  actionSubtitle: {
+    fontSize: 13,
+    lineHeight: 15,
+    color: '#4F5B67',
+    fontWeight: '500',
+  },
+  refreshHint: {
+    marginTop: 2,
+    paddingBottom: 8,
     textAlign: 'center',
-    lineHeight: 22,
-    marginTop: 22,
-    paddingHorizontal: 16,
+    color: '#87909B',
+    fontSize: 11,
+    fontWeight: '500',
   },
 });
