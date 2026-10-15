@@ -23,6 +23,7 @@ const API_ENDPOINTS = {
   TECHNICIANS_FOR_COURIER: '/technicians-for-courier/',
   COURIER_PDF: (id) => `/courier/${id}/pdf/`,
   MY_COURIER_HISTORY: '/my-courier-history/',
+  PUSH_DEVICE_TOKEN: '/push-device-token/',
   
   // Technician
   TECHNICIAN_LIST: '/technicians/',

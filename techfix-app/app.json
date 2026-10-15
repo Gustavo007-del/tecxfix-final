@@ -49,6 +49,12 @@
         }
       ],
       "@react-native-community/datetimepicker",
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "couriers"
+        }
+      ],
       "expo-router",
       "expo-web-browser",
       "expo-font"

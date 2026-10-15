@@ -1,6 +1,7 @@
 // E:\study\techfix\techfix-app\src\context\AuthContext.js
 import React, { createContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { unregisterCourierPushNotifications } from '../services/pushNotifications';
 
 
 export const AuthContext = createContext();
@@ -72,6 +73,10 @@ export const AuthProvider = ({ children }) => {
 
 
   const signOut = async () => {
+    try {
+      await unregisterCourierPushNotifications();
+    } catch (e) {
+    }
     try {
       await AsyncStorage.removeItem('access_token');
       await AsyncStorage.removeItem('refresh_token');

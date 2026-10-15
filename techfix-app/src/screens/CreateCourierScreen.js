@@ -22,6 +22,7 @@ export default function CreateCourierScreen({ navigation }) {
     const [availableStock, setAvailableStock] = useState([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [submitProgress, setSubmitProgress] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
     const [showTechModal, setShowTechModal] = useState(false);
     const [showItemModal, setShowItemModal] = useState(false);
@@ -43,6 +44,21 @@ export default function CreateCourierScreen({ navigation }) {
         const timeout = setTimeout(() => fetchCompanyStock(1, false), 300);
         return () => clearTimeout(timeout);
     }, [showItemModal, selectedItem, searchQuery]);
+
+    useEffect(() => {
+        if (!submitting) return undefined;
+
+        const startedAt = Date.now();
+        setSubmitProgress(0);
+        const timer = setInterval(() => {
+            // The API does not expose server-side progress, so show elapsed-time
+            // progress as an estimate and leave room for the actual response.
+            const estimate = Math.min(90, Math.floor(((Date.now() - startedAt) / 40000) * 90));
+            setSubmitProgress(estimate);
+        }, 500);
+
+        return () => clearInterval(timer);
+    }, [submitting]);
 
     const fetchCompanyStock = async (pageNumber = 1, append = false) => {
         setStockLoading(true);
@@ -179,7 +195,21 @@ export default function CreateCourierScreen({ navigation }) {
         };
 
 
-        const response = await client.post(API_ENDPOINTS.COURIER_CREATE, payload);
+        // Google Sheets sync can make courier creation take longer than the
+        // shared 10-second API timeout. Keep this request alive long enough
+        // for the backend to return its result instead of showing a false error.
+        const response = await client.post(API_ENDPOINTS.COURIER_CREATE, payload, {
+            timeout: 45000,
+        });
+
+        if (response.data?.data?.stock_sync_status === 'failed') {
+            Alert.alert(
+                'Courier stock update failed',
+                'The courier is recorded, but the stock sheet update failed. Check Courier History for details. Do not create it again.',
+                [{ text: 'Open Courier History', onPress: () => navigation.navigate('AllCouriers') }, { text: 'OK' }]
+            );
+            return;
+        }
         
         
         const courierId = response.data.data?.id;
@@ -206,7 +236,19 @@ export default function CreateCourierScreen({ navigation }) {
             },
         ]);
     } catch (error) {
-        
+        const timedOut = error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT' || /timeout/i.test(error.message || '');
+        if (timedOut) {
+            Alert.alert(
+                'Courier is still processing',
+                'The app stopped waiting, but the server may still be updating the stock sheets. You can continue using the app. Check Courier History for the final status, and do not create this courier again.',
+                [
+                    { text: 'Open Courier History', onPress: () => navigation.navigate('AllCouriers') },
+                    { text: 'Back to Dashboard', style: 'cancel', onPress: () => navigation.goBack() },
+                ]
+            );
+            return;
+        }
+
         const errorMsg = error.response?.data?.error || 
                        JSON.stringify(error.response?.data) ||
                        error.message || 
@@ -586,6 +628,23 @@ export default function CreateCourierScreen({ navigation }) {
             </ScrollView>
             
             <View style={styles.footer}>
+                {submitting && (
+                    <View style={styles.submissionProgress}>
+                        <View style={styles.submissionProgressHeader}>
+                            <Text style={styles.submissionProgressLabel}>Sending courier and updating stock…</Text>
+                            <Text style={styles.submissionProgressPercent}>{submitProgress}%</Text>
+                        </View>
+                        <View
+                            style={styles.submissionProgressTrack}
+                            accessibilityRole="progressbar"
+                            accessibilityLabel="Estimated courier creation progress"
+                            accessibilityValue={{ min: 0, max: 100, now: submitProgress }}
+                        >
+                            <View style={[styles.submissionProgressFill, { width: `${submitProgress}%` }]} />
+                        </View>
+                        <Text style={styles.submissionProgressHint}>Estimated progress; waiting for Google Sheets to finish.</Text>
+                    </View>
+                )}
                 {step > 1 && (
                     <TouchableOpacity
                         style={styles.secondaryButton}
@@ -939,6 +998,45 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.white,
         borderTopWidth: 1,
         borderTopColor: COLORS.lightGray,
+        flexWrap: 'wrap',
+    },
+    submissionProgress: {
+        width: '100%',
+        paddingBottom: 4,
+    },
+    submissionProgressHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 7,
+    },
+    submissionProgressLabel: {
+        flex: 1,
+        fontSize: 12,
+        fontWeight: '600',
+        color: COLORS.dark,
+        marginRight: 8,
+    },
+    submissionProgressPercent: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: COLORS.primary,
+    },
+    submissionProgressTrack: {
+        height: 7,
+        overflow: 'hidden',
+        borderRadius: 4,
+        backgroundColor: COLORS.lightGray,
+    },
+    submissionProgressFill: {
+        height: '100%',
+        borderRadius: 4,
+        backgroundColor: COLORS.primary,
+    },
+    submissionProgressHint: {
+        marginTop: 5,
+        fontSize: 10,
+        color: COLORS.gray,
     },
     primaryButton: {
         flex: 1,

@@ -18,12 +18,13 @@ from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.http import FileResponse
 
-from .models import CourierTransaction, TechnicianStock
+from .models import CourierTransaction, TechnicianStock, PushDeviceToken
 from .serializers import (
     CourierTransactionSerializer, CourierCreateSerializer,
     CourierReceiveSerializer, TechnicianStockSerializer
 )
 from .sheets_sync import SheetsSync
+from .push_notifications import send_courier_push_notifications
 from .pdf_generator import generate_courier_pdf
 from api.db_retry import database_retry
 from api.models import CompanyStock, TechnicianStockSnapshot
@@ -215,6 +216,12 @@ def create_courier(request):
             courier.stock_sync_status = 'complete'
             courier.stock_sync_error = ''
             courier.save(update_fields=['status', 'received_time', 'stock_sync_status', 'stock_sync_error', 'updated_at'])
+            try:
+                send_courier_push_notifications(courier)
+            except Exception:
+                # Push delivery is best-effort; it must not undo a successful
+                # courier creation or technician stock sync.
+                logger.exception("Courier push notification failed for %s", courier.courier_id)
         except Exception as sync_error:
             logger.exception("Stock sheet sync failed for courier %s", courier.courier_id)
             courier.stock_sync_status = 'failed'
@@ -241,6 +248,40 @@ def create_courier(request):
             {'error': f"Server error: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def push_device_token(request):
+    """Register or remove the authenticated user's Expo push token."""
+    token = request.data.get('token')
+    if not isinstance(token, str):
+        return Response({'error': 'A push token is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    token = token.strip()
+
+    if request.method == 'DELETE':
+        deleted, _ = PushDeviceToken.objects.filter(
+            user=request.user,
+            token=token,
+        ).delete()
+        return Response({'success': True, 'removed': bool(deleted)}, status=status.HTTP_200_OK)
+
+    platform = request.data.get('platform')
+    valid_token_prefixes = ('ExpoPushToken[', 'ExponentPushToken[')
+    if (
+        not token.startswith(valid_token_prefixes)
+        or not token.endswith(']')
+        or len(token) > 255
+    ):
+        return Response({'error': 'Invalid Expo push token.'}, status=status.HTTP_400_BAD_REQUEST)
+    if platform not in dict(PushDeviceToken.PLATFORM_CHOICES):
+        return Response({'error': 'Platform must be android or ios.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    PushDeviceToken.objects.update_or_create(
+        token=token,
+        defaults={'user': request.user, 'platform': platform},
+    )
+    return Response({'success': True}, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

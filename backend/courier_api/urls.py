@@ -19,6 +19,7 @@ urlpatterns = [
     # Courier status
     path('pending-couriers/', views.pending_couriers, name='pending_couriers'),
     path('mark-received/<str:courier_id>/', views.mark_received, name='mark_received'),
+    path('push-device-token/', views.push_device_token, name='push_device_token'),
     path("health/", health, name="health"),
 
     

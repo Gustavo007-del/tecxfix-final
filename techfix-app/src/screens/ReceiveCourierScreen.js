@@ -254,6 +254,13 @@ export default function ReceiveCourierScreen({ route, navigation }) {
                                 <Text style={styles.courierMeta}>Sent: {formatCourierDate(item.sent_time)}</Text>
                                 {item.received_time ? <Text style={styles.courierMeta}>Received: {formatCourierDate(item.received_time)}</Text> : null}
                                 <Text style={styles.courierMeta}>Items: {item.items?.length || 0}</Text>
+                                {item.stock_sync_status === 'failed' ? (
+                                    <Text style={[styles.courierMeta, styles.stockSyncFailed]}>Stock sheet update failed — contact admin</Text>
+                                ) : item.stock_sync_status === 'complete' ? (
+                                    <Text style={[styles.courierMeta, styles.stockSyncComplete]}>Stock sheet updated</Text>
+                                ) : item.stock_sync_status ? (
+                                    <Text style={[styles.courierMeta, styles.stockSyncPending]}>Stock sheet update in progress</Text>
+                                ) : null}
                             </TouchableOpacity>
                         )}
                         keyExtractor={item => item.id.toString()}
@@ -490,6 +497,18 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '500',
         marginTop: 3,
+    },
+    stockSyncFailed: {
+        color: '#B42318',
+        fontWeight: '700',
+    },
+    stockSyncComplete: {
+        color: '#16803C',
+        fontWeight: '600',
+    },
+    stockSyncPending: {
+        color: '#9A6700',
+        fontWeight: '600',
     },
     filterRow: {
         flexDirection: 'row',

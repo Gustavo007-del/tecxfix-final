@@ -1,12 +1,13 @@
 ﻿// E:\study\techfix\techfix-app\App.js
 import React, { useEffect, useContext, useState } from 'react';
 import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
 import { COLORS } from './src/theme/colors';
@@ -16,6 +17,10 @@ import StockOrderedScreen from './src/screens/StockOrderedScreen';
 import OrderHistoryScreen from './src/screens/OrderHistoryScreen';
 import ReceivedHistoryScreen from './src/screens/ReceivedHistoryScreen';
 import TechCourierScreen from './src/screens/TechCourierScreen';
+import {
+  isCourierPushNotification,
+  registerForCourierPushNotifications,
+} from './src/services/pushNotifications';
 
 // Auth Screens
 import LoginChoiceScreen from './src/screens/LoginChoiceScreen';
@@ -52,6 +57,7 @@ import SalesHistoryScreen from './src/screens/SalesHistoryScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+const navigationRef = createNavigationContainerRef();
 const LOCATION_DISCLOSURE_SEEN_KEY = 'location_disclosure_seen';
 
 // ============================================
@@ -341,6 +347,38 @@ function AuthNavigator() {
 function RootNavigator() {
     const { state } = useContext(AuthContext);
 
+    useEffect(() => {
+        if (state.role !== 'technician' || !state.userToken) return undefined;
+
+        let active = true;
+        const openCourierHistory = (response) => {
+            if (!active || !isCourierPushNotification(response)) return;
+            if (navigationRef.isReady()) {
+                navigationRef.navigate('ReceiveCourierStack');
+            }
+        };
+
+        registerForCourierPushNotifications().catch((error) => {
+            console.warn('Could not register courier push notifications:', error?.message || error);
+        });
+
+        const responseSubscription = Notifications.addNotificationResponseReceivedListener(
+            openCourierHistory
+        );
+        Notifications.getLastNotificationResponseAsync()
+            .then((response) => {
+                if (!response) return;
+                openCourierHistory(response);
+                Notifications.clearLastNotificationResponseAsync?.();
+            })
+            .catch(() => {});
+
+        return () => {
+            active = false;
+            responseSubscription.remove();
+        };
+    }, [state.role, state.userToken]);
+
     if (state.isLoading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.white }}>
@@ -350,7 +388,7 @@ function RootNavigator() {
     }
 
     return (
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
             {state.userToken == null ? (
                 <AuthNavigator />
             ) : state.role === 'technician' ? (

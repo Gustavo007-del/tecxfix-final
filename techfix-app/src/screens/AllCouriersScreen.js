@@ -32,9 +32,15 @@ export default function AllCouriersScreen({ navigation }) {
         fetchCouriers();
     }, [filter]);
 
-    const fetchCouriers = async () => {
+    useEffect(() => {
+        if (!couriers.some(courier => ['pending', 'in_progress'].includes(courier.stock_sync_status))) return undefined;
+        const timer = setInterval(() => fetchCouriers(true), 5000);
+        return () => clearInterval(timer);
+    }, [couriers, filter]);
+
+    const fetchCouriers = async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
 
             const params = filter !== 'all' ? `?status=${filter}` : '';
             const response = await client.get(
@@ -66,10 +72,12 @@ export default function AllCouriersScreen({ navigation }) {
                 errorMessage = 'Network error. Please check your connection.';
             }
             
-            Alert.alert('Error', errorMessage);
-            setCouriers([]);
+            if (!silent) {
+                Alert.alert('Error', errorMessage);
+                setCouriers([]);
+            }
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     };
 
@@ -315,6 +323,25 @@ export default function AllCouriersScreen({ navigation }) {
                             {getItemCount(item.items)} items
                         </Text>
                     </View>
+
+                    {item.stock_sync_status && (
+                        <View style={styles.stockSyncRow}>
+                            <MaterialIcons
+                                name={item.stock_sync_status === 'failed' ? 'error-outline' : item.stock_sync_status === 'complete' ? 'check-circle' : 'sync'}
+                                size={16}
+                                color={item.stock_sync_status === 'failed' ? '#B42318' : item.stock_sync_status === 'complete' ? '#16803C' : '#9A6700'}
+                            />
+                            <Text style={[
+                                styles.stockSyncText,
+                                item.stock_sync_status === 'failed' && styles.stockSyncFailed,
+                            ]}>
+                                {item.stock_sync_status === 'failed' ? 'Stock update failed — review required' : item.stock_sync_status === 'complete' ? 'Stock sheets updated' : 'Stock sheet update in progress'}
+                            </Text>
+                        </View>
+                    )}
+                    {item.stock_sync_status === 'failed' && item.stock_sync_error ? (
+                        <Text style={styles.stockSyncError}>{item.stock_sync_error}</Text>
+                    ) : null}
 
                     {totalAmount !== null && (
                         <View style={styles.infoRow}>
@@ -652,6 +679,29 @@ const styles = StyleSheet.create({
     cardBody: {
         padding: 16,
         gap: 8,
+    },
+    stockSyncRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 7,
+        marginTop: 2,
+    },
+    stockSyncText: {
+        flex: 1,
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#16803C',
+    },
+    stockSyncFailed: {
+        color: '#B42318',
+    },
+    stockSyncError: {
+        fontSize: 11,
+        lineHeight: 16,
+        color: '#7A271A',
+        backgroundColor: '#FEF3F2',
+        borderRadius: 6,
+        padding: 8,
     },
     qtyRow: {
         flexDirection: 'row',

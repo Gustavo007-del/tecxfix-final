@@ -14,6 +14,27 @@ class SheetsApiRateLimitState(models.Model):
     def __str__(self):
         return f"Google Sheets API slot after {self.next_allowed_at}"
 
+
+class PushDeviceToken(models.Model):
+    """Expo push token registered by an authenticated app installation."""
+    PLATFORM_CHOICES = [
+        ('android', 'Android'),
+        ('ios', 'iOS'),
+    ]
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='push_device_tokens',
+    )
+    token = models.CharField(max_length=255, unique=True)
+    platform = models.CharField(max_length=12, choices=PLATFORM_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username} ({self.platform})"
+
 class TechnicianStock(models.Model):
     """
     Metadata for technician stock.
