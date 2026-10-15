@@ -372,13 +372,6 @@ export default function AttendanceScreen({ navigation }) {
           <Text style={styles.sectionEyebrow}>YOUR DAY</Text>
           <Text style={styles.sectionTitle}>Quick actions</Text>
           <View style={styles.actionGrid}>
-            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('ReceiveCourierStack')}>
-              <View style={[styles.actionIcon, styles.iconYellow]}><MaterialIcons name="local-shipping" size={21} color="#7A5A00" /></View>
-              <View style={styles.actionCopy}>
-                <Text style={styles.actionTitle}>Couriers</Text>
-                <Text style={styles.actionSubtitle}>Accept incoming couriers</Text>
-              </View>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('Profile')}>
               <View style={[styles.actionIcon, styles.iconGreen]}><MaterialIcons name="person-outline" size={21} color="#26724F" /></View>
               <View style={styles.actionCopy}>

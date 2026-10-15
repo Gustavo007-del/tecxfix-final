@@ -27,7 +27,6 @@ import AttendanceScreen from './src/screens/AttendanceScreen';
 import TechnicianStockScreen from './src/screens/TechnicianStockScreen';
 import SparePendingScreen from './src/screens/SparePendingScreen';
 import MyRequestsScreen from './src/screens/MyRequestsScreen';
-import ReceiveCourierScreen from './src/screens/ReceiveCourierScreen';
 import TechnicianProfileScreen from './src/screens/TechnicianProfileScreen';
 
 // Admin Screens
@@ -121,9 +120,9 @@ function TechnicianNavigator() {
             />
             <Tab.Screen
                 name="ReceiveCourierStack"
-                component={ReceiveCourierScreenStack}
+                component={TechCourierScreen}
                 options={{
-                    tabBarLabel: 'Courier',
+                    tabBarLabel: 'Courier history',
                     tabBarLabelStyle: { fontSize: 11 },
                 }}
             />
@@ -177,24 +176,6 @@ function CouriersScreenStack() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="CouriersMain" component={SparePendingScreen} />
             <Stack.Screen name="CourierView" component={CourierViewScreen} />
-            <Stack.Screen name="ReceiveCourier" component={ReceiveCourierScreen} />
-        </Stack.Navigator>
-    );
-}
-
-function ReceiveCourierScreenStack() {
-    return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen 
-                name="ReceiveCourierMain" 
-                component={ReceiveCourierScreen} 
-                initialParams={{ fromTab: true }} // Indicate this is from tab navigation
-            />
-            <Stack.Screen 
-                name="ReceiveCourierDetails" 
-                component={ReceiveCourierScreen}
-                initialParams={{ fromTab: false }}
-            />
         </Stack.Navigator>
     );
 }

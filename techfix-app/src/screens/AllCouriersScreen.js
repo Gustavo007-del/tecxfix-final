@@ -188,6 +188,12 @@ export default function AllCouriersScreen({ navigation }) {
                     color: COLORS.success,
                     icon: 'check-circle',
                 };
+            case 'sent':
+                return {
+                    label: 'Sent · Stock updated',
+                    color: COLORS.success,
+                    icon: 'check-circle',
+                };
             default:
                 return {
                     label: 'Unknown',
@@ -449,7 +455,7 @@ export default function AllCouriersScreen({ navigation }) {
 
             {/* FILTERS */}
             <View style={styles.filterContainer}>
-                {['all', 'in_transit', 'received'].map((key) => (
+                {['all', 'in_transit', 'sent', 'received'].map((key) => (
                     <TouchableOpacity
                         key={key}
                         style={[
@@ -469,6 +475,8 @@ export default function AllCouriersScreen({ navigation }) {
                                 ? 'All'
                                 : key === 'in_transit'
                                 ? 'In Transit'
+                                : key === 'sent'
+                                ? 'Sent / Updated'
                                 : 'Received'}
                         </Text>
                     </TouchableOpacity>
@@ -481,6 +489,7 @@ export default function AllCouriersScreen({ navigation }) {
                 <Text style={styles.statsText}>
                     Total: {couriers.length} | 
                     In Transit: {couriers.filter(c => c.status === 'in_transit').length} | 
+                    Sent / Updated: {couriers.filter(c => c.status === 'sent').length} |
                     Received: {couriers.filter(c => c.status === 'received').length}
                 </Text>
             </View>

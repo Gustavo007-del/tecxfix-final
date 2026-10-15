@@ -41,6 +41,7 @@ class CourierTransactionSerializer(serializers.ModelSerializer):
             'id', 'courier_id', 'created_by', 'created_by_info',
             'technicians', 'technicians_info',
             'sent_time', 'received_time', 'status',
+            'stock_sync_status', 'stock_sync_error',
             'items', 'total_amount', 'pdf_file', 'notes',
             'created_at', 'updated_at'
         ]

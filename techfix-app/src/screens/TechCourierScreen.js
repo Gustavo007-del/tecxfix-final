@@ -185,13 +185,13 @@ export default function TechCourierScreen({ navigation }) {
                         <View style={[
                             styles.statusBadge,
                             {
-                                backgroundColor: item.status === 'received'
+                                backgroundColor: ['received', 'sent'].includes(item.status)
                                     ? COLORS.success
                                     : COLORS.warning
                             }
                         ]}>
                             <Text style={styles.statusText}>
-                                {item.status === 'received' ? 'Received' : 'In Transit'}
+                                {item.status === 'sent' ? 'Sent · Stock updated' : item.status === 'received' ? 'Received' : 'In Transit'}
                             </Text>
                         </View>
                     </View>
@@ -329,7 +329,7 @@ export default function TechCourierScreen({ navigation }) {
                 <MaterialIcons name="local-shipping" size={20} color={COLORS.primary} />
                 <Text style={styles.statsText}>
                     Total Couriers: {couriers.length} | 
-                    Received: {couriers.filter(c => c.status === 'received').length}
+                    Completed: {couriers.filter(c => ['received', 'sent'].includes(c.status)).length}
                 </Text>
             </View>
 

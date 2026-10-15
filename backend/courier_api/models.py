@@ -40,7 +40,8 @@ class CourierTransaction(models.Model):
     Items stored as JSON to preserve exact send details.
     """
     STATUS_CHOICES = [
-        ('in_transit', 'In Transit'),  # NEW: Changed from 'sent'
+        ('in_transit', 'In Transit'),
+        ('sent', 'Sent and stock updated'),
         ('received', 'Received'),
     ]
     
@@ -68,6 +69,15 @@ class CourierTransaction(models.Model):
         choices=STATUS_CHOICES, 
         default='in_transit'  # Changed default
     )
+
+    STOCK_SYNC_CHOICES = [
+        ('pending', 'Pending'),
+        ('in_progress', 'In progress'),
+        ('complete', 'Complete'),
+        ('failed', 'Failed'),
+    ]
+    stock_sync_status = models.CharField(max_length=20, choices=STOCK_SYNC_CHOICES, default='pending')
+    stock_sync_error = models.TextField(blank=True)
     
     # Items stored as JSON: 
     # [{"spare_id": "X", "name": "...", "qty": 5, "mrp": 100.0, "brand": "...", "hsn": "..."}]

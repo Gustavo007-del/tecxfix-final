@@ -492,11 +492,49 @@ class SheetsSync:
 
         return True
 
+    def append_courier_technician_stock(self, technician_name, spare_id, qty, item_name, sent_date):
+        """Append a courier stock row, writing only A:D and F so column E is preserved."""
+        self.authenticate()
+        spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
+        sheet = spreadsheet.worksheet(self.TECHNICIAN_STOCK_WORKSHEET)
+
+        # Append exactly A:D; the append response identifies the row used.
+        result = sheet.append_row(
+            [item_name, spare_id, qty, technician_name],
+            value_input_option="USER_ENTERED",
+            table_range="A:D",
+        )
+        updated_range = result.get("updates", {}).get("updatedRange", "")
+        try:
+            import re
+            match = re.search(r"![A-Z]+(\d+):", updated_range)
+            if not match:
+                raise ValueError(f"Could not determine appended sheet row from {updated_range!r}")
+            row_number = int(match.group(1))
+        except Exception:
+            # Do not guess a row and risk writing into an existing technician's data.
+            raise RuntimeError("Courier row was appended but its row number could not be confirmed")
+
+        sheet.update_cell(row_number, 6, sent_date)
+        self._tech_stock_cache = None
+
+        try:
+            from api.services.sheet_snapshot_sync import update_technician_stock_snapshot
+            update_technician_stock_snapshot(
+                technician_name=technician_name,
+                spare_id=spare_id,
+                delta=qty,
+                name=item_name,
+            )
+        except Exception:
+            logger.exception("Failed updating technician stock snapshot for courier row %s / %s", technician_name, spare_id)
+        return True
+
     # -----------------------
     # COURIER → SHEETS SYNC
     # -----------------------
 
-    def sync_courier_to_sheets(self, items, technician_ids):
+    def sync_courier_to_sheets(self, items, technician_ids, sent_date=None):
         from .models import TechnicianStock
 
         self.authenticate()
@@ -520,15 +558,26 @@ class SheetsSync:
         if not tech_mapping:
             raise Exception("No valid technicians found")
 
+        sent_date = sent_date or datetime.now().date().isoformat()
+        from django.db.models import F
         for item in items:
             spare_id = item["spare_id"]
             qty = item["qty"]
 
             total_qty = qty * len(tech_mapping)
             self.update_company_stock(spare_id, total_qty)
+            try:
+                from api.models import CompanyStock
+                CompanyStock.objects.filter(spare_id=spare_id).update(
+                    quantity=F('quantity') - total_qty
+                )
+            except Exception:
+                logger.exception("Company stock snapshot update failed for %s", spare_id)
 
             for tech_name in tech_mapping.values():
-                self.update_technician_stock(tech_name, spare_id, qty)
+                self.append_courier_technician_stock(
+                    tech_name, spare_id, qty, item.get("name", ""), sent_date
+                )
 
         logger.info("Courier sync completed successfully")
         return True

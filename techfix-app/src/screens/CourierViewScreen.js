@@ -1,5 +1,5 @@
 // E:\study\techfix\techfix-app\src\screens\CourierViewScreen.js
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, ScrollView, ActivityIndicator,
     TouchableOpacity, Alert
@@ -8,11 +8,9 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import client, { API_ENDPOINTS } from '../api/client';
-import { AuthContext } from '../context/AuthContext';
 
 export default function CourierViewScreen({ route, navigation }) {
     const insets = useSafeAreaInsets();
-    const { state } = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
     const [courier, setCourier] = useState(null);
     const [error, setError] = useState(null);
@@ -45,12 +43,6 @@ export default function CourierViewScreen({ route, navigation }) {
             setError(err.response?.data?.error || 'Failed to load courier details');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleReceiveClick = () => {
-        if (courier && courier.id) {
-            navigation.navigate('ReceiveCourier', { courierId: courier.id });
         }
     };
 
@@ -102,14 +94,12 @@ export default function CourierViewScreen({ route, navigation }) {
             case 'in_transit':
                 return COLORS.warning;
             case 'received':
+            case 'sent':
                 return COLORS.success;
             default:
                 return COLORS.gray;
         }
     };
-
-    const isTechnician = !state.user?.is_staff;
-    const canReceive = isTechnician && courier.status === 'in_transit';
 
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -137,12 +127,12 @@ export default function CourierViewScreen({ route, navigation }) {
                             { backgroundColor: getStatusColor(courier.status) }
                         ]}>
                             <MaterialIcons 
-                                name={courier.status === 'received' ? 'check-circle' : 'local-shipping'} 
+                                name={['received', 'sent'].includes(courier.status) ? 'check-circle' : 'local-shipping'}
                                 size={16} 
                                 color={COLORS.white} 
                             />
                             <Text style={styles.statusText}>
-                                {courier.status === 'in_transit' ? 'In Transit' : 'Received'}
+                                {courier.status === 'sent' ? 'Sent · Stock updated' : courier.status === 'in_transit' ? 'In Transit' : 'Received'}
                             </Text>
                         </View>
                     </View>
@@ -168,7 +158,7 @@ export default function CourierViewScreen({ route, navigation }) {
                             <View style={styles.infoRow}>
                                 <MaterialIcons name="check-circle" size={20} color={COLORS.success} />
                                 <View style={styles.infoTextContainer}>
-                                    <Text style={styles.infoLabel}>Received Time</Text>
+                                <Text style={styles.infoLabel}>{courier.status === 'sent' ? 'Stock Updated' : 'Received Time'}</Text>
                                     <Text style={styles.infoValue}>
                                         {new Date(courier.received_time).toLocaleString('en-IN', {
                                             day: '2-digit',

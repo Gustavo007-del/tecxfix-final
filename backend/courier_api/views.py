@@ -120,7 +120,7 @@ def company_stock(request):
 def create_courier(request):
     """
     Admin endpoint: Create a new courier transaction.
-    Status: 'in_transit' (not updating sheets yet)
+    Sending a courier immediately updates company and technician stock sheets.
     """
     if not request.user.is_staff:
         return Response(
@@ -201,14 +201,37 @@ def create_courier(request):
         # PDF generation is disabled as per requirements
         logger.info("PDF generation is disabled")
         
-        # DON'T update sheets yet - only when technician marks received
-        
+        # Courier sending is the stock transfer event; technician confirmation is no longer required.
+        try:
+            courier.stock_sync_status = 'in_progress'
+            courier.save(update_fields=['stock_sync_status', 'updated_at'])
+            sheets_sync.sync_courier_to_sheets(
+                items,
+                list(technicians.values_list('id', flat=True)),
+                sent_date=timezone.localtime(courier.sent_time).date().isoformat(),
+            )
+            courier.status = 'sent'
+            courier.received_time = timezone.now()
+            courier.stock_sync_status = 'complete'
+            courier.stock_sync_error = ''
+            courier.save(update_fields=['status', 'received_time', 'stock_sync_status', 'stock_sync_error', 'updated_at'])
+        except Exception as sync_error:
+            logger.exception("Stock sheet sync failed for courier %s", courier.courier_id)
+            courier.stock_sync_status = 'failed'
+            courier.stock_sync_error = str(sync_error)[:4000]
+            courier.save(update_fields=['stock_sync_status', 'stock_sync_error', 'updated_at'])
+            return Response({
+                'success': False,
+                'message': 'Courier was recorded, but stock sheet synchronization failed. Do not create it again; contact an administrator for reconciliation.',
+                'data': CourierTransactionSerializer(courier).data,
+            }, status=status.HTTP_202_ACCEPTED)
+
         # Serialize and return
         serializer = CourierTransactionSerializer(courier)
         
         return Response({
             'success': True,
-            'message': 'Courier created successfully (in transit)',
+            'message': 'Courier sent and stock updated successfully',
             'data': serializer.data
         }, status=status.HTTP_201_CREATED)
         
@@ -422,6 +445,11 @@ def mark_received(request, courier_id):
         ]
     }
     """
+    return Response(
+        {'error': 'Courier acceptance has been removed. Sent couriers update stock automatically.'},
+        status=status.HTTP_410_GONE,
+    )
+
     try:
         # Try to find by courier_id string first
         courier = CourierTransaction.objects.get(courier_id=courier_id)
