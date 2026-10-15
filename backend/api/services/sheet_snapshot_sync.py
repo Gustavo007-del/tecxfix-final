@@ -9,6 +9,7 @@ from django.db import transaction
 from django.db.models import F, Q
 from django.utils import timezone
 from google.oauth2.service_account import Credentials
+from courier_api.sheets_rate_limit import install_sheets_api_rate_limit
 
 from ..models import CompanyStock, TechnicianStockSnapshot, TrackingComplaint
 
@@ -43,7 +44,7 @@ def get_sheets_client():
         credentials = Credentials.from_service_account_file(
             "service.json", scopes=SCOPES
         )
-    return gspread.authorize(credentials)
+    return install_sheets_api_rate_limit(gspread.authorize(credentials))
 
 
 def _value(row, index):

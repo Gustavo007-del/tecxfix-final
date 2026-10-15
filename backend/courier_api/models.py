@@ -3,6 +3,17 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+
+class SheetsApiRateLimitState(models.Model):
+    """Shared request schedule for all app workers using the Sheets service account."""
+    next_allowed_at = models.DateTimeField()
+
+    class Meta:
+        verbose_name = "Google Sheets API rate limit state"
+
+    def __str__(self):
+        return f"Google Sheets API slot after {self.next_allowed_at}"
+
 class TechnicianStock(models.Model):
     """
     Metadata for technician stock.

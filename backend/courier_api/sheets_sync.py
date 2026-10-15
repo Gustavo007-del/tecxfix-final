@@ -15,6 +15,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from django.core.cache import cache
 from django.contrib.auth.models import User
+from .sheets_rate_limit import install_sheets_api_rate_limit
 
 logger = logging.getLogger(__name__)
 
@@ -180,6 +181,11 @@ class SheetsSync:
             logger.info("[TIMING] Authorizing gspread client...")
             auth_start = time.time()
             self.client = gspread.authorize(creds)
+            # gspread routes Sheets API calls through this HTTP client. The
+            # database-backed slot schedule is shared by web workers and the
+            # backfill process, keeping app traffic to 40 requests/min and
+            # reserving headroom under Google's 60/user/minute quota.
+            install_sheets_api_rate_limit(self.client)
             auth_time = time.time() - auth_start
             logger.info(f"[TIMING] Gspread authorization completed in: {auth_time:.3f}s")
             
@@ -581,3 +587,90 @@ class SheetsSync:
 
         logger.info("Courier sync completed successfully")
         return True
+
+    def backfill_courier_technician_rows(self, items, technician_ids, sent_date):
+        """Append one historical courier's technician rows in two batched writes.
+
+        This intentionally skips company stock: historical backfill is for
+        making sent courier items visible in technician stock, and the company
+        sheet is not authoritative for this repair. Column E is never written.
+        """
+        from .models import TechnicianStock
+
+        self.authenticate()
+        tech_mapping = {}
+        for tech_id in technician_ids:
+            tech_stock = TechnicianStock.objects.filter(technician_id=tech_id).first()
+            if tech_stock and tech_stock.sheet_technician_name:
+                tech_mapping[tech_id] = tech_stock.sheet_technician_name
+            else:
+                try:
+                    user = User.objects.get(id=tech_id)
+                    tech_mapping[tech_id] = user.username
+                except User.DoesNotExist:
+                    continue
+
+        if not tech_mapping:
+            raise Exception("No valid technicians found")
+
+        rows = []
+        snapshot_updates = []
+        for item in items:
+            spare_id = str(item.get('spare_id', '')).strip()
+            qty = item.get('qty', 0)
+            item_name = item.get('name', '')
+            for tech_name in tech_mapping.values():
+                rows.append([item_name, spare_id, qty, tech_name])
+                snapshot_updates.append((tech_name, spare_id, qty, item_name))
+
+        if not rows:
+            raise Exception("Courier has no technician stock rows to append")
+
+        spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
+        sheet = spreadsheet.worksheet(self.TECHNICIAN_STOCK_WORKSHEET)
+        result = sheet.append_rows(
+            rows,
+            value_input_option='USER_ENTERED',
+            table_range='A:D',
+        )
+        updated_range = result.get('updates', {}).get('updatedRange', '')
+        import re
+        match = re.search(r'![A-Z]+(\d+):[A-Z]+(\d+)', updated_range)
+        if not match:
+            raise RuntimeError(
+                "Technician rows were appended but their row range could not be confirmed; "
+                "inspect the sheet before retrying"
+            )
+        first_row, last_row = map(int, match.groups())
+        if last_row - first_row + 1 != len(rows):
+            raise RuntimeError(
+                "Appended row count does not match the courier; inspect the sheet before retrying"
+            )
+
+        # One batched values write updates F while preserving existing E values.
+        sheet.batch_update(
+            [{
+                'range': f'F{first_row}:F{last_row}',
+                'values': [[sent_date] for _ in rows],
+            }],
+            value_input_option='USER_ENTERED',
+        )
+
+        for tech_name, spare_id, qty, item_name in snapshot_updates:
+            try:
+                from api.services.sheet_snapshot_sync import update_technician_stock_snapshot
+                update_technician_stock_snapshot(
+                    technician_name=tech_name,
+                    spare_id=spare_id,
+                    delta=qty,
+                    name=item_name,
+                )
+            except Exception:
+                logger.exception(
+                    "Failed updating technician snapshot for courier row %s / %s",
+                    tech_name,
+                    spare_id,
+                )
+
+        logger.info("Backfilled %s technician rows for courier", len(rows))
+        return len(rows)

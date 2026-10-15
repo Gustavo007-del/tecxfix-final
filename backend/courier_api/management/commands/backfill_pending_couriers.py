@@ -11,7 +11,7 @@ from courier_api.sheets_sync import SheetsSync
 
 class Command(BaseCommand):
     help = (
-        "Preview legacy in-transit couriers, or transfer their stock with "
+        "Preview legacy in-transit couriers, or append their technician rows with "
         "--apply --confirm-production-backfill. Failed/in-progress records are never replayed automatically."
     )
 
@@ -19,21 +19,30 @@ class Command(BaseCommand):
         parser.add_argument(
             '--apply',
             action='store_true',
-            help='Write technician and company stock updates to Google Sheets.',
+            help='Append historical courier rows to the technician stock sheet.',
         )
         parser.add_argument(
             '--confirm-production-backfill',
             action='store_true',
             help='Required with --apply to confirm this live stock mutation.',
         )
+        parser.add_argument(
+            '--limit',
+            type=int,
+            default=None,
+            help='Optional maximum couriers to process in this run.',
+        )
 
     def handle(self, *args, **options):
         apply_changes = options['apply']
         confirmed = options['confirm_production_backfill']
+        limit = options['limit']
         if confirmed and not apply_changes:
             raise CommandError('--confirm-production-backfill can only be used with --apply.')
         if apply_changes and not confirmed:
             raise CommandError('For safety, --apply also requires --confirm-production-backfill.')
+        if limit is not None and limit < 1:
+            raise CommandError('--limit must be at least 1.')
 
         couriers = list(
             CourierTransaction.objects.filter(status='in_transit')
@@ -41,9 +50,11 @@ class Command(BaseCommand):
             .order_by('sent_time')
         )
         candidates = [c for c in couriers if c.stock_sync_status == 'pending']
+        if limit is not None:
+            candidates = candidates[:limit]
         excluded = [
             {'courier_id': c.courier_id, 'stock_sync_status': c.stock_sync_status}
-            for c in couriers if c.stock_sync_status != 'pending'
+            for c in couriers if c not in candidates
         ]
         preview = [
             {
@@ -60,7 +71,9 @@ class Command(BaseCommand):
                 'mode': 'dry-run',
                 'sheet_writes': 0,
                 'candidate_count': len(candidates),
-                'excluded_non_pending': excluded,
+                'max_sheets_api_requests_per_minute': 40,
+                'company_stock_updates': 0,
+                'not_in_this_run': excluded,
                 'couriers': preview,
             }, indent=2, ensure_ascii=False))
             self.stdout.write(self.style.WARNING(
@@ -75,7 +88,10 @@ class Command(BaseCommand):
             # partial Google write is left in_progress and is not blindly replayed.
             with transaction.atomic():
                 courier = CourierTransaction.objects.select_for_update().get(pk=candidate.pk)
-                if courier.status != 'in_transit' or courier.stock_sync_status != 'pending':
+                if (
+                    courier.status != 'in_transit'
+                    or courier.stock_sync_status != 'pending'
+                ):
                     self.stdout.write(self.style.WARNING(
                         f"Skipped {courier.courier_id}: status changed to "
                         f"{courier.status}/{courier.stock_sync_status}."
@@ -86,7 +102,7 @@ class Command(BaseCommand):
                 courier.save(update_fields=['stock_sync_status', 'stock_sync_error', 'updated_at'])
 
             try:
-                sync.sync_courier_to_sheets(
+                sync.backfill_courier_technician_rows(
                     candidate.items,
                     list(candidate.technicians.values_list('id', flat=True)),
                     sent_date=timezone.localtime(candidate.sent_time).date().isoformat(),
@@ -115,5 +131,7 @@ class Command(BaseCommand):
             'mode': 'apply',
             'completed_count': len(completed),
             'completed_courier_ids': completed,
-            'failed_or_interrupted_records_require_manual_reconciliation': excluded,
+            'max_sheets_api_requests_per_minute': 40,
+            'company_stock_updates': 0,
+            'not_in_this_run': excluded,
         }, indent=2)))

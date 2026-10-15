@@ -57,6 +57,7 @@ def api_root(request):
 
 # sheets
 from googleapiclient.discovery import build
+from courier_api.sheets_rate_limit import install_sheets_api_rate_limit
 
 
 def get_google_sheets_client():
@@ -80,7 +81,7 @@ def get_google_sheets_client():
             )
             logger.info("Using Google credentials from service.json file")
 
-        return gspread.authorize(creds)
+        return install_sheets_api_rate_limit(gspread.authorize(creds))
     except Exception as e:
         logger.error(f"Failed to authenticate with Google Sheets: {str(e)}")
         raise Exception(f"Google Sheets authentication failed: {str(e)}")
