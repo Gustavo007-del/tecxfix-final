@@ -13,6 +13,7 @@
     },
     "android": {
       "package": "com.shijil.py.texfixapp",
+      "versionCode": 3,
       "edgeToEdgeEnabled": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
