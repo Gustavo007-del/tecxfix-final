@@ -198,6 +198,13 @@ GOOGLE_SHEET_ID = os.environ.get(
 
 COURIER_SHEET_ID = GOOGLE_SHEET_ID
 
+# Older app versions do not send an idempotency key when creating a courier.
+# Treat an identical submission from the same admin during this period as a
+# retry, rather than sending the same stock to Google Sheets a second time.
+COURIER_DUPLICATE_SUBMISSION_WINDOW_SECONDS = int(
+    os.environ.get("COURIER_DUPLICATE_SUBMISSION_WINDOW_SECONDS", "900")
+)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

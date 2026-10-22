@@ -4,6 +4,10 @@
       "eas": {
         "projectId": "953399aa-9e92-48b1-94c9-0d354d89eede"
       }
+    },
+    "android": {
+      "package": "com.shijil.py.techfix",
+      "versionCode": 23
     }
   }
 }

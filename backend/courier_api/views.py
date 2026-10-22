@@ -5,7 +5,11 @@ import time
 import uuid
 import logging
 import traceback
+import hashlib
+import json
+from datetime import timedelta
 from django.conf import settings
+from django.db import transaction
 from django.db.models import Q
 
 from rest_framework.decorators import api_view, permission_classes
@@ -33,6 +37,48 @@ logger = logging.getLogger(__name__)
 
 # Initialize sheets sync
 sheets_sync = SheetsSync()
+
+
+def _courier_submission_fingerprint(user_id, technician_ids, items, notes):
+    """Create a stable identifier for a legacy app courier submission."""
+    normalized_items = sorted(
+        [
+            {
+                'spare_id': str(item.get('spare_id', '')).strip(),
+                'name': str(item.get('name', '')).strip(),
+                'qty': int(item.get('qty', 0)),
+                'mrp': format(float(item.get('mrp', 0)), '.2f'),
+                'brand': str(item.get('brand', '')).strip(),
+                'hsn': str(item.get('hsn', '')).strip(),
+            }
+            for item in items
+        ],
+        key=lambda item: (
+            item['spare_id'], item['name'], item['qty'], item['mrp'],
+            item['brand'], item['hsn'],
+        ),
+    )
+    payload = {
+        'user_id': user_id,
+        'technician_ids': sorted(set(technician_ids)),
+        'items': normalized_items,
+        'notes': (notes or '').strip(),
+    }
+    encoded = json.dumps(payload, sort_keys=True, separators=(',', ':')).encode('utf-8')
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _existing_courier_response(courier):
+    """Return the first courier for a retried legacy-app submission."""
+    return Response({
+        'success': True,
+        'duplicate_submission': True,
+        'message': (
+            'This courier was already submitted. Returning the existing '
+            'courier without updating stock again.'
+        ),
+        'data': CourierTransactionSerializer(courier).data,
+    }, status=status.HTTP_200_OK)
 
 # ==================== ADMIN ENDPOINTS ====================
 
@@ -137,67 +183,86 @@ def create_courier(request):
         technician_ids = serializer.validated_data['technician_ids']
         items = serializer.validated_data['items']
         notes = serializer.validated_data.get('notes', '')
-        
-        # Validate technicians exist
-        technicians = User.objects.filter(id__in=technician_ids)
-        if technicians.count() != len(technician_ids):
-            return Response(
-                {'error': 'One or more technicians not found'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Validate stock availability
-        company_stock = [
-            {
-                'spare_id': item.spare_id,
-                'name': item.name,
-                'qty': item.quantity,
-            }
-            for item in CompanyStock.objects.all()
-        ]
-        
-        # Calculate total qty needed (for all technicians)
-        total_qty_needed = {}
-        for item in items:
-            spare_id = item.get('spare_id')
-            qty = item.get('qty')
-            total_qty_needed[spare_id] = total_qty_needed.get(spare_id, 0) + (qty * len(technician_ids))
-        
-        # Check stock availability
-        for spare_id, total_qty in total_qty_needed.items():
-            stock_item = next(
-                (s for s in company_stock if s['spare_id'] == spare_id), 
-                None
-            )
-            
-            if not stock_item:
-                return Response(
-                    {'error': f"Spare ID '{spare_id}' not found in company stock"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            if stock_item['qty'] < total_qty:
-                return Response(
-                    {
-                        'error': f"Insufficient stock for '{spare_id}'. Available: {stock_item['qty']}, Requested: {total_qty}"
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        
-        # Generate courier ID
-        courier_id = f"COURIER-{uuid.uuid4().hex[:8].upper()}"
-        
-        # Create courier transaction in DB with status 'in_transit'
-        courier = CourierTransaction.objects.create(
-            courier_id=courier_id,
-            created_by=request.user,
-            items=items,
-            notes=notes,
-            status='in_transit'  # Changed from 'sent'
+        submission_fingerprint = _courier_submission_fingerprint(
+            request.user.id, technician_ids, items, notes
         )
-        
-        # Add technicians
-        courier.technicians.set(technicians)
+        duplicate_cutoff = timezone.now() - timedelta(
+            seconds=settings.COURIER_DUPLICATE_SUBMISSION_WINDOW_SECONDS
+        )
+
+        # Lock this admin's User row while checking and creating.  This makes
+        # two near-simultaneous retries serialize even though legacy clients
+        # cannot send their own idempotency key.
+        with transaction.atomic():
+            User.objects.select_for_update().get(pk=request.user.pk)
+            existing_courier = CourierTransaction.objects.filter(
+                created_by=request.user,
+                submission_fingerprint=submission_fingerprint,
+                created_at__gte=duplicate_cutoff,
+            ).order_by('-created_at').first()
+            if existing_courier:
+                logger.warning(
+                    "Prevented duplicate courier submission for user %s; returning %s",
+                    request.user.pk,
+                    existing_courier.courier_id,
+                )
+                return _existing_courier_response(existing_courier)
+
+            # Validate technicians exist.
+            technicians = list(User.objects.filter(id__in=technician_ids))
+            if len(technicians) != len(technician_ids):
+                return Response(
+                    {'error': 'One or more technicians not found'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Validate stock availability.
+            company_stock = [
+                {
+                    'spare_id': item.spare_id,
+                    'name': item.name,
+                    'qty': item.quantity,
+                }
+                for item in CompanyStock.objects.all()
+            ]
+
+            total_qty_needed = {}
+            for item in items:
+                spare_id = item.get('spare_id')
+                qty = item.get('qty')
+                total_qty_needed[spare_id] = total_qty_needed.get(spare_id, 0) + (qty * len(technician_ids))
+
+            for spare_id, total_qty in total_qty_needed.items():
+                stock_item = next(
+                    (s for s in company_stock if s['spare_id'] == spare_id),
+                    None
+                )
+
+                if not stock_item:
+                    return Response(
+                        {'error': f"Spare ID '{spare_id}' not found in company stock"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                if stock_item['qty'] < total_qty:
+                    return Response(
+                        {
+                            'error': f"Insufficient stock for '{spare_id}'. Available: {stock_item['qty']}, Requested: {total_qty}"
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # Persist the courier before doing external work. A retry after a
+            # client timeout will find this record and cannot write Sheets twice.
+            courier = CourierTransaction.objects.create(
+                courier_id=f"COURIER-{uuid.uuid4().hex[:8].upper()}",
+                created_by=request.user,
+                items=items,
+                notes=notes,
+                status='in_transit',
+                submission_fingerprint=submission_fingerprint,
+            )
+            courier.technicians.set(technicians)
         
         # PDF generation is disabled as per requirements
         logger.info("PDF generation is disabled")
@@ -208,7 +273,7 @@ def create_courier(request):
             courier.save(update_fields=['stock_sync_status', 'updated_at'])
             sheets_sync.sync_courier_to_sheets(
                 items,
-                list(technicians.values_list('id', flat=True)),
+                [technician.id for technician in technicians],
                 sent_date=timezone.localtime(courier.sent_time).date().isoformat(),
             )
             courier.status = 'sent'

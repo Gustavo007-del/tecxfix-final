@@ -110,6 +110,10 @@ class CourierTransaction(models.Model):
     ]
     stock_sync_status = models.CharField(max_length=20, choices=STOCK_SYNC_CHOICES, default='pending')
     stock_sync_error = models.TextField(blank=True)
+
+    # Hash of the normalized create request. It provides server-side
+    # idempotency for app versions that do not yet send an idempotency key.
+    submission_fingerprint = models.CharField(max_length=64, blank=True, db_index=True)
     
     # Items stored as JSON: 
     # [{"spare_id": "X", "name": "...", "qty": 5, "mrp": 100.0, "brand": "...", "hsn": "..."}]
