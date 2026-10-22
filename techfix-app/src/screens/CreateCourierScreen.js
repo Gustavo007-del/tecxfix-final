@@ -10,6 +10,10 @@ import { AuthContext } from '../context/AuthContext';
 import client, { API_ENDPOINTS } from '../api/client';
 import { COLORS } from '../theme/colors';
 
+// Large couriers perform several Google Sheets writes. This deliberately
+// exceeds the API client's normal 10-second timeout without waiting forever.
+const COURIER_CREATE_TIMEOUT_MS = 7 * 60 * 1000;
+
 export default function CreateCourierScreen({ navigation }) {
     const insets = useSafeAreaInsets();
     const { userToken } = useContext(AuthContext);
@@ -22,6 +26,7 @@ export default function CreateCourierScreen({ navigation }) {
     const [availableStock, setAvailableStock] = useState([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [submissionUncertain, setSubmissionUncertain] = useState(false);
     const [submitProgress, setSubmitProgress] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
     const [showTechModal, setShowTechModal] = useState(false);
@@ -51,9 +56,12 @@ export default function CreateCourierScreen({ navigation }) {
         const startedAt = Date.now();
         setSubmitProgress(0);
         const timer = setInterval(() => {
-            // The API does not expose server-side progress, so show elapsed-time
-            // progress as an estimate and leave room for the actual response.
-            const estimate = Math.min(90, Math.floor(((Date.now() - startedAt) / 40000) * 90));
+            // The API does not expose server-side progress, so show a conservative
+            // estimate over the full courier request timeout.
+            const estimate = Math.min(
+                95,
+                Math.floor(((Date.now() - startedAt) / COURIER_CREATE_TIMEOUT_MS) * 95)
+            );
             setSubmitProgress(estimate);
         }, 500);
 
@@ -171,6 +179,11 @@ export default function CreateCourierScreen({ navigation }) {
     };
     
     const handleCreateCourier = async () => {
+    if (submissionUncertain) {
+        navigation.navigate('AllCouriers');
+        return;
+    }
+
     if (selectedTechs.length === 0 || selectedItems.length === 0) {
         Alert.alert('Error', 'Please select technicians and items');
         return;
@@ -195,14 +208,14 @@ export default function CreateCourierScreen({ navigation }) {
         };
 
 
-        // Google Sheets sync can make courier creation take longer than the
-        // shared 10-second API timeout. Keep this request alive long enough
-        // for the backend to return its result instead of showing a false error.
+        // Large couriers can require several minutes of Google Sheets work.
+        // Keep the button locked while the server completes the request.
         const response = await client.post(API_ENDPOINTS.COURIER_CREATE, payload, {
-            timeout: 45000,
+            timeout: COURIER_CREATE_TIMEOUT_MS,
         });
 
         if (response.data?.data?.stock_sync_status === 'failed') {
+            setSubmissionUncertain(true);
             Alert.alert(
                 'Courier stock update failed',
                 'The courier is recorded, but the stock sheet update failed. Check Courier History for details. Do not create it again.',
@@ -213,6 +226,28 @@ export default function CreateCourierScreen({ navigation }) {
         
         
         const courierId = response.data.data?.id;
+        const isDuplicateSubmission = response.data?.duplicate_submission === true;
+
+        if (isDuplicateSubmission) {
+            Alert.alert(
+                'Courier already submitted',
+                'This courier was already being processed or was completed. No stock was updated twice.',
+                [
+                    {
+                        text: 'View Courier',
+                        onPress: () => {
+                            if (courierId) {
+                                navigation.replace('CourierView', { courierId });
+                            } else {
+                                navigation.navigate('AllCouriers');
+                            }
+                        },
+                    },
+                    { text: 'Courier History', onPress: () => navigation.navigate('AllCouriers') },
+                ]
+            );
+            return;
+        }
         
         Alert.alert('Success', 'Courier created successfully!', [
             {
@@ -236,11 +271,14 @@ export default function CreateCourierScreen({ navigation }) {
             },
         ]);
     } catch (error) {
-        const timedOut = error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT' || /timeout/i.test(error.message || '');
-        if (timedOut) {
+        // Without a response, the server may already have accepted the courier.
+        // Keep this form locked so the same payload cannot be submitted again.
+        const uncertainSubmission = !error.response;
+        if (uncertainSubmission) {
+            setSubmissionUncertain(true);
             Alert.alert(
                 'Courier is still processing',
-                'The app stopped waiting, but the server may still be updating the stock sheets. You can continue using the app. Check Courier History for the final status, and do not create this courier again.',
+                'The connection ended before the server replied. The courier may still be updating stock. This form is now locked: check Courier History and do not create it again.',
                 [
                     { text: 'Open Courier History', onPress: () => navigation.navigate('AllCouriers') },
                     { text: 'Back to Dashboard', style: 'cancel', onPress: () => navigation.goBack() },
@@ -675,11 +713,13 @@ export default function CreateCourierScreen({ navigation }) {
                             styles.primaryButton,
                             submitting && styles.primaryButtonDisabled
                         ]}
-                        onPress={handleCreateCourier}
+                        onPress={submissionUncertain ? () => navigation.navigate('AllCouriers') : handleCreateCourier}
                         disabled={submitting}
                     >
                         {submitting ? (
                             <ActivityIndicator color={COLORS.white} />
+                        ) : submissionUncertain ? (
+                            <Text style={styles.primaryButtonText}>Open Courier History</Text>
                         ) : (
                             <Text style={styles.primaryButtonText}>Create Courier</Text>
                         )}
