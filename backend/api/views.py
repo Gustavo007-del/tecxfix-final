@@ -1693,6 +1693,8 @@ def process_pending_complaints(request):
         since_date = datetime.strptime(
             request.data.get('since_date') or '2026-03-22', '%Y-%m-%d',
         ).date()
+        if since_date < datetime(2026, 3, 22).date():
+            raise ValueError('Processing before 22 March 2026 is not permitted')
         technician_filter = request.data.get('technician_filter') or ''
         if not isinstance(technician_filter, str) or len(technician_filter) > 255:
             raise ValueError('Invalid technician filter')
@@ -1950,26 +1952,28 @@ def reject_sales_request(request, request_id):
                 'error': 'Admin access required'
             }, status=status.HTTP_403_FORBIDDEN)
         
+        from courier_api.stock_lock import stock_write_lock, StockBusyError
+        from .models import StockOperation
         try:
-            sales_request = SalesRequest.objects.get(id=request_id)
-        except SalesRequest.DoesNotExist:
-            return Response({
-                'success': False,
-                'error': 'Sales request not found'
-            }, status=status.HTTP_404_NOT_FOUND)
-        
-        if sales_request.status != 'PENDING':
-            return Response({
-                'success': False,
-                'error': 'Sales request is not pending'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Update status
-        sales_request.status = 'REJECTED'
-        sales_request.approved_by = request.user
-        sales_request.reviewed_at = timezone.now()
-        sales_request.admin_notes = request.data.get('admin_notes', '')
-        sales_request.save()
+            with stock_write_lock():
+                try:
+                    sales_request = SalesRequest.objects.get(id=request_id)
+                except SalesRequest.DoesNotExist:
+                    return Response({'success': False, 'error': 'Sales request not found'}, status=404)
+                if sales_request.status != 'PENDING':
+                    return Response({'success': False, 'error': 'Sales request is not pending'}, status=400)
+                if StockOperation.objects.filter(source='sale', reference=str(request_id)).exclude(status='failed').exists():
+                    return Response({
+                        'success': False,
+                        'error': 'This sale has a completed or uncertain stock deduction. Review it before rejection.',
+                    }, status=409)
+                sales_request.status = 'REJECTED'
+                sales_request.approved_by = request.user
+                sales_request.reviewed_at = timezone.now()
+                sales_request.admin_notes = request.data.get('admin_notes', '')
+                sales_request.save(update_fields=['status', 'approved_by', 'reviewed_at', 'admin_notes'])
+        except StockBusyError as error:
+            return Response({'success': False, 'error': str(error)}, status=409)
         
         logger.info(f"Sales request {request_id} rejected by admin {request.user.username}")
         

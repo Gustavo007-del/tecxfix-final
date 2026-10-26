@@ -74,7 +74,7 @@ export function createComplaintProcessing(client, endpoints, timers = { setTimeo
         pendingSubmission = null;
         publish({ run: data.run, unknown: false, message: '' });
       }
-    } catch (error) {
+    } catch (_error) {
       publish({ unknown: true, message: 'Status is unavailable. Processing may still be running. Use Check progress to retry the status check.' });
     } finally {
       publish({ checking: false });

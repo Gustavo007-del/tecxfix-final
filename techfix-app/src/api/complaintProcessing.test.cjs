@@ -1,10 +1,9 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const path = require('node:path');
 
 // Load the dependency-free ES module without changing the Expo package type.
-const modulePromise = import(`data:text/javascript;base64,${fs.readFileSync(path.join(__dirname, 'complaintProcessing.js')).toString('base64')}`);
+const modulePromise = import(`data:text/javascript;base64,${fs.readFileSync(require.resolve('./complaintProcessing.js')).toString('base64')}`);
 const endpoints = { PROCESS_COMPLAINTS: '/complaints/process/', COMPLAINT_PROCESSING_STATUS: '/complaints/processing-status/' };
 const job = (status = 'queued', extra = {}) => ({ id: 12, status, completed_count: 0, total_count: 10, ...extra });
 const response = (run) => ({ data: { success: true, run } });

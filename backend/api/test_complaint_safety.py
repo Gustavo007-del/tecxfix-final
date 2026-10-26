@@ -159,6 +159,7 @@ class ComplaintSafetyTests(TransactionTestCase):
 
     def test_invalid_date_returns_400(self):
         self.assertEqual(self.client.post('/process/', {'since_date': 'wrong'}).status_code, 400)
+        self.assertEqual(self.client.post('/process/', {'since_date': '2026-03-21'}).status_code, 400)
 
     @override_settings(COMPLAINT_PROCESSING_ENABLED=False)
     def test_rollout_switch_disables_new_batches(self):
@@ -210,3 +211,11 @@ class ComplaintSafetyTests(TransactionTestCase):
         self.assertEqual(StockOperation.objects.filter(status='complete').count(), 2)
         # First product succeeds once; second fails once then succeeds.
         self.assertEqual(self.sheets.update_technician_stock.call_count, 3)
+
+    def test_partially_deducted_sale_cannot_be_rejected(self):
+        sale = SalesRequest.objects.create(technician=self.admin, company_name='Test', total_amount=5)
+        self.deduct(source='sale', reference=str(sale.pk))
+        response = self.client.post(f'/sales/{sale.pk}/reject/')
+        self.assertEqual(response.status_code, 409)
+        sale.refresh_from_db()
+        self.assertEqual(sale.status, 'PENDING')
