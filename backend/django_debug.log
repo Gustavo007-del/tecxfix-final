@@ -4231,3 +4231,144 @@ INFO 2026-09-11 14:52:19,171 manage main 121 9912 16500 [TIMING] Total Django pr
 INFO 2026-09-11 14:52:19,171 manage main 121 9912 16500 [TIMING] Total Django process time: 6.738s
 INFO 2026-09-11 14:52:19,172 manage main 122 9912 16500 === DJANGO PROCESS ENDING ===
 INFO 2026-09-11 14:52:19,172 manage main 122 9912 16500 === DJANGO PROCESS ENDING ===
+ERROR 2026-10-26 12:37:54,997 manage main 115 16900 2384 Django command failed after: 17.459s
+ERROR 2026-10-26 12:37:54,997 manage main 115 16900 2384 Django command failed after: 17.459s
+ERROR 2026-10-26 12:37:54,998 manage main 116 16900 2384 Django command failed: settings.DATABASES is improperly configured. Please supply the ENGINE value. Check settings documentation for more details.
+ERROR 2026-10-26 12:37:54,998 manage main 116 16900 2384 Django command failed: settings.DATABASES is improperly configured. Please supply the ENGINE value. Check settings documentation for more details.
+ERROR 2026-10-26 12:37:55,252 manage main 117 16900 2384 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\core\management\commands\showmigrations.py", line 65, in handle
+    return self.show_plan(connection, options["app_label"])
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\core\management\commands\showmigrations.py", line 141, in show_plan
+    loader = MigrationLoader(connection)
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\db\migrations\loader.py", line 59, in __init__
+    self.build_graph()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\db\migrations\loader.py", line 288, in build_graph
+    self.applied_migrations = recorder.applied_migrations()
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\db\migrations\recorder.py", line 89, in applied_migrations
+    if self.has_table():
+       ~~~~~~~~~~~~~~^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\db\migrations\recorder.py", line 63, in has_table
+    with self.connection.cursor() as cursor:
+         ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 320, in cursor
+    return self._cursor()
+           ~~~~~~~~~~~~^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\db\backends\dummy\base.py", line 21, in complain
+    raise ImproperlyConfigured(
+    ...<3 lines>...
+    )
+django.core.exceptions.ImproperlyConfigured: settings.DATABASES is improperly configured. Please supply the ENGINE value. Check settings documentation for more details.
+
+ERROR 2026-10-26 12:37:55,252 manage main 117 16900 2384 Traceback: Traceback (most recent call last):
+  File "E:\study\techfix\backend\manage.py", line 108, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\core\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\core\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\core\management\commands\showmigrations.py", line 65, in handle
+    return self.show_plan(connection, options["app_label"])
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\core\management\commands\showmigrations.py", line 141, in show_plan
+    loader = MigrationLoader(connection)
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\db\migrations\loader.py", line 59, in __init__
+    self.build_graph()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\db\migrations\loader.py", line 288, in build_graph
+    self.applied_migrations = recorder.applied_migrations()
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\db\migrations\recorder.py", line 89, in applied_migrations
+    if self.has_table():
+       ~~~~~~~~~~~~~~^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\db\migrations\recorder.py", line 63, in has_table
+    with self.connection.cursor() as cursor:
+         ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 320, in cursor
+    return self._cursor()
+           ~~~~~~~~~~~~^^
+  File "C:\Users\asash\AppData\Roaming\Python\Python313\site-packages\django\db\backends\dummy\base.py", line 21, in complain
+    raise ImproperlyConfigured(
+    ...<3 lines>...
+    )
+django.core.exceptions.ImproperlyConfigured: settings.DATABASES is improperly configured. Please supply the ENGINE value. Check settings documentation for more details.
+
+INFO 2026-10-26 12:37:55,254 manage main 121 16900 2384 [TIMING] Total Django process time: 19.552s
+INFO 2026-10-26 12:37:55,254 manage main 121 16900 2384 [TIMING] Total Django process time: 19.552s
+INFO 2026-10-26 12:37:55,255 manage main 122 16900 2384 === DJANGO PROCESS ENDING ===
+INFO 2026-10-26 12:37:55,255 manage main 122 16900 2384 === DJANGO PROCESS ENDING ===
+INFO 2026-10-26 13:23:47,207 manage main 111 13720 10968 [TIMING] Django command completed in: 9.710s
+INFO 2026-10-26 13:23:47,207 manage main 111 13720 10968 [TIMING] Django command completed in: 9.710s
+INFO 2026-10-26 13:23:47,209 manage main 112 13720 10968 Django command completed successfully
+INFO 2026-10-26 13:23:47,209 manage main 112 13720 10968 Django command completed successfully
+INFO 2026-10-26 13:23:47,210 manage main 121 13720 10968 [TIMING] Total Django process time: 10.111s
+INFO 2026-10-26 13:23:47,210 manage main 121 13720 10968 [TIMING] Total Django process time: 10.111s
+INFO 2026-10-26 13:23:47,210 manage main 122 13720 10968 === DJANGO PROCESS ENDING ===
+INFO 2026-10-26 13:23:47,210 manage main 122 13720 10968 === DJANGO PROCESS ENDING ===
+INFO 2026-10-26 13:24:13,483 manage main 111 18536 8560 [TIMING] Django command completed in: 4.457s
+INFO 2026-10-26 13:24:13,483 manage main 111 18536 8560 [TIMING] Django command completed in: 4.457s
+INFO 2026-10-26 13:24:13,484 manage main 112 18536 8560 Django command completed successfully
+INFO 2026-10-26 13:24:13,484 manage main 112 18536 8560 Django command completed successfully
+INFO 2026-10-26 13:24:13,485 manage main 121 18536 8560 [TIMING] Total Django process time: 4.835s
+INFO 2026-10-26 13:24:13,485 manage main 121 18536 8560 [TIMING] Total Django process time: 4.835s
+INFO 2026-10-26 13:24:13,485 manage main 122 18536 8560 === DJANGO PROCESS ENDING ===
+INFO 2026-10-26 13:24:13,485 manage main 122 18536 8560 === DJANGO PROCESS ENDING ===
+DEBUG 2026-10-26 13:24:54,535 schema execute 192 1236 8796 CREATE TABLE "api_stockoperation" ("id" bigint NOT NULL PRIMARY KEY GENERATED BY DEFAULT AS IDENTITY, "operation_key" varchar(64) NOT NULL UNIQUE, "source" varchar(20) NOT NULL, "reference" varchar(100) NOT NULL, "technician_name" varchar(255) NOT NULL, "product_code" varchar(100) NOT NULL, "quantity" integer NOT NULL CHECK ("quantity" >= 0), "status" varchar(20) NOT NULL, "plan" jsonb NOT NULL, "error" text NOT NULL, "created_at" timestamp with time zone NOT NULL, "updated_at" timestamp with time zone NOT NULL); (params None)
+DEBUG 2026-10-26 13:24:55,464 schema execute 192 1236 8796 CREATE TABLE "api_complaintprocessingrun" ("id" bigint NOT NULL PRIMARY KEY GENERATED BY DEFAULT AS IDENTITY, "status" varchar(20) NOT NULL, "active_slot" smallint NULL UNIQUE CHECK ("active_slot" >= 0), "since_date" date NOT NULL, "technician_filter" varchar(255) NOT NULL, "created_at" timestamp with time zone NOT NULL, "updated_at" timestamp with time zone NOT NULL, "started_at" timestamp with time zone NULL, "finished_at" timestamp with time zone NULL, "total_count" integer NOT NULL CHECK ("total_count" >= 0), "completed_count" integer NOT NULL CHECK ("completed_count" >= 0), "result" jsonb NOT NULL, "error" text NOT NULL, "requested_by_id" integer NULL); (params None)
+DEBUG 2026-10-26 13:24:55,577 schema execute 192 1236 8796 CREATE INDEX "api_stockoperation_operation_key_44d7a780_like" ON "api_stockoperation" ("operation_key" varchar_pattern_ops); (params None)
+DEBUG 2026-10-26 13:24:55,698 schema execute 192 1236 8796 CREATE INDEX "api_stockoperation_reference_d79c9f2b" ON "api_stockoperation" ("reference"); (params None)
+DEBUG 2026-10-26 13:24:55,774 schema execute 192 1236 8796 CREATE INDEX "api_stockoperation_reference_d79c9f2b_like" ON "api_stockoperation" ("reference" varchar_pattern_ops); (params None)
+DEBUG 2026-10-26 13:24:55,855 schema execute 192 1236 8796 CREATE INDEX "api_stockoperation_status_45670440" ON "api_stockoperation" ("status"); (params None)
+DEBUG 2026-10-26 13:24:56,535 schema execute 192 1236 8796 CREATE INDEX "api_stockoperation_status_45670440_like" ON "api_stockoperation" ("status" varchar_pattern_ops); (params None)
+DEBUG 2026-10-26 13:24:56,612 schema execute 192 1236 8796 ALTER TABLE "api_complaintprocessingrun" ADD CONSTRAINT "api_complaintprocess_requested_by_id_da2ee3f5_fk_auth_user" FOREIGN KEY ("requested_by_id") REFERENCES "auth_user" ("id") DEFERRABLE INITIALLY DEFERRED; (params None)
+DEBUG 2026-10-26 13:24:56,729 schema execute 192 1236 8796 CREATE INDEX "api_complaintprocessingrun_status_ebc5fd84" ON "api_complaintprocessingrun" ("status"); (params None)
+DEBUG 2026-10-26 13:24:56,811 schema execute 192 1236 8796 CREATE INDEX "api_complaintprocessingrun_status_ebc5fd84_like" ON "api_complaintprocessingrun" ("status" varchar_pattern_ops); (params None)
+DEBUG 2026-10-26 13:24:56,889 schema execute 192 1236 8796 CREATE INDEX "api_complaintprocessingrun_requested_by_id_da2ee3f5" ON "api_complaintprocessingrun" ("requested_by_id"); (params None)
+DEBUG 2026-10-26 13:24:57,604 schema execute 192 1236 8796 ALTER TABLE "courier_api_couriertransaction" ADD COLUMN "submission_fingerprint" varchar(64) DEFAULT '' NOT NULL; (params None)
+DEBUG 2026-10-26 13:24:58,215 schema execute 192 1236 8796 ALTER TABLE "courier_api_couriertransaction" ALTER COLUMN "submission_fingerprint" DROP DEFAULT; (params None)
+DEBUG 2026-10-26 13:24:58,611 schema execute 192 1236 8796 CREATE INDEX "courier_api_couriertransaction_submission_fingerprint_3c30d1d7" ON "courier_api_couriertransaction" ("submission_fingerprint"); (params None)
+DEBUG 2026-10-26 13:24:59,175 schema execute 192 1236 8796 CREATE INDEX "courier_api_couriertrans_submission_fingerprint_3c30d1d7_like" ON "courier_api_couriertransaction" ("submission_fingerprint" varchar_pattern_ops); (params None)
+INFO 2026-10-26 13:25:04,051 manage main 111 1236 8796 [TIMING] Django command completed in: 15.791s
+INFO 2026-10-26 13:25:04,051 manage main 111 1236 8796 [TIMING] Django command completed in: 15.791s
+INFO 2026-10-26 13:25:04,052 manage main 112 1236 8796 Django command completed successfully
+INFO 2026-10-26 13:25:04,052 manage main 112 1236 8796 Django command completed successfully
+INFO 2026-10-26 13:25:04,053 manage main 121 1236 8796 [TIMING] Total Django process time: 16.160s
+INFO 2026-10-26 13:25:04,053 manage main 121 1236 8796 [TIMING] Total Django process time: 16.160s
+INFO 2026-10-26 13:25:04,053 manage main 122 1236 8796 === DJANGO PROCESS ENDING ===
+INFO 2026-10-26 13:25:04,053 manage main 122 1236 8796 === DJANGO PROCESS ENDING ===
+INFO 2026-10-26 13:25:16,781 manage main 111 16644 24016 [TIMING] Django command completed in: 3.225s
+INFO 2026-10-26 13:25:16,781 manage main 111 16644 24016 [TIMING] Django command completed in: 3.225s
+INFO 2026-10-26 13:25:16,782 manage main 112 16644 24016 Django command completed successfully
+INFO 2026-10-26 13:25:16,782 manage main 112 16644 24016 Django command completed successfully
+INFO 2026-10-26 13:25:16,783 manage main 121 16644 24016 [TIMING] Total Django process time: 3.609s
+INFO 2026-10-26 13:25:16,783 manage main 121 16644 24016 [TIMING] Total Django process time: 3.609s
+INFO 2026-10-26 13:25:16,783 manage main 122 16644 24016 === DJANGO PROCESS ENDING ===
+INFO 2026-10-26 13:25:16,783 manage main 122 16644 24016 === DJANGO PROCESS ENDING ===

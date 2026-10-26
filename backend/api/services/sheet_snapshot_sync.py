@@ -6,10 +6,11 @@ from decimal import Decimal, InvalidOperation
 import gspread
 import django
 from django.db import transaction
-from django.db.models import F, Q
+from django.db.models import Q
 from django.utils import timezone
 from google.oauth2.service_account import Credentials
 from courier_api.sheets_rate_limit import install_sheets_api_rate_limit
+from courier_api.stock_lock import serialized_stock_write
 
 from ..models import CompanyStock, TechnicianStockSnapshot, TrackingComplaint
 
@@ -54,6 +55,11 @@ def _value(row, index):
 def _technician_key(value):
     """Normalize sheet technician names so spacing/case differences do not split stock rows."""
     return " ".join((value or "").split()).casefold()
+
+
+def _product_key(value):
+    """Match product codes without changing internal whitespace or punctuation."""
+    return (value or "").strip().casefold()
 
 
 def _decimal(value):
@@ -237,6 +243,7 @@ class SheetSnapshotSync:
 )
         return len(seen_ids)
 
+    @serialized_stock_write
     def sync_technician_stock(self):
         """Mirror the Technician Stocks worksheet into TechnicianStockSnapshot.
 
@@ -257,7 +264,7 @@ class SheetSnapshotSync:
             if not spare_id or not technician_name:
                 continue
 
-            key = (_technician_key(technician_name), spare_id)
+            key = (_technician_key(technician_name), _product_key(spare_id))
             quantity = _integer(_value(row, 2))
             existing = objects_by_key.get(key)
             if existing:
@@ -340,29 +347,63 @@ def update_company_stock_snapshot(spare_id, quantity):
     return CompanyStock.objects.filter(spare_id=spare_id).update(quantity=quantity)
 
 
-def update_technician_stock_snapshot(technician_name, spare_id, delta, name=""):
+@serialized_stock_write
+def update_technician_stock_snapshot(
+    technician_name, spare_id, delta=0, name="", *, quantity=None
+):
     """Apply an application-owned Technician Stock change locally (write-through).
 
-    `delta` is signed (+qty received via courier, -qty reduced by complaint
-    processing or sales approval). If the snapshot has no row for this
-    (technician, spare) pair yet (e.g. the part was just appended to the
-    sheet), a row is created. The Google sheet remains the source of truth;
-    the next full sync reconciles any drift.
+    Canonical matches are merged before applying signed ``delta`` exactly once.
+    ``quantity``, when supplied (including zero), replaces the merged balance
+    with the fresh absolute sheet total; ``delta`` is then ignored. Callers
+    that read a fresh total must hold the same stock lock across that read,
+    their sheet write and this call. The lock is reentrant.
+
+    Returns 1 when an existing canonical balance is updated, otherwise 0
+    (including creation), preserving the previous create/no-op return contract.
+    This only writes the DB snapshot. Google Sheets remains the source of truth.
     """
-    if not delta:
+    if quantity is None and not delta:
         return 0
 
-    updated = TechnicianStockSnapshot.objects.filter(
-        technician_name__iexact=technician_name,
-        spare_id=spare_id,
-    ).update(quantity=F("quantity") + delta)
+    technician_key = _technician_key(technician_name)
+    product_key = _product_key(spare_id)
+    if not technician_key or not product_key:
+        raise ValueError("Technician name and product code must not be blank")
+    amount = Decimal(str(quantity if quantity is not None else delta))
+    if not amount.is_finite() or amount != amount.to_integral_value():
+        raise ValueError("Snapshot quantity/delta must be a finite integer")
+    amount = int(amount)
 
-    if updated == 0:
-        TechnicianStockSnapshot.objects.create(
-            technician_name=technician_name,
-            spare_id=spare_id,
-            name=name,
-            quantity=delta,
+    with transaction.atomic():
+        # Python casefold handles Unicode and whitespace variants that SQL
+        # iexact cannot. The shared stock lock also protects the absent-row case.
+        matching_ids = [
+            row_id
+            for row_id, tech, product in TechnicianStockSnapshot.objects.values_list(
+                "pk", "technician_name", "spare_id"
+            ).iterator()
+            if _technician_key(tech) == technician_key
+            and _product_key(product) == product_key
+        ]
+        matches = list(
+            TechnicianStockSnapshot.objects.select_for_update()
+            .filter(pk__in=matching_ids).order_by("pk")
         )
+        total = amount if quantity is not None else sum(row.quantity for row in matches) + amount
+        if not matches:
+            TechnicianStockSnapshot.objects.create(
+                technician_name=" ".join(technician_name.split()),
+                spare_id=spare_id.strip(),
+                name=name,
+                quantity=total,
+            )
+            return 0
 
-    return updated
+        survivor = matches[0]
+        survivor.quantity = total
+        survivor.name = name or next((row.name for row in matches if row.name), "")
+        survivor.save(update_fields=["quantity", "name", "synced_at"])
+        TechnicianStockSnapshot.objects.filter(pk__in=[row.pk for row in matches[1:]]).delete()
+
+    return 1

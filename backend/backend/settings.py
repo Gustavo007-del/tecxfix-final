@@ -15,6 +15,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Set to False to disable member location features
 MAP_SERVICE = os.environ.get("MAP_SERVICE", "False") == "True"
 
+# Enable after migrations and the dedicated complaint worker are deployed.
+COMPLAINT_PROCESSING_ENABLED = os.environ.get('COMPLAINT_PROCESSING_ENABLED', 'False') == 'True'
+
 # -------------------------------------------------
 # SECURITY
 # -------------------------------------------------

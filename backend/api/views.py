@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.db import transaction
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -1679,57 +1679,34 @@ def get_received_history(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def process_pending_complaints(request):
-    """
-    Admin only: Process completed complaints and reduce technician stock
-    Expected payload:
-    {
-        "since_date": "2026-04-25",  // optional, defaults to yesterday (April 25, 2026)
-        "technician_filter": "John Doe"  // optional, filter by technician name
-    }
-    """
-    try:
-        if not request.user.is_staff:
-            return Response({
-                'success': False,
-                'error': 'Admin access required'
-            }, status=status.HTTP_403_FORBIDDEN)
-        
-        # Get parameters from request
-        since_date_str = request.data.get('since_date')
-        technician_filter = request.data.get('technician_filter')
-        
-        # Parse since_date or use default (yesterday: April 25, 2026)
-        if since_date_str:
-            since_date = datetime.strptime(since_date_str, '%Y-%m-%d').date()
-        else:
-            # Default to yesterday (April 25, 2026)
-            since_date = date(2026, 4, 25)
-            logger.info(f"Using default date filter from yesterday: {since_date}")
-        
-        logger.info(f"Admin {request.user.username} initiated complaint processing since {since_date}")
-        
-        # Import and use the complaint processor
-        from .services.complaint_processor import ComplaintProcessor
-        processor = ComplaintProcessor()
-        
-        # Process complaints
-        result = processor.process_complaints(
-            since_date=since_date,
-            technician_filter=technician_filter
-        )
-        
-        logger.info(f"Complaint processing completed by admin {request.user.username}. "
-                    f"Processed: {result.get('processed_count', 0)}, "
-                    f"Errors: {len(result.get('errors', []))}")
-        
-        return Response(result, status=status.HTTP_200_OK)
-        
-    except Exception as e:
-        logger.exception(f"Error in process_pending_complaints: {e}")
+    """Enqueue once and return quickly; safe for clients that time out."""
+    from django.conf import settings
+    from .services.complaint_jobs import enqueue_run, serialize_run
+    if not request.user.is_staff:
+        return Response({'success': False, 'error': 'Admin access required'}, status=403)
+    if not getattr(settings, 'COMPLAINT_PROCESSING_ENABLED', False):
         return Response({
-            "success": False,
-            "error": f"Server error: {str(e)}"
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            'success': False,
+            'error': 'Complaint processing is paused until the stock safeguards and worker are ready.',
+        }, status=503)
+    try:
+        since_date = datetime.strptime(
+            request.data.get('since_date') or '2026-03-22', '%Y-%m-%d',
+        ).date()
+        technician_filter = request.data.get('technician_filter') or ''
+        if not isinstance(technician_filter, str) or len(technician_filter) > 255:
+            raise ValueError('Invalid technician filter')
+    except (TypeError, ValueError):
+        return Response({'success': False, 'error': 'Use a valid YYYY-MM-DD date and technician name.'}, status=400)
+    run, created = enqueue_run(request.user, since_date, technician_filter.strip())
+    message = 'Processing queued. Check processing status; do not start another request.'
+    if not created:
+        message = 'A processing run is already active. Showing its progress.'
+    # Legacy clients inspect success: never claim that queuing deducted stock.
+    return Response({
+        'success': False, 'accepted': True, 'already_running': not created,
+        'run': serialize_run(run), 'message': message, 'error': message,
+    }, status=202)
 
 
 @api_view(['GET'])
@@ -1746,7 +1723,20 @@ def get_complaint_processing_status(request):
                 "error": "Only admin users can access this endpoint"
             }, status=status.HTTP_403_FORBIDDEN)
         
-        # Get processing statistics
+        from .models import ComplaintProcessingRun, StockOperation
+        from .services.complaint_jobs import serialize_run
+        run_id = request.query_params.get('run_id')
+        if run_id:
+            if not run_id.isdigit():
+                return Response({'success': False, 'error': 'Invalid run ID'}, status=400)
+            run = ComplaintProcessingRun.objects.filter(pk=run_id).first()
+            if run is None:
+                return Response({'success': False, 'error': 'Processing run not found'}, status=404)
+            return Response({'success': True, 'run': serialize_run(run)})
+        run = (ComplaintProcessingRun.objects.filter(active_slot=1).first() or
+               ComplaintProcessingRun.objects.order_by('-pk').first())
+
+        # Keep the legacy response shape for older clients; add journal counts.
         total_processed = ProcessedComplaint.objects.count()
         successful_reductions = ProcessedComplaint.objects.filter(stock_reduced=True).count()
         failed_reductions = ProcessedComplaint.objects.filter(stock_reduced=False).count()
@@ -1765,6 +1755,12 @@ def get_complaint_processing_status(request):
         
         return Response({
             "success": True,
+            "run": serialize_run(run),
+            "journal_statistics": {
+                'completed': StockOperation.objects.filter(source='complaint', status='complete').count(),
+                'retryable_failures': StockOperation.objects.filter(source='complaint', status='failed').count(),
+                'needs_review': StockOperation.objects.filter(source='complaint', status__in=['applying', 'needs_review']).count(),
+            },
             "statistics": {
                 "total_processed": total_processed,
                 "successful_reductions": successful_reductions,
@@ -1897,71 +1893,50 @@ def get_sales_requests(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def approve_sales_request(request, request_id):
-    """Approve a sales request (Admin only)"""
+    """Approve only when every product deduction is durably confirmed."""
+    from courier_api.stock_lock import stock_write_lock, StockBusyError
+    from .services.complaint_processor import ComplaintProcessor
+    from .services.stock_operations import deduct_once, validate_product, StockReviewRequired
+    if not request.user.is_staff:
+        return Response({'success': False, 'error': 'Admin access required'}, status=403)
     try:
-        if not request.user.is_staff:
-            return Response({
-                'success': False,
-                'error': 'Admin access required'
-            }, status=status.HTTP_403_FORBIDDEN)
-        
-        try:
-            sales_request = SalesRequest.objects.get(id=request_id)
-        except SalesRequest.DoesNotExist:
-            return Response({
-                'success': False,
-                'error': 'Sales request not found'
-            }, status=status.HTTP_404_NOT_FOUND)
-        
-        if sales_request.status != 'PENDING':
-            return Response({
-                'success': False,
-                'error': 'Sales request is not pending'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Update status
-        sales_request.status = 'APPROVED'
-        sales_request.approved_by = request.user
-        sales_request.reviewed_at = timezone.now()
-        sales_request.save()
-        
-        # Reduce technician stock for each product
-        from courier_api.sheets_sync import SheetsSync
-        from .services.complaint_processor import ComplaintProcessor
-        sheets_sync = SheetsSync()
-        processor = ComplaintProcessor()
-        
-        for product in sales_request.products.all():
+        with stock_write_lock():
             try:
-                # Get technician sheet name
-                technician_name = sales_request.technician.first_name if sales_request.technician else "Unknown"
-                tech_sheet_name = processor.get_technician_sheet_name(technician_name)
-                
-                # Reduce from technician stock (not company stock)
-                sheets_sync.update_technician_stock(
-                    tech_sheet_name,
-                    product.product_code,
-                    -product.quantity
-                )
-                logger.info(f"Reduced {product.quantity} from technician {technician_name} stock for {product.product_code}")
-            except Exception as e:
-                logger.error(f"Failed to reduce technician stock for {product.product_code}: {e}")
-                # Continue with other products even if one fails
-                continue
-        
-        logger.info(f"Sales request {request_id} approved by admin {request.user.username}")
-        
-        return Response({
-            'success': True,
-            'message': 'Sales request approved successfully'
-        }, status=status.HTTP_200_OK)
-        
-    except Exception as e:
-        logger.exception(f"Error approving sales request {request_id}: {e}")
+                sales_request = SalesRequest.objects.select_related('technician').get(pk=request_id)
+            except SalesRequest.DoesNotExist:
+                return Response({'success': False, 'error': 'Sales request not found'}, status=404)
+            if sales_request.status != 'PENDING':
+                return Response({'success': False, 'error': 'Sales request is not pending'}, status=400)
+            products = {}
+            for product in sales_request.products.all():
+                code = validate_product(product.product_code)
+                if product.quantity <= 0:
+                    raise ValueError('Product quantity must be positive')
+                products[code] = products.get(code, 0) + product.quantity
+            if not products:
+                raise ValueError('Sales request has no products')
+            mapping = getattr(sales_request.technician, 'technician_stock_metadata', None)
+            name = (mapping.sheet_technician_name if mapping and mapping.sheet_technician_name else
+                    sales_request.technician.first_name or sales_request.technician.username)
+            sheets = SheetsSync()
+            for code, quantity in products.items():
+                deduct_once(sheets, source='sale', reference=str(request_id),
+                            technician_name=name, product_code=code, quantity=quantity)
+            sales_request.status = 'APPROVED'
+            sales_request.approved_by = request.user
+            sales_request.reviewed_at = timezone.now()
+            sales_request.save(update_fields=['status', 'approved_by', 'reviewed_at'])
+            return Response({'success': True, 'message': 'Sales request approved; all stock deductions confirmed.'})
+    except (StockBusyError, StockReviewRequired) as error:
+        return Response({'success': False, 'error': str(error)}, status=409)
+    except ValueError as error:
+        return Response({'success': False, 'error': str(error)}, status=400)
+    except Exception:
+        logger.exception('Sales approval interrupted for %s', request_id)
         return Response({
             'success': False,
-            'error': 'Failed to approve sales request'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            'error': 'Approval incomplete. Check processing history before retrying; confirmed deductions will not repeat.',
+        }, status=503)
 
 
 @api_view(['POST'])

@@ -14,16 +14,24 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import client from '../api/client';
 import API_ENDPOINTS from '../api/endpoints';
+import {
+  COMPLAINT_CUTOFF_LABEL,
+  complaintRunSummary,
+  createComplaintProcessing,
+  isActiveRun,
+} from '../api/complaintProcessing';
 import { syncTrackingSnapshot } from '../api/snapshotSync';
 import { AuthContext } from '../context/AuthContext';
 import { COLORS } from '../theme/colors';
+
+const complaintProcessing = createComplaintProcessing(client, API_ENDPOINTS);
 
 export default function AdminDashboardScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [processingComplaints, setProcessingComplaints] = useState(false);
+  const [complaintJob, setComplaintJob] = useState(complaintProcessing.getState);
   const [syncingMrpList, setSyncingMrpList] = useState(false);
   const { signOut, state } = useContext(AuthContext);
   const isSpareAdmin = state?.user?.username === 'SpareAdmin';
@@ -31,6 +39,8 @@ export default function AdminDashboardScreen({ navigation }) {
   useEffect(() => {
     fetchDashboardStats();
   }, []);
+
+  useEffect(() => complaintProcessing.subscribe(setComplaintJob), []);
 
   const fetchDashboardStats = async () => {
     try {
@@ -80,49 +90,15 @@ export default function AdminDashboardScreen({ navigation }) {
   };
 
   const handleProcessComplaints = async () => {
+    if (!complaintProcessing.canSubmit()) return;
     Alert.alert(
       'Process Completed Complaints',
-      'This will process all Completed complaints from 06/04/26 onwards and reduce technician stock accordingly. Continue?',
+      `This will process all Completed complaints with a complaint date on or after ${COMPLAINT_CUTOFF_LABEL} and reduce technician stock accordingly. The cutoff uses the complaint date, not the completion date. Continue?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Process',
-          onPress: async () => {
-            try {
-              setProcessingComplaints(true);
-              
-              const response = await client.post(API_ENDPOINTS.PROCESS_COMPLAINTS, {
-                since_date: '2026-03-22', // Default date as specified
-                technician_filter: null // Process all technicians
-              });
-
-              const result = response.data;
-              
-              if (result.success) {
-                let message = `Successfully processed ${result.processed_count} complaints.`;
-                
-                if (result.errors && result.errors.length > 0) {
-                  message += `\n\nErrors: ${result.errors.length} items failed.`;
-                }
-
-                if (result.stock_reductions && result.stock_reductions.length > 0) {
-                  message += `\n\nStock reduced for ${result.stock_reductions.length} items.`;
-                }
-
-                Alert.alert('Success', message);
-              } else {
-                Alert.alert('Error', result.error || 'Failed to process complaints');
-              }
-            } catch (error) {
-              console.error('Complaint processing error:', error);
-              Alert.alert(
-                'Error',
-                error.response?.data?.error || 'Failed to process complaints. Please try again.'
-              );
-            } finally {
-              setProcessingComplaints(false);
-            }
-          },
+          onPress: () => complaintProcessing.submit(),
         },
       ]
     );
@@ -357,24 +333,47 @@ export default function AdminDashboardScreen({ navigation }) {
 
         {/* NEW: Process Pending Complaints Button */}
         <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: processingComplaints ? COLORS.gray : COLORS.warning }]}
+            style={[styles.actionButton, { backgroundColor: complaintProcessing.canSubmit() ? COLORS.warning : COLORS.gray }]}
             onPress={handleProcessComplaints}
-            disabled={processingComplaints}
+            disabled={!complaintProcessing.canSubmit()}
         >
-            {processingComplaints ? (
+            {complaintJob.submitting || complaintJob.checking || isActiveRun(complaintJob.run) ? (
                 <ActivityIndicator size={24} color={COLORS.white} />
             ) : (
                 <MaterialIcons name="pending-actions" size={24} color={COLORS.white} />
             )}
             <View style={styles.actionContent}>
                 <Text style={styles.actionTitle}>
-                    {processingComplaints ? 'Processing...' : 'Process Completed Complaints'}
+                    {complaintJob.submitting ? 'Submitting…' : complaintJob.unknown ? 'Status unconfirmed' :
+                      isActiveRun(complaintJob.run) ? (complaintJob.run.status === 'queued' ? 'Processing queued' : 'Processing…') : 'Process Completed Complaints'}
                 </Text>
                 <Text style={styles.actionSubtitle}>
-                    Process completed complaints & reduce stock
+                    Completed complaints dated {COMPLAINT_CUTOFF_LABEL} onwards (complaint date)
                 </Text>
             </View>
         </TouchableOpacity>
+
+        <View style={styles.complaintStatus} accessibilityLiveRegion="polite">
+          {!!complaintJob.submissionError && <Text style={styles.complaintStatusText}>{complaintJob.submissionError}</Text>}
+          {!!complaintJob.message && <Text style={styles.complaintStatusText}>{complaintJob.message}</Text>}
+          {!!complaintJob.run && (
+            <Text style={styles.complaintStatusText}>
+              Run #{complaintJob.run.id}{complaintJob.unknown ? ' (last known status)' : ''}{'\n'}
+              {complaintJob.unknown && !isActiveRun(complaintJob.run) ?
+                'Current outcome is unconfirmed. Check progress for a confirmed result.' : complaintRunSummary(complaintJob.run)}
+            </Text>
+          )}
+          <TouchableOpacity
+            onPress={() => complaintProcessing.checkStatus()}
+            disabled={complaintJob.checking || complaintJob.submitting}
+            accessibilityRole="button"
+            style={styles.complaintCheckButton}
+          >
+            <Text style={styles.complaintCheckText}>
+              {complaintJob.checking ? 'Checking progress…' : 'Check progress'}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* NEW: Sales Requests Button */}
         <TouchableOpacity
@@ -534,6 +533,29 @@ const styles = StyleSheet.create({
   actionContent: {
     flex: 1,
     marginLeft: 10,
+  },
+  complaintStatus: {
+    width: '100%',
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    padding: 12,
+    marginVertical: 6,
+  },
+  complaintStatusText: {
+    color: COLORS.dark,
+    fontSize: 13,
+    marginBottom: 6,
+  },
+  complaintCheckButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: COLORS.dark,
+    borderRadius: 6,
+  },
+  complaintCheckText: {
+    color: COLORS.white,
+    fontWeight: 'bold',
   },
   actionTitle: {
     fontSize: 14,

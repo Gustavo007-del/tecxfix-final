@@ -274,6 +274,38 @@ class ProcessedComplaint(models.Model):
         return f"{self.complaint_no} - {self.technician_name} ({self.quantity_reduced} units)"
 
 
+class ComplaintProcessingRun(models.Model):
+    """Durable queue. A non-null active_slot permits only one unfinished run."""
+    status = models.CharField(max_length=20, default='queued', db_index=True)
+    active_slot = models.PositiveSmallIntegerField(null=True, unique=True, default=1)
+    since_date = models.DateField()
+    technician_filter = models.CharField(max_length=255, blank=True)
+    requested_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    started_at = models.DateTimeField(null=True)
+    finished_at = models.DateTimeField(null=True)
+    total_count = models.PositiveIntegerField(default=0)
+    completed_count = models.PositiveIntegerField(default=0)
+    result = models.JSONField(default=dict)
+    error = models.TextField(blank=True)
+
+
+class StockOperation(models.Model):
+    """Write-ahead journal; applying/review operations must NEVER auto-retry."""
+    operation_key = models.CharField(max_length=64, unique=True)
+    source = models.CharField(max_length=20)
+    reference = models.CharField(max_length=100, db_index=True)
+    technician_name = models.CharField(max_length=255)
+    product_code = models.CharField(max_length=100)
+    quantity = models.PositiveIntegerField()
+    status = models.CharField(max_length=20, default='pending', db_index=True)
+    plan = models.JSONField(default=dict)
+    error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
 class SalesRequest(models.Model):
     """Track sales requests from technicians"""
     

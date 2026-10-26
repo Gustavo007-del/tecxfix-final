@@ -10,14 +10,56 @@ import traceback
 from datetime import datetime
 import signal
 from contextlib import contextmanager
+from copy import deepcopy
+from decimal import Decimal, InvalidOperation
 
 import gspread
 from google.oauth2.service_account import Credentials
 from django.core.cache import cache
 from django.contrib.auth.models import User
 from .sheets_rate_limit import install_sheets_api_rate_limit
+from .stock_lock import serialized_stock_write
 
 logger = logging.getLogger(__name__)
+
+
+class StockUpdateError(Exception):
+    """Technician update failure; audit contains the intended write, if prepared."""
+
+    def __init__(self, message, audit=None):
+        super().__init__(message)
+        self.audit = deepcopy(audit)
+
+
+class StockPrewriteError(StockUpdateError):
+    """No Google stock write was attempted (including a failed audit hook)."""
+
+
+class StockValidationError(StockPrewriteError):
+    """Invalid input, invalid sheet quantity, or insufficient net stock."""
+
+
+class StockWriteUncertainError(StockUpdateError):
+    """A write was attempted; reconcile the audit before considering a retry."""
+
+
+def canonical_product(value):
+    return str(value or "").strip().casefold()
+
+
+def canonical_technician(value):
+    return " ".join(str(value or "").split()).casefold()
+
+
+def _stock_quantity(value):
+    """Fail closed for mutations instead of silently dropping malformed stock."""
+    try:
+        quantity = Decimal(str(value).strip().replace(",", ""))
+        if not quantity.is_finite() or quantity != quantity.to_integral_value():
+            raise ValueError
+        return int(quantity)
+    except (InvalidOperation, ValueError, TypeError, OverflowError) as exc:
+        raise StockValidationError(f"Invalid stock quantity: {value!r}") from exc
 
 
 # -----------------------
@@ -90,6 +132,7 @@ class SheetsSync:
         # from Google on every single call, which is what was causing the
         # worker timeout when processing many complaints in one request.
         self._tech_stock_cache = None
+        self._tech_stock_sheet = None
 
     # -----------------------
     # AUTHENTICATION (ENV BASED)
@@ -181,6 +224,7 @@ class SheetsSync:
             logger.info("[TIMING] Authorizing gspread client...")
             auth_start = time.time()
             self.client = gspread.authorize(creds)
+            self.client.set_timeout(30)
             # gspread routes Sheets API calls through this HTTP client. The
             # database-backed slot schedule is shared by web workers and the
             # backfill process, keeping app traffic to 40 requests/min and
@@ -308,6 +352,13 @@ class SheetsSync:
     # TECHNICIAN STOCK
     # -----------------------
 
+    def _get_tech_stock_sheet(self):
+        if self._tech_stock_sheet is None:
+            self.authenticate()
+            spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
+            self._tech_stock_sheet = spreadsheet.worksheet(self.TECHNICIAN_STOCK_WORKSHEET)
+        return self._tech_stock_sheet
+
     def _get_tech_stock_sheet_rows(self, force_refresh=False):
         """
         Fetch the "Technician Stocks" worksheet ONCE and cache the raw rows
@@ -319,10 +370,9 @@ class SheetsSync:
         if self._tech_stock_cache is not None and not force_refresh:
             return self._tech_stock_cache
 
-        self.authenticate()
-        spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
-        sheet = spreadsheet.worksheet(self.TECHNICIAN_STOCK_WORKSHEET)
-
+        # A failed refresh must not leave an older snapshot available for reuse.
+        self._tech_stock_cache = None
+        sheet = self._get_tech_stock_sheet()
         rows = sheet.get_all_values()
         self._tech_stock_cache = rows[1:]
         logger.info(f"Fetched and cached {len(self._tech_stock_cache)} rows from technician stock sheet")
@@ -338,18 +388,17 @@ class SheetsSync:
         data_rows = self._get_tech_stock_sheet_rows()
 
         stock_by_spare_id = {}
+        technician_key = canonical_technician(technician_name)
 
         for r in data_rows:
-            if len(r) < 4 or not r[1]:
+            if len(r) < 4 or not canonical_product(r[1]):
                 continue
 
-            sheet_technician_name = " ".join(r[3].split())
-            mapped_technician_name = " ".join(technician_name.split())
-            if sheet_technician_name.casefold() != mapped_technician_name.casefold():
+            if canonical_technician(r[3]) != technician_key:
                 continue
 
             spare_id = r[1].strip()
-            key = spare_id.casefold()
+            key = canonical_product(spare_id)
             if key in stock_by_spare_id:
                 stock_by_spare_id[key]["qty"] += safe_int(r[2])
                 if r[0].strip():
@@ -378,6 +427,7 @@ class SheetsSync:
     # UPDATE COMPANY STOCK
     # -----------------------
 
+    @serialized_stock_write
     def update_company_stock(self, spare_id, qty_to_reduce):
         start_time = time.time()
         process = psutil.Process(os.getpid())
@@ -422,87 +472,136 @@ class SheetsSync:
     # UPDATE TECHNICIAN STOCK
     # -----------------------
 
-    def update_technician_stock(self, technician_name, spare_id, qty_to_add):
-        self.authenticate()
+    @serialized_stock_write
+    def update_technician_stock(self, technician_name, spare_id, qty_to_add, *, before_write=None):
+        """Apply a signed integer delta using fresh rows and return True.
 
-        spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
-        sheet = spreadsheet.worksheet(self.TECHNICIAN_STOCK_WORKSHEET)
+        The caller must hold its global stock-operation gate throughout this
+        call; the decorator also acquires that same reentrant gate. No automatic
+        retries are performed here. An optional
+        before_write(audit) callback must durably journal the JSON-serializable
+        plan before returning; raising aborts the write. It receives a detached
+        copy, so changing it cannot alter the write. Audit rows contain physical
+        row numbers, original row values, and before/after quantities, including
+        unchanged negative rows; totals describe net stock. For an append the
+        row number is unknown until Google assigns it.
 
-        # Reuse the cached rows if we already have them this run instead of
-        # doing yet another full-sheet fetch just to locate the row.
-        data_rows = self._get_tech_stock_sheet_rows()
+        StockPrewriteError (including StockValidationError) means no stock write
+        was attempted. StockWriteUncertainError means the write may have applied:
+        inspect its .audit and reconcile, never blindly retry. Process death
+        after the hook also requires reconciliation of the parent's journal.
+        Errors after the Google write are also uncertain to the caller until
+        its journal commits completion.
+        A zero delta is a no-op and does not invoke the hook.
+        """
+        audit = None
+        try:
+            product_key = canonical_product(spare_id)
+            technician_key = canonical_technician(technician_name)
+            if not product_key or not technician_key:
+                raise StockValidationError("Technician and spare ID must be nonempty")
+            qty_to_add = _stock_quantity(qty_to_add)
+            if qty_to_add == 0:
+                return True
 
-        found_row = None
+            data_rows = self._get_tech_stock_sheet_rows(force_refresh=True)
+            sheet = self._get_tech_stock_sheet()
+            matches = []
+            for idx, row in enumerate(data_rows, start=2):
+                if (len(row) >= 4 and canonical_product(row[1]) == product_key
+                        and canonical_technician(row[3]) == technician_key):
+                    quantity = _stock_quantity(row[2])
+                    matches.append({"row": idx, "values": list(row),
+                                    "before": quantity, "after": quantity})
 
-        for idx, r in enumerate(data_rows):
-            if (
-                len(r) >= 4 and
-                r[1].strip() == spare_id and
-                r[3].strip().lower() == technician_name.strip().lower()
-            ):
-                found_row = idx + 2
-                break
+            total_before = sum(row["before"] for row in matches)
+            if qty_to_add < 0 and (not matches or total_before < -qty_to_add):
+                raise StockValidationError(
+                    f"Insufficient stock for {spare_id} (Available: {total_before})"
+                )
 
-        part_name = ""
+            append_values = None
+            part_name = next((row["values"][0].strip() for row in reversed(matches)
+                              if row["values"][0].strip()), "")
+            if qty_to_add < 0:
+                remaining = -qty_to_add
+                for row in matches:
+                    deduction = min(max(row["before"], 0), remaining)
+                    row["after"] -= deduction
+                    remaining -= deduction
+            elif matches:
+                matches[0]["after"] += qty_to_add
+            else:
+                item = next((item for item in self.get_company_stock()
+                             if canonical_product(item["spare_id"]) == product_key), None)
+                if item is None:
+                    raise StockValidationError(f"Spare {spare_id} not found in company stock")
+                part_name = item["name"]
+                append_values = [part_name, str(spare_id).strip(), qty_to_add,
+                                 " ".join(str(technician_name).split())]
 
-        if found_row:
-            part_name = data_rows[found_row - 2][0].strip() if data_rows[found_row - 2] else ""
-            current_qty = safe_int(sheet.cell(found_row, 3).value)
-            sheet.update_cell(found_row, 3, current_qty + qty_to_add)
-        else:
-            company_stock = self.get_company_stock()
-            item = next(
-                (s for s in company_stock if s["spare_id"] == spare_id),
-                None
-            )
+            updates = [{"range": f'C{row["row"]}', "values": [[row["after"]]]}
+                       for row in matches if row["before"] != row["after"]]
+            # Prepare the success cache before the write, without mutating the
+            # fetched rows. An append needs a fresh read for its actual position.
+            success_cache = deepcopy(data_rows) if append_values is None else None
+            if success_cache is not None:
+                for row in matches:
+                    if row["before"] != row["after"]:
+                        success_cache[row["row"] - 2][2] = str(row["after"])
+            audit = {
+                "spreadsheet_id": self.COMPANY_SHEET_ID,
+                "worksheet": self.TECHNICIAN_STOCK_WORKSHEET,
+                "technician": technician_key, "spare_id": product_key,
+                "delta": qty_to_add, "total_before": total_before,
+                "total_after": total_before + qty_to_add,
+                "rows": matches, "updates": updates, "append_values": append_values,
+            }
+            if before_write is not None:
+                before_write(deepcopy(audit))
+        except StockPrewriteError:
+            self._tech_stock_cache = None
+            raise
+        except Exception as exc:
+            self._tech_stock_cache = None
+            raise StockPrewriteError("Technician stock update failed before write", audit) from exc
 
-            if not item:
-                raise Exception(f"Spare {spare_id} not found in company stock")
-
-            part_name = item["name"]
-
-            sheet.append_row(
-                [
-                    item["name"],
-                    spare_id,
-                    qty_to_add,
-                    technician_name,
-                ],
-                value_input_option="USER_ENTERED"
-            )
-
-        # The sheet just changed on Google's side, so the cached snapshot is
-        # stale. Drop it - the next get_technician_stock()/update call will
-        # do one fresh fetch and re-cache.
+        # Any failure once the write is invoked is conservatively uncertain,
+        # even if it appears to be a transport timeout or server rejection.
         self._tech_stock_cache = None
+        try:
+            if append_values is not None:
+                sheet.append_row(append_values, value_input_option="RAW", table_range="A:D")
+            else:
+                sheet.batch_update(updates, value_input_option="RAW")
+        except Exception as exc:
+            raise StockWriteUncertainError(
+                "Technician stock write outcome is uncertain; reconcile before retrying", audit
+            ) from exc
+        self._tech_stock_cache = success_cache
 
-        # Write-through to the local DB snapshot so /my-stock/ reflects the
-        # change immediately instead of waiting for the next full sync.
-        # Best-effort: the Google sheet stays the source of truth and the
-        # periodic sync reconciles any drift.
+        # Use the observed net balance for deductions so a stale snapshot or
+        # duplicate sheet rows cannot make the local total drift further.
         try:
             from api.services.sheet_snapshot_sync import update_technician_stock_snapshot
+            snapshot_kwargs = {"quantity": audit["total_after"]} if qty_to_add < 0 else {"delta": qty_to_add}
             update_technician_stock_snapshot(
-                technician_name=technician_name,
-                spare_id=spare_id,
-                delta=qty_to_add,
-                name=part_name,
+                technician_name=" ".join(str(technician_name).split()),
+                spare_id=str(spare_id).strip(), name=part_name, **snapshot_kwargs,
             )
-        except Exception:
-            logger.exception(
-                "Failed to update TechnicianStockSnapshot for %s / %s "
-                "- will be reconciled on next sync",
-                technician_name,
-                spare_id,
-            )
+        except Exception as exc:
+            self._tech_stock_cache = None
+            raise StockWriteUncertainError(
+                "Sheet stock write succeeded but snapshot update failed; reconcile before retrying", audit
+            ) from exc
 
         return True
 
+    @serialized_stock_write
     def append_courier_technician_stock(self, technician_name, spare_id, qty, item_name, sent_date):
         """Append a courier stock row, writing only A:D and F so column E is preserved."""
-        self.authenticate()
-        spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
-        sheet = spreadsheet.worksheet(self.TECHNICIAN_STOCK_WORKSHEET)
+        sheet = self._get_tech_stock_sheet()
+        self._tech_stock_cache = None
 
         # Append exactly A:D; the append response identifies the row used.
         result = sheet.append_row(
@@ -540,6 +639,7 @@ class SheetsSync:
     # COURIER → SHEETS SYNC
     # -----------------------
 
+    @serialized_stock_write
     def sync_courier_to_sheets(self, items, technician_ids, sent_date=None):
         from .models import TechnicianStock
 
@@ -588,6 +688,7 @@ class SheetsSync:
         logger.info("Courier sync completed successfully")
         return True
 
+    @serialized_stock_write
     def backfill_courier_technician_rows(self, items, technician_ids, sent_date):
         """Append one historical courier's technician rows in two batched writes.
 
@@ -626,8 +727,8 @@ class SheetsSync:
         if not rows:
             raise Exception("Courier has no technician stock rows to append")
 
-        spreadsheet = self.client.open_by_key(self.COMPANY_SHEET_ID)
-        sheet = spreadsheet.worksheet(self.TECHNICIAN_STOCK_WORKSHEET)
+        sheet = self._get_tech_stock_sheet()
+        self._tech_stock_cache = None
         result = sheet.append_rows(
             rows,
             value_input_option='USER_ENTERED',
