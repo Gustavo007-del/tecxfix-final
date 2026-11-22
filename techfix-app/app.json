@@ -3,7 +3,7 @@
     "name": "TEX FIX",
     "slug": "texfix-app",
     "version": "3.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
@@ -14,7 +14,6 @@
     "android": {
       "package": "com.shijil.py.texfixapp",
       "versionCode": 23,
-      "edgeToEdgeEnabled": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#2C2C2C"
@@ -39,6 +38,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "./plugins/withAdaptiveAndroid",
       [
         "expo-location",
         {

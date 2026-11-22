@@ -5,12 +5,13 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+  ScrollView,
   Animated,
   Easing,
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -194,6 +195,7 @@ export default function LoginChoiceScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <LinearGradient
         colors={[C.glowStrong, C.glowTransparent]}
         style={styles.glowTopRight}
@@ -259,6 +261,7 @@ export default function LoginChoiceScreen({ navigation }) {
           <View style={styles.footerLine} />
         </Animated.View>
       </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

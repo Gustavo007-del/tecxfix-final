@@ -1,0 +1,18 @@
+[artifact-tool] embedded_font_decode_failed: unsupported CTF scaler type 0x4f54544f
+Inspect result written to file: .deck-build/project-fixed.pptx.inspect.ndjson
+node:internal/fs/promises:1345
+  return new FileHandle(await PromisePrototypeThen(
+                        ^
+
+Error: EEXIST: file already exists, open 'C:\Users\91906\Desktop\tecxfix-final\.deck-build\project-validation.json'
+    at async open (node:internal/fs/promises:1345:25)
+    at async Object.writeFile (node:internal/fs/promises:1972:14)
+    at async finalizePresentation (file:///C:/Users/91906/.codex/plugins/cache/openai-primary-runtime/presentations/26.1025.11240/skills/presentations/container_tools/artifact_tool_utils.mjs:1058:5)
+    at async file:///C:/Users/91906/Desktop/tecxfix-final/.deck-build/project-fix.mjs:15:13 {
+  errno: -4075,
+  code: 'EEXIST',
+  syscall: 'open',
+  path: 'C:\\Users\\91906\\Desktop\\tecxfix-final\\.deck-build\\project-validation.json'
+}
+
+Node.js v24.22.1
